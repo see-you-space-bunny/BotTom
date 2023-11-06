@@ -2,14 +2,17 @@
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using DSharpPlus.SlashCommands;
+using Microsoft.VisualBasic;
 using org.mariuszgromada.math.mxparser;
 
 namespace BotTom
 {
     internal class Program
     {
+
         static async Task Main(string[] args)
         {
+            Envy.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
             var discordClient = new DiscordClient(new DiscordConfiguration
             {
                 Token = Environment.GetEnvironmentVariable("DISCORD_TOKEN"),
