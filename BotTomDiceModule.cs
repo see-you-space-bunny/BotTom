@@ -82,5 +82,24 @@ namespace BotTom
 
             return context.CreateResponseAsync(p2e_r.ToString());
         }
+
+        
+        [SlashCommand("sta", "Roll d20s for Star Trek Adventures.")]
+        internal Task StarTrekDice(
+            InteractionContext context,
+            [Option("tn", "Your aptitude plus discipline.")] long targetNumber,
+            [Option("fn", "If you have a focus for the roll, add your discipline here. (default: 1)")] long? focusNumber = null,
+            [Option("dice", "The number of dice you're rolling. (default: 2)")] long? dice = null,
+            [Option("threat", "The threshold at which you generate Threat. (default: 20)")] long? threatNumber = null,
+            [Option("ctn", "The Computer's aptitude plus discipline.")] long? computerTargetNumber = null,
+            [Option("cfn", "If the Computer has a focus for the roll, add its discipline here. (default: 1)")] long? computerFocusNumber = null,
+            [Option("label", "A label to identify what the roll is for. (default: none)")] string? label = null
+            )
+        {
+            var p2e_r = new StarTrekRoll(targetNumber, focusNumber, dice, threatNumber, computerTargetNumber, computerFocusNumber, label);
+            p2e_r.Roll();
+
+            return context.CreateResponseAsync(p2e_r.ToString());
+        }
     }    
 }

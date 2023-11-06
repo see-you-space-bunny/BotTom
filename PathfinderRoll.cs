@@ -47,7 +47,7 @@ namespace BotTom
         private Tuple<int,DegreeOfSuccess?,bool?>? _result;
 
         /// <summary>
-        /// Constructor for the <c>DiceRoller</c> class.
+        /// Constructor for the <c>PathfinderRoll</c> class.
         /// </summary>
         /// <param name="diceModifier">Dice Modifier (DM) of the roll, an <see cref="System.Integer"/> between -99 and 99.</param>
         /// <param name="difficultyClass">The type of DC used (Basic, Level, SpellLevel) and the target number of the opposing roll, an <see cref="System.Integer"/> between 0 and 99.</param>
