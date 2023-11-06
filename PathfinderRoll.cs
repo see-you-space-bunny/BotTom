@@ -128,7 +128,9 @@ namespace BotTom
         {
             StringBuilder sb = new();
             if (_label != null)
-                sb.AppendLine($"> {_label}");
+            {
+                sb.AppendLine($"> {_label.Replace("\\n","\n> ")}");
+            }
 
             if (_result == null)
                 return "Not yet rolled";
