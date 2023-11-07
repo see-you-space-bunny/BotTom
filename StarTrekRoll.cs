@@ -90,6 +90,8 @@ namespace BotTom
 
         public void Roll()
         {
+            if (_dice is null)
+                return;
             int[] rolls = DiceParser.RollDice((int)_dice, 20);
             int hits = 0;
             int threat = 0;
@@ -98,26 +100,44 @@ namespace BotTom
             for (int i = 0; i < rolls.Length; i++)
             {
                 if (i + 1 >= rolls.Length && _computerTargetNumber is not null)
+                {
                     if (_computerFocusNumber is not null && rolls[i] <= _computerFocusNumber)
+                    {
                         hits += 2;
+                    }
                     else if (rolls[i] < _computerTargetNumber)
+                    {
                         hits += 1;
+                    }
                     else if (rolls[i] == _computerTargetNumber)
+                    {
                         hitAtCost += 1;
+                    }
                     else if (rolls[i] == 20)
+                    {
                         threat += 2;
-                else 
+                    }
+                }
+                else
+                {
                     if (rolls[i] == 1 || (_focusNumber is not null && rolls[i] <= _focusNumber))
+                    {
                         hits += 2;
+                    }
                     else if (rolls[i] < _targetNumber)
-                        hits += 1; 
+                    {
+                        hits += 1;
+                    }
                     else if (rolls[i] == _targetNumber)
+                    {
                         hitAtCost += 1;
+                    }
                     else if (rolls[i] == 20)
+                    {
                         threat += 2;
+                    }
+                }
             }
-            
-            
             _result = new Tuple<int[],int,int,int> (rolls, hits, threat, hitAtCost);
         }
 
@@ -133,19 +153,27 @@ namespace BotTom
             if (_result == null)
                 return "Not yet rolled";
 
-            sb.Append($"{_dice}d20[`");
-            for (int i = 0; i < _result.Item1.Length; i++)
+            int computerDieOffset = 0;
+            if (_computerTargetNumber is not null)
+                computerDieOffset = 1;
+
+            sb.Append($"{_dice-computerDieOffset}d20[`");
+            for (int i = 0; i + computerDieOffset < _result.Item1.Length; i++)
             {
                 sb.Append(_result.Item1[i]);
-                if (i + 1 < _result.Item1.Length)
+                if (i + 1 + computerDieOffset < _result.Item1.Length)
                     sb.Append(", ");
             }
-            sb.AppendLine("`]");
-            sb.Append($"- Successes achieved: __**`{_result.Item2}`**__");
+            sb.Append($"`] vs TN/F __**` {_targetNumber}/{_focusNumber} `**__");
+
+            if (computerDieOffset > 0)
+                sb.Append($", 1d20[`{_result.Item1[^1]}`] vs TN/F __**` {_computerTargetNumber}/{_computerFocusNumber} `**__");
+
+            sb.Append($"\n- Successes achieved: __**` {_result.Item2} `**__");
             if (_result.Item3 > 0)
-                sb.Append($"\n- Threat generated: __**`{_result.Item3}`**__");
+                sb.Append($"\n- Threat generated: __**` {_result.Item3} `**__");
             if (_result.Item4 > 0)
-                sb.Append($"\n- (Optional) Successes at a cost: __**`{_result.Item4}`**__");
+                sb.Append($"\n- (Optional) Successes at a cost: __**` {_result.Item4} `**__");
 
             return sb.ToString();
         }
