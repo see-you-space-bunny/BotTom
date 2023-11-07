@@ -13,35 +13,45 @@ namespace BotTom
         static async Task Main(string[] args)
         {
             Envy.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
-            var discordClient = new DiscordClient(new DiscordConfiguration
+
+            if(Convert.ToBoolean(Environment.GetEnvironmentVariable("OFFLINE_DEBUG")))
             {
-                Token = Environment.GetEnvironmentVariable("DISCORD_TOKEN"),
-                TokenType = TokenType.Bot,
-                Intents = DiscordIntents.AllUnprivileged | DiscordIntents.GuildMessages | DiscordIntents.MessageContents
-            });
-            
-            // ----------------------------------------------------------------------------------
-            // mXparser required
-            // Non-Commercial Use Confirmation
-            bool isCallSuccessful = License.iConfirmNonCommercialUse(Environment.GetEnvironmentVariable("USER_NAME"));
-            
-            // Verification if use type has been already confirmed
-            bool isConfirmed = License.checkIfUseTypeConfirmed();
-            
-            // Checking use type confirmation message
-            String message = License.getUseTypeConfirmationMessage();
-            
-            // ----------------------------------------------------------------------------------
-            Console.WriteLine("isCallSuccessful = " + isCallSuccessful);
-            Console.WriteLine("isConfirmed = " + isConfirmed);
-            Console.WriteLine("message = " + message);
-            // ----------------------------------------------------------------------------------
+                var sta_r = new StarTrekRoll(14, 4, 3, null, 11, null, "testing!");
+                sta_r.Roll();
+                Console.WriteLine(sta_r.ToString());
+            }
+            else 
+            {
+                var discordClient = new DiscordClient(new DiscordConfiguration
+                {
+                    Token = Environment.GetEnvironmentVariable("DISCORD_TOKEN"),
+                    TokenType = TokenType.Bot,
+                    Intents = DiscordIntents.AllUnprivileged | DiscordIntents.GuildMessages | DiscordIntents.MessageContents
+                });
+                
+                // ----------------------------------------------------------------------------------
+                // mXparser required
+                // Non-Commercial Use Confirmation
+                bool isCallSuccessful = License.iConfirmNonCommercialUse(Environment.GetEnvironmentVariable("USER_NAME"));
+                
+                // Verification if use type has been already confirmed
+                bool isConfirmed = License.checkIfUseTypeConfirmed();
+                
+                // Checking use type confirmation message
+                String message = License.getUseTypeConfirmationMessage();
+                
+                // ----------------------------------------------------------------------------------
+                Console.WriteLine("isCallSuccessful = " + isCallSuccessful);
+                Console.WriteLine("isConfirmed = " + isConfirmed);
+                Console.WriteLine("message = " + message);
+                // ----------------------------------------------------------------------------------
 
-            var slash = discordClient.UseSlashCommands();
-            slash.RegisterCommands<BotTomDiceModule>();
+                var slash = discordClient.UseSlashCommands();
+                slash.RegisterCommands<BotTomDiceModule>();
 
-            await discordClient.ConnectAsync();
-            await Task.Delay(-1);
+                await discordClient.ConnectAsync();
+                await Task.Delay(-1);
+            }
         }
     }
 }
