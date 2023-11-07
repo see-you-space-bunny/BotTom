@@ -18,6 +18,16 @@ namespace BotTom
     /// </summary>
     internal class BotTomDiceModule : ApplicationCommandModule
     {
+
+        [SlashCommand("help", "Get instructions on how to use this bot.")]
+        internal Task HelpMe(InteractionContext context)
+        {
+            StringBuilder sb = new("");
+            sb.Append("Not yet implemented");
+
+            return context.CreateResponseAsync(sb.ToString());
+        }
+
         // ----------------------------------------------------------------------------------
         /// <summary>
         /// Task <c>DiceCommand</c>, that is called by the user with 
@@ -83,7 +93,6 @@ namespace BotTom
             return context.CreateResponseAsync(p2e_r.ToString());
         }
 
-        
         [SlashCommand("sta", "Roll d20s for Star Trek Adventures.")]
         internal Task StarTrekDice(
             InteractionContext context,
@@ -96,10 +105,25 @@ namespace BotTom
             [Option("label", "A label to identify what the roll is for. (default: none)")] string? label = null
             )
         {
-            var p2e_r = new StarTrekRoll(targetNumber, focusNumber, dice, threatNumber, computerTargetNumber, computerFocusNumber, label);
-            p2e_r.Roll();
+            var sta_r = new StarTrekRoll(targetNumber, focusNumber, dice, threatNumber, computerTargetNumber, computerFocusNumber, label);
+            sta_r.Roll();
 
-            return context.CreateResponseAsync(p2e_r.ToString());
+            return context.CreateResponseAsync(sta_r.ToString());
+        }
+
+        [SlashCommand("hwi", "Roll d6s for Hard Wired Island.")]
+        internal Task HardWiredIslandDice(
+            InteractionContext context,
+            [Option("dm", "Your dice bonus.")] long diceModifier,
+            [Option("dr", "The roll's difficulty rating. (default: none)")] long? difficultyRating = null,
+            [Option("boost", "If any by how much the roll is being boosted. (default: 0)")] long? boost = null,
+            [Option("label", "A label to identify what the roll is for. (default: none)")] string? label = null
+            )
+        {
+            var hwi_r = "Not yet implemented"; //new HardWiredIslandRoll(diceModifier, difficultyRating, boost, label);
+            //hwi_r.Roll();
+
+            return context.CreateResponseAsync(hwi_r.ToString());
         }
     }    
 }
