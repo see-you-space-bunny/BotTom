@@ -125,5 +125,23 @@ namespace BotTom
 
             return context.CreateResponseAsync(hwi_r.ToString());
         }
+
+        [SlashCommand("cod", "Roll d10s for Chronicles of Darkness (and other Storyteller systems).")]
+        internal Task StorytellerDice(
+            InteractionContext context,
+            [Option("pool", "Your dice pool. A pool of zero is a chance die.")] long dicePool,
+            [Option("hit", "The roll's difficulty rating. (default: 8)")] long hitThreshold = 8,
+            [Option("again", "X-again threshold for exploding dice. A 0 means no result explodes. (default: 10)")] long againThreshold = 10,
+            [Option("exceptional", "How many successes are needed for an exceptional success. (default: 5)")] long exceptionalThreshold = 5,
+            [Option("rote", "If this is 'true', then the roll is treated as a rote action. (default: false)")] bool roteAction = false,
+            [Option("bonushits", "How many extra successes you recieve when you roll at least one success. (default: 0)")] long bonusHits = 0,
+            [Option("label", "A label to identify what the roll is for. (default: none)")] string? label = null
+            )
+        {
+            var cod_r = new StorytellerRoll((int)dicePool, (int)hitThreshold, (int)againThreshold, (int)exceptionalThreshold, (int)bonusHits, roteAction, label);
+            cod_r.Roll();
+            
+            return context.CreateResponseAsync(cod_r.ToString());
+        }
     }    
 }

@@ -16,7 +16,19 @@ namespace BotTom
 
             if(Convert.ToBoolean(Environment.GetEnvironmentVariable("OFFLINE_DEBUG")))
             {
-                var sta_r = new StarTrekRoll(14, 4, 3, null, 11, null, "testing!");
+                StorytellerRoll sta_r;
+
+                sta_r = new StorytellerRoll(6,8,10,5,0,false,"testing 1!");
+                sta_r.Roll();
+                Console.WriteLine(sta_r.ToString());
+
+
+                sta_r = new StorytellerRoll(6,8,10,3,0,false,"testing 2!");
+                sta_r.Roll();
+                Console.WriteLine(sta_r.ToString());
+
+
+                sta_r = new StorytellerRoll(6,8,10,5,0,true,"testing 3!");
                 sta_r.Roll();
                 Console.WriteLine(sta_r.ToString());
             }
