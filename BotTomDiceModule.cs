@@ -143,5 +143,18 @@ namespace BotTom
             
             return context.CreateResponseAsync(cod_r.ToString());
         }
+
+        [SlashCommand("l5r", "Roll Legend of the Five Rings dice.")]
+        internal Task LegendFiveRingsDice(
+            InteractionContext context,
+            [Option("ring", "Your dice pool of Ring dice.")] long ringDice,
+            [Option("skill", "Your dice pool of Skill dice. (default: 0)")] long skillDice = 0,
+            [Option("label", "A label to identify what the roll is for. (default: none)")] string? label = null
+            )
+        {
+            var cod_r = new LegendFiveRingsRoll((int)ringDice, (int)skillDice, label);
+            cod_r.Roll();
+            return context.CreateResponseAsync(cod_r.ToString());
+        }
     }    
 }
