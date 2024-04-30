@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root-element>
-    <name></name>
+    <name>Cursed Skinwalker</name>
     <credit url="https://morkborg.com/">TextTextText</credit>
     <background roll="1d6">
-        <result>TextTextText</result>
-        <result>TextTextText</result>
-        <result>TextTextText</result>
-        <result>TextTextText</result>
-        <result>TextTextText</result>
-        <result>TextTextText</result>
+        <result>TextTextText1</result>
+        <result>TextTextText2</result>
+        <result>TextTextText3</result>
+        <result>TextTextText4</result>
+        <result>TextTextText5</result>
+        <result>TextTextText6</result>
     </background>
     <abilities agility="+0" presence="+0" strength="+0" toughness="+0"/>
     <survival hitpoints="T+1d8" omens="d2"/>
