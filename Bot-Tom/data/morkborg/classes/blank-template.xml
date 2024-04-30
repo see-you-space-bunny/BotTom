@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root-element>
+    <name></name>
+    <credit url="https://morkborg.com/">TextTextText</credit>
+    <background roll="1d6">
+        <result>TextTextText</result>
+        <result>TextTextText</result>
+        <result>TextTextText</result>
+        <result>TextTextText</result>
+        <result>TextTextText</result>
+        <result>TextTextText</result>
+    </background>
+    <abilities agility="+0" presence="+0" strength="+0" toughness="+0"/>
+    <survival hitpoints="T+1d8" omens="d2"/>
+    <equipment weapon="d6" armor="d2" silver="2d6*10"/>
+    <special roll="1d6">
+        <!-- things like skinwalker forms, armor, mutations, etc -->
+        <result>TextTextText</result>
+        <result>TextTextText</result>
+        <result>TextTextText</result>
+        <result>TextTextText</result>
+        <result>TextTextText</result>
+        <result>TextTextText</result>
+    </special>
+    <fluff>
+        <!-- flavor text to display -->
+        <background>TextTextText</background>
+        <abilities>TextTextText</abilities>
+        <survival>TextTextText</survival>
+        <equipment>TextTextText</equipment>
+        <special>TextTextText</special>
+    </fluff>
+</root-element>

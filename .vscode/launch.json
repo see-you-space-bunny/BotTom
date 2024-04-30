@@ -8,7 +8,7 @@
             "name": "C#: Bot-Tom Debug",
             "type": "dotnet",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/Bot-Tom.csproj",
+            "projectPath": "${workspaceFolder}/Bot-Tom/Bot-Tom.csproj",
         }
       ]
 }

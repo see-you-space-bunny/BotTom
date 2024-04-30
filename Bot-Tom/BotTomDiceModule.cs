@@ -156,5 +156,33 @@ namespace BotTom
             cod_r.Roll();
             return context.CreateResponseAsync(cod_r.ToString());
         }
+
+        [SlashCommand("simple", "Roll basic dice.")]
+        internal Task SimpleDice(
+            InteractionContext context,
+            [Option("Roll", "A simple dice string to roll for a result.")] string roll,
+            [Option("Label", "An optional label to identify what the roll is for.")] string? label = null
+            )
+        {
+            var simpleRoll = DiceParser.BasicRoll(roll);
+            
+            if(label is not null)
+                label = "> " + label.Replace("\\n","> \n");
+            else
+                label ="";
+
+            return context.CreateResponseAsync($"{simpleRoll.Item1} = `{simpleRoll.Item2:00}`");
+        }
+
+        [SlashCommand("scvm", "Generate a Mörk Borg character.")]
+        internal Task SCVMGen(
+            InteractionContext context,
+            [Option("Class", "The class you want to roll up.")] string mbClass
+            )
+        {
+            var freshSCVM = new MakeSCVM(mbClass);
+
+            return context.CreateResponseAsync(freshSCVM.ToString());
+        }
     }    
 }

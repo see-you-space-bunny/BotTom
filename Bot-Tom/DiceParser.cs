@@ -171,7 +171,7 @@ namespace BotTom
 
                     if (keep_highest is not null || keep_lowest is not null || explode  is not null )
                     {
-                        if ((keep_highest is not null && keep_highest > 0) || (keep_lowest is not null && keep_lowest > 0))
+                        if (keep_highest is not null || keep_lowest is not null)
                         {
                             if (keep_highest is not null){
                                 int[] kh = MaxNOf((int) keep_highest, dice_rolls);
@@ -189,6 +189,11 @@ namespace BotTom
                             for (int k = 0; k < dice_rolls.Length; k++)
                                 dice_kept[k] = true;
                         }
+                    }
+                    else
+                    {
+                        for (int k = 0; k < dice_rolls.Length; k++)
+                            dice_kept[k] = true;
                     }
 
                     for (int j = 0; j < dice_rolls.Length; j++)
