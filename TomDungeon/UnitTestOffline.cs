@@ -2,16 +2,11 @@ using Xunit.Abstractions;
 
 namespace BotTom;
 
-public class UnitTestOffline
+public class UnitTestOffline(ITestOutputHelper output)
 {
-  private ITestOutputHelper _output;
+  private readonly ITestOutputHelper _output = output;
 
-  public UnitTestOffline(ITestOutputHelper output)
-  {
-      _output = output;
-  }
-
-  [Fact]
+    [Fact]
   public void TestBasicRoll_SingleDie()
   {
     var simpleRoll = DiceParser.BasicRoll("1d10");
@@ -37,5 +32,19 @@ public class UnitTestOffline
   {
     var simpleRoll = DiceParser.BasicRoll("2d12kh1");
     Assert.InRange(simpleRoll.Item2, 1, 12);
+  }
+
+  [Fact]
+  public void TestBasicRoll_ExplodeDice()
+  {
+    var simpleRoll = DiceParser.BasicRoll("8d4e");
+    Assert.Fail("Not Implemented");
+  }
+
+  [Fact]
+  public void TestBasicRoll_RecursiveExplodeDice()
+  {
+    var simpleRoll = DiceParser.BasicRoll("12d6x");
+    Assert.Fail("Not Implemented");
   }
 }
