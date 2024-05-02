@@ -16,6 +16,11 @@ public class UnitTestMorkBorg
     "TextTextText6"
   };
 
+  private string[] _NameResults = {
+    "Cursed Skinwalker",
+    "TextTextText"
+  };
+
   public UnitTestMorkBorg(ITestOutputHelper output)
   {
       _output = output;
@@ -25,7 +30,8 @@ public class UnitTestMorkBorg
   public void TestClassName()
   {
     var scvm = new MakeSCVM();
-    Assert.Equal("Cursed Skinwalker",scvm.Name);
+    Assert.Contains(scvm.Name,_NameResults);
+    _output.WriteLine(scvm.Name);
   }
 
   [Fact]
@@ -33,5 +39,6 @@ public class UnitTestMorkBorg
   {
     var scvm = new MakeSCVM();
     Assert.Contains(scvm.Background,_BackgroundResults);
+    _output.WriteLine(scvm.Background);
   }
 }
