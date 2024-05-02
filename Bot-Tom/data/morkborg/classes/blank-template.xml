@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root-element>
-    <name>TextTextText</name>
-    <credit url="https://morkborg.com/">TextTextText</credit>
+    <name>TextTextTextName</name>
+    <credit url="https://morkborg.com/">TextTextTextCredit</credit>
     <background roll="1d6">
         <result>TextTextText1</result>
         <result>TextTextText2</result>
@@ -15,19 +15,19 @@
     <equipment weapon="d6" armor="d2" silver="2d6*10"/>
     <special roll="1d6">
         <!-- things like skinwalker forms, armor, mutations, etc -->
-        <result>TextTextText</result>
-        <result>TextTextText</result>
-        <result>TextTextText</result>
-        <result>TextTextText</result>
-        <result>TextTextText</result>
-        <result>TextTextText</result>
+        <result>TextTextTextS1</result>
+        <result>TextTextTextS2</result>
+        <result>TextTextTextS3</result>
+        <result>TextTextTextS4</result>
+        <result>TextTextTextS5</result>
+        <result>TextTextTextS6</result>
     </special>
     <fluff>
         <!-- flavor text to display -->
-        <background>TextTextText</background>
-        <abilities>TextTextText</abilities>
-        <survival>TextTextText</survival>
-        <equipment>TextTextText</equipment>
-        <special>TextTextText</special>
+        <background>TextTextTextB</background>
+        <abilities>TextTextTextA</abilities>
+        <survival>TextTextTextL</survival>
+        <equipment>TextTextTextE</equipment>
+        <special>TextTextTextS</special>
     </fluff>
 </root-element>

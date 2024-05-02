@@ -180,7 +180,7 @@ namespace BotTom
             [Option("Class", "The class you want to roll up.")] string mbClass
             )
         {
-            var freshSCVM = new MakeSCVM(mbClass);
+            SCVM freshSCVM = new MakeSCVM().Random();
 
             return context.CreateResponseAsync(freshSCVM.ToString());
         }
