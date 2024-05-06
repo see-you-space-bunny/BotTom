@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 using System.Text;
-=======
->>>>>>> 0f5439c7388993abed3552eea7789a3a2aaa63a5
 
 namespace BotTom;
 

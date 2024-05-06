@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 using System.Text;
-=======
->>>>>>> 0f5439c7388993abed3552eea7789a3a2aaa63a5
 
 namespace BotTom;
 
@@ -21,11 +18,7 @@ class ForgedInTheDarkRoll(long dicePool, string? label)
       StringBuilder sb = new();
       if(Label is not null)
           sb.AppendLine($"> {Label.Replace("\\n","\n> ")}");
-<<<<<<< HEAD
-
-=======
           
->>>>>>> 0f5439c7388993abed3552eea7789a3a2aaa63a5
       return sb.ToString();
   }
 }
