@@ -157,7 +157,7 @@ namespace BotTom
             return context.CreateResponseAsync(cod_r.ToString());
         }
 
-        [SlashCommand("simple", "Roll basic dice.")]
+        [SlashCommand("simple", "Roll a simple dice string. Supports math!")]
         internal Task SimpleDice(
             InteractionContext context,
             [Option("Roll", "A simple dice string to roll for a result.")] string roll,
@@ -166,18 +166,18 @@ namespace BotTom
         {
             var simpleRoll = DiceParser.BasicRoll(roll);
             
-            if(label is not null)
-                label = "> " + label.Replace("\\n","> \n");
+            if(label is null)
+                label = string.Empty;
             else
-                label ="";
+                label = string.Concat("> ", label.Replace("\\n","\n> "), "\n");
 
-            return context.CreateResponseAsync($"{simpleRoll.Item1} = `{simpleRoll.Item2:00}`");
+            return context.CreateResponseAsync($"{label}{simpleRoll.Item1} = `{simpleRoll.Item2:00}`");
         }
 
         [SlashCommand("scvm", "Generate a Mörk Borg character.")]
         internal Task SCVMGen(
             InteractionContext context,
-            [Option("Class", "The class you want to roll up.")] string mbClass
+            [Option("Class", "The class you want to roll up.")] string? mbClass
             )
         {
             SCVM freshSCVM = new MakeSCVM().Random();
