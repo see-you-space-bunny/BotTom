@@ -1,10 +1,17 @@
 using Xunit.Abstractions;
 using Xunit.Sdk;
+using System.Text.RegularExpressions;
 
 namespace BotTom;
 
 public class UnitTestMorkBorg(ITestOutputHelper output)
 {
+  private const string ExpectedRegexPattern_1 = @"\#\ [\w]+";
+  private const string ExpectedRegexPattern_2 = @"\>\ \*By\ \[\w+\]\([\w\+\.\:\/]+\)\*";
+  private const string ExpectedRegexPattern_3 = @"\nBackground\:\ [\w\d]+";
+  private const string ExpectedRegexPattern_4 = @"Strength\ [\+\-0-6]{2}\,\ Agility\ [\+\-0-6]{2}\,\ Presence\ [\+\-0-6]{2}\,\ Toughness\ [\+\-0-6]{2}";
+  private const string ExpectedRegexPattern_5 = @"[0-9]{1}\ Omen[s]{0,1}\ \(d[0-9]{1}\)\,\ [0-9]+ Silver";
+  private const string ExpectedRegexPattern_6 = @"Weapon\ [0-9]+\,\ Armor\ [0-9]+[\n\w]*";
   private readonly ITestOutputHelper _output = output;
 
   private readonly string[] _BackgroundResults = [
@@ -96,5 +103,18 @@ public class UnitTestMorkBorg(ITestOutputHelper output)
     Assert.True(scvm.HasSpecial);
     _output.WriteLine("Special of {0}: {1}", scvm.Name, scvm.Special);
     Assert.Contains(scvm.Special,_SpecialResults);
+  }
+
+  [Fact]
+  public void TestStringOutput()
+  {
+    var scvmString = new MakeSCVM().Random().ToString();
+    _output.WriteLine(scvmString);
+    Assert.Matches(ExpectedRegexPattern_1, scvmString);
+    Assert.Matches(ExpectedRegexPattern_2, scvmString);
+    Assert.Matches(ExpectedRegexPattern_3, scvmString);
+    Assert.Matches(ExpectedRegexPattern_4, scvmString);
+    Assert.Matches(ExpectedRegexPattern_5, scvmString);
+    Assert.Matches(ExpectedRegexPattern_6, scvmString);
   }
 }

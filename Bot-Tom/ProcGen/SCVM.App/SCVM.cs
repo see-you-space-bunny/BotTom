@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace BotTom;
 
 public partial class SCVM
@@ -22,7 +24,15 @@ public partial class SCVM
 
   public override string ToString()
   {
-    // TODO
-    return base.ToString() ?? string.Empty;
+    StringBuilder sb = new();
+    sb.AppendLine($"# {Name}");
+    sb.AppendLine($"> *By [{CreditText}]({CreditUrl})*");
+    sb.AppendLine($"Background: {Background}");
+    sb.AppendLine($"Strength {(Abilities.Strength>=0?'+':string.Empty)}{Abilities.Strength}, Agility {(Abilities.Agility>=0?'+':string.Empty)}{Abilities.Agility}, Presence {(Abilities.Presence>=0?'+':string.Empty)}{Abilities.Presence}, Toughness {(Abilities.Toughness>=0?'+':string.Empty)}{Abilities.Toughness}");
+    sb.AppendLine($"{Omens.Roll} Omen{(Omens.Roll!=1?'s':string.Empty)} (d{Omens.Die}), {Equipment.Silver} Silver");
+    sb.AppendLine($"Weapon {Equipment.Weapon}, Armor {Equipment.Armor}");
+    if(HasSpecial)
+      sb.AppendLine($"{Special}");
+    return sb.ToString();
   }
 }
