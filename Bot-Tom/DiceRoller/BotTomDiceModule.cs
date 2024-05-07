@@ -24,7 +24,7 @@ namespace BotTom
         {
             StringBuilder sb = new("");
             sb.Append("Not yet implemented");
-
+            // TODO: Add help text.
             return context.CreateResponseAsync(sb.ToString());
         }
 
@@ -123,6 +123,7 @@ namespace BotTom
             var hwi_r = "Not yet implemented"; //new HardWiredIslandRoll(diceModifier, difficultyRating, boost, label);
             //hwi_r.Roll();
 
+            // TODO: Add HardWiredIslandDice module.
             return context.CreateResponseAsync(hwi_r.ToString());
         }
 
@@ -152,10 +153,14 @@ namespace BotTom
             [Option("label", "A label to identify what the roll is for. (default: none)")] string? label = null
             )
         {
-            var cod_r = new LegendFiveRingsRoll((int)ringDice, (int)skillDice, label);
-            cod_r.Roll();
-            return context.CreateResponseAsync(cod_r.ToString());
+            var l5r_r = new LegendFiveRingsRoll((int)ringDice, (int)skillDice, label);
+            l5r_r.Roll();
+
+            // TODO: Add custom emoji to LegendFiveRingsDice module.
+            return context.CreateResponseAsync(l5r_r.ToString());
         }
+
+        // TODO: Add ForgedInTheDarkDice module.
 
         [SlashCommand("simple", "Roll a simple dice string. Supports math!")]
         internal Task SimpleDice(
@@ -182,6 +187,7 @@ namespace BotTom
         {
             SCVM freshSCVM = new MakeSCVM().Random();
 
+            // TODO: SCVM.ToString() seems to not work properly.
             return context.CreateResponseAsync(freshSCVM.ToString());
         }
     }    
