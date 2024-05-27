@@ -70,77 +70,84 @@ namespace BotTom
 
             for (int i = 0; i < ringRolls.Length; i++)
             {
-                if(ringRolls[i] == 1)
-                    sbR.Append(":black_large_square:");
-                else if(ringRolls[i] == 2 || ringRolls[i] == 3)
+                /// <:Ring_Blank:1196584977157075024>
+                /// <:Ring_ExSt:1196584980311195728>
+                /// <:Ring_Op:1196584986212585552>
+                /// <:Ring_OpSt:1196584989324742797>
+                /// <:Ring_Su:1196584998535450755>
+                /// <:Ring_SuSt:1196585003451162684>
+                switch(ringRolls[i])
                 {
-                    oppurtunities += 1;
-                    sbR.Append(":milky_way:");
-                }
-                    else if(ringRolls[i] == 4 || ringRolls[i] == 5)
-                {
-                    successes += 1;
-                    sbR.Append(":sparkles:");
-                }
-                    else if(ringRolls[i] == 6)
-                {
-                    successes += 1;
-                    sbR.Append(":fireworks:");
-                }
+                    case 1:
+                        sbR.Append("<:Ring_Blank:1196584977157075024>");
+                        break;
+                    case 2:
+                        strife += 1;
+                        oppurtunities += 1;
+                        sbR.Append("<:Ring_OpSt:1196584989324742797>");
+                        break;
+                    case 3:
+                        oppurtunities += 1;
+                        sbR.Append("<:Ring_Op:1196584986212585552>");
+                        break;
+                    case 4:
+                        strife += 1;
+                        successes += 1;
+                        sbR.Append("<:Ring_SuSt:1196585003451162684>");
+                        break;
+                    case 5:
+                        successes += 1;
+                        sbR.Append("<:Ring_Su:1196584998535450755>");
+                        break;
+                    case 6:
+                        strife += 1;
+                        successes += 1;
+                        sbR.Append("<:Ring_ExSt:1196584980311195728>");
+                        break;
 
-                if(ringRolls[i] == 2 || ringRolls[i] == 4 || ringRolls[i] == 6)
-                {
-                    strife += 1;
-                    sbR.Append(":fire:");
                 }
-                else
-                    sbR.Append(":black_large_square:");
-                
-                sbR.Append(" ");
+                sbR.Append(' ');
             }
                 
 
             if(_skillDice > 0)
             {
+                /// <:Skill_Blank:1196585004680101959>
+                /// <:Skill_Ex:1196585008509505536>
+                /// <:Skill_ExSt:1196585018978488401>
+                /// <:Skill_Op:1196585024976322580>
+                /// <:Skill_Su:1196585026142359583>
+                /// <:Skill_SuOp:1196585028767973519>
+                /// <:Skill_SuSt:1196585031523635230>
                 skillRolls = DiceParser.RollDice((int)_skillDice, 12);
                 for (int i = 0; i < skillRolls.Length; i++)
                 {
-                    if(skillRolls[i] <= 2)
+                    switch(skillRolls[i])
                     {
-                        sbS.Append(":white_large_square:");
-                    }
-                    else if(skillRolls[i] >= 3 && skillRolls[i] <= 5)
-                    {
-                        oppurtunities += 1;
-                        sbS.Append(":milky_way:");
-                    }
-                    else if(skillRolls[i] >= 6 && skillRolls[i] <= 10)
-                    {
-                        successes += 1;
-                        sbS.Append(":sparkles:");
-                    }
-                    else if(skillRolls[i] >= 11)
-                    {
-                        successes += 1;
-                        sbS.Append(":fireworks:");
-                    }
-
-                    if(skillRolls[i] == 6 || skillRolls[i] == 7 || skillRolls[i] == 11)
-                    {
-                        strife += 1;
-                        sbS.Append(":fire:");
-                    }
-                    else if(skillRolls[i] == 10)
-                    {
-                        oppurtunities += 1;
-                        sbS.Append(":milky_way:");
-                    }
-                    else
-                    {
-                        sbS.Append(":white_large_square:");
+                        case int n when n <= 2:
+                            sbS.Append("<:Skill_Blank:1196585004680101959>");
+                            break;
+                        case int n when n >= 3 || n <= 5:
+                            sbS.Append("<:Skill_Op:1196585024976322580>");
+                            break;
+                        case int n when n == 6 || n == 7:
+                            sbS.Append("<:Skill_SuSt:1196585031523635230>");
+                            break;
+                        case int n when n == 8 || n == 9:
+                            sbS.Append("<:Skill_Su:1196585026142359583>");
+                            break;
+                        case 10:
+                            sbS.Append("<:Skill_SuOp:1196585028767973519>");
+                            break;
+                        case 11:
+                            sbS.Append("<:Skill_ExSt:1196585018978488401>");
+                            break;
+                        case 12:
+                            sbS.Append("<:Skill_Ex:1196585008509505536>");
+                            break;
                     }
                     
-                    sbS.Append(" ");
+                    sbS.Append(' ');
                 }
             }
             
@@ -165,8 +172,7 @@ namespace BotTom
             if(_skillDice > 0)
                 sb.Append($"\n\n### **Skill Dice**\n> {_result.Item2}");
 
-            sb.Append("\n\n:fireworks: Exploding Success  :sparkles: Success\n:milky_way: Opportunity  :fire: Strife");
-
+            //sb.Append("\n\n:fireworks: Exploding Success  :sparkles: Success\n:milky_way: Opportunity  :fire: Strife");
             return sb.ToString();
         }
     }

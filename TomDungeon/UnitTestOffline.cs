@@ -47,4 +47,13 @@ public class UnitTestOffline(ITestOutputHelper output)
     var simpleRoll = DiceParser.BasicRoll("12d6x");
     Assert.Fail("Not Implemented");
   }
+
+  [Fact]
+  public void TestLegentRoll_Basic()
+  {
+    var legendRoll = new LegendFiveRingsRoll(ringDice: 4, skillDice: 4, null);
+    legendRoll.Roll();
+    _output.WriteLine(legendRoll.ToString());
+    Assert.Fail("Show me the output!");
+  }
 }
