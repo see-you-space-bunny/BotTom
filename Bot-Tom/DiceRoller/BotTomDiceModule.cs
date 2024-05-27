@@ -31,7 +31,7 @@ namespace BotTom
         // ----------------------------------------------------------------------------------
         /// <summary>
         /// Task <c>DiceCommand</c>, that is called by the user with 
-        /// the slash-command "roll".
+        /// the slash-command "pf".
         /// </summary>
         /// <param name="context"><c>InteractionContext</c> ???</param>
         /// <param name="targetNumber">An <c>int</c> representing the Test/Check target 
@@ -185,10 +185,10 @@ namespace BotTom
             [Option("Class", "The class you want to roll up.")] string? mbClass
             )
         {
-            SCVM freshSCVM = new MakeSCVM().Random();
+            MakeSCVM freshSCVM = new();
 
             // TODO: SCVM.ToString() seems to not work properly.
-            return context.CreateResponseAsync(freshSCVM.ToString());
+            return context.CreateResponseAsync(freshSCVM.Random().ToString());
         }
-    }    
+    }
 }

@@ -108,7 +108,8 @@ public class UnitTestMorkBorg(ITestOutputHelper output)
   [Fact]
   public void TestStringOutput()
   {
-    var scvmString = new MakeSCVM().Random().ToString();
+    var scvm = new MakeSCVM();
+    string scvmString = scvm.Random().ToString();
     _output.WriteLine(scvmString);
     Assert.Matches(ExpectedRegexPattern_1, scvmString);
     Assert.Matches(ExpectedRegexPattern_2, scvmString);
@@ -116,5 +117,6 @@ public class UnitTestMorkBorg(ITestOutputHelper output)
     Assert.Matches(ExpectedRegexPattern_4, scvmString);
     Assert.Matches(ExpectedRegexPattern_5, scvmString);
     Assert.Matches(ExpectedRegexPattern_6, scvmString);
+    //Assert.Fail(scvmString);
   }
 }
