@@ -9,7 +9,7 @@ using Charsheet.MorkBorg.Text;
 [assembly:InternalsVisibleTo("TomDungeon")]
 namespace Charsheet.MorkBorg.Actors;
 
-internal partial class Scum : IXmlSerializable
+public partial class Scum : IXmlSerializable
 {
   #region (~) Constructor
   internal Scum()
