@@ -127,7 +127,7 @@ namespace BotTom
                         case int n when n <= 2:
                             sbS.Append("<:Skill_Blank:1196585004680101959>");
                             break;
-                        case int n when n >= 3 || n <= 5:
+                        case int n when n >= 3 && n <= 5:
                             sbS.Append("<:Skill_Op:1196585024976322580>");
                             break;
                         case int n when n == 6 || n == 7:
@@ -167,10 +167,10 @@ namespace BotTom
                 return "Not yet rolled";
 
 
-            sb.Append($"### **Ring Dice**\n> {_result.Item1}");
+            sb.Append($"### **Ring Dice**\n{_result.Item1}");
 
             if(_skillDice > 0)
-                sb.Append($"\n\n### **Skill Dice**\n> {_result.Item2}");
+                sb.Append($"\n### **Skill Dice**\n{_result.Item2}");
 
             //sb.Append("\n\n:fireworks: Exploding Success  :sparkles: Success\n:milky_way: Opportunity  :fire: Strife");
             return sb.ToString();

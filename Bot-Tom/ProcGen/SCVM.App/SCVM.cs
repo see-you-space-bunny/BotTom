@@ -32,7 +32,7 @@ public partial class SCVM
     sb.AppendLine($"{Omens.Roll} Omen{(Omens.Roll!=1?'s':string.Empty)} (d{Omens.Die}), {Equipment.Silver} Silver");
     sb.AppendLine($"Weapon {Equipment.Weapon}, Armor {Equipment.Armor}");
     if(HasSpecial)
-      sb.AppendLine($"{Special}");
+      sb.AppendLine($"{Special.Trim()}");
     return sb.ToString();
   }
 }
