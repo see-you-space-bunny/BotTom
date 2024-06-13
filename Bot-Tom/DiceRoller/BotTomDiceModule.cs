@@ -187,8 +187,9 @@ namespace BotTom
         {
             MakeSCVM freshSCVM = new();
 
+            var scvm = freshSCVM.Random();
             // TODO: SCVM.ToString() seems to not work properly.
-            return context.CreateResponseAsync(freshSCVM.Random().ToString());
+            return context.CreateResponseAsync(scvm.ToString());
         }
     }
 }
