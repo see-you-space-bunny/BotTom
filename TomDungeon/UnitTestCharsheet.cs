@@ -20,7 +20,7 @@ public class UnitTestCharsheet(ITestOutputHelper output)
   public void TestMorkBorgWriteScum()
   {
     string fileName = Path.Combine(Environment.CurrentDirectory,"MorkBorg","TestWriteScum.xml");
-    using (var writer = XmlWriter.Create(fileName,new XmlWriterSettings() { Indent = true }))
+    using(var writer = XmlWriter.Create(fileName,new XmlWriterSettings() { Indent = true }))
     {
       var scum = new Scum();
       (scum as IXmlSerializable).WriteXml(writer);
@@ -33,11 +33,20 @@ public class UnitTestCharsheet(ITestOutputHelper output)
     string fileName = Path.Combine(Environment.CurrentDirectory,"MorkBorg","TestReadScum.xml");
     if(File.Exists(fileName))
     {
-      using (var reader = XmlReader.Create(fileName))
+      using(var reader = XmlReader.Create(fileName))
       {
         var scum = new Scum();
         (scum as IXmlSerializable).ReadXml(reader);
         Assert.Equal("Named Scum",scum.Name);
+        Assert.Equal(0,scum.Version);
+        Assert.Equal(0,scum.AbilityScores[MorkBorg.Enum.AbilityScores.Agility].Value);
+        Assert.Equal(1,scum.AbilityScores[MorkBorg.Enum.AbilityScores.Strength].Value);
+        Assert.Equal(2,scum.AbilityScores[MorkBorg.Enum.AbilityScores.Toughness].Value);
+        Assert.Equal(3,scum.AbilityScores[MorkBorg.Enum.AbilityScores.Presence].Value);
+        Assert.Equal(4,scum.HitPoints.Maximum);
+        Assert.Equal(2,scum.HitPoints.Current);
+        Assert.Equal(2,scum.Omens.Maximum);
+        Assert.Equal(1,scum.Omens.Current);
       }
     }
   }

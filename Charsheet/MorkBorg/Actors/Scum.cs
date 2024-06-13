@@ -47,7 +47,9 @@ public partial class Scum : IXmlSerializable
 
   void IXmlSerializable.ReadXml(XmlReader reader)
   {
-    if(reader.MoveToContent() == XmlNodeType.Element && reader.LocalName.Equals("Scum", StringComparison.CurrentCultureIgnoreCase))
+    if(
+      reader.MoveToContent() == XmlNodeType.Element
+      && reader.LocalName.Equals("Scum", StringComparison.CurrentCultureIgnoreCase))
     {
       switch(Int32.Parse(reader.GetAttribute("Version") ?? "0"))
       {
@@ -65,51 +67,45 @@ public partial class Scum : IXmlSerializable
   }
   #endregion
 
-  #region ToString()
-  public override string ToString()
-  {
-    return base.ToString() ?? "Scum";
-  }
-  #endregion
-
   #region Serial v0
   private void DeserializerV0(XmlReader reader)
   {
     Name = reader.GetAttribute("Name") ?? System.MorkBorg.DefaultName;
 
-    if(reader.ReadToDescendant("AbilityScore"))
+    if(reader.ReadToDescendant("AbilityScores") && reader.ReadToDescendant("AbilityScore"))
     {
       int i = 0;
-      List<Enum.AbilityScores> scoresAlreadyLoaded = [];
-      while(
-        reader.MoveToContent() == XmlNodeType.Element && reader.LocalName == "AbilityScore"
-        && i < System.MorkBorg.MaxAbilityScores
-        && scoresAlreadyLoaded.Count < AbilityScores.Count
-        )
+      do
       {
         if(Enum.AbilityScores.TryParse<AbilityScores>(reader["Name"], true, out AbilityScores key))
-          AbilityScores[key] = new (key, Int32.Parse(reader["Value"] ?? "0"));
-        scoresAlreadyLoaded.Add(key);
+          if(AbilityScores.Keys.Contains(key))
+            AbilityScores[key] = new (key, Int32.Parse(reader["Value"] ?? "0"));
         ++i;
       }
+      while(
+        reader.ReadToNextSibling("AbilityScore")
+        && reader.MoveToContent() == XmlNodeType.Element
+        && i < System.MorkBorg.MaxAbilityScores
+        && i < AbilityScores.Count
+      );
     }
 
-    if(reader.ReadToNextSibling("HitPoints"))
+    reader.ReadToNextSibling("HitPoints");
+    if(
+      reader.MoveToContent() == XmlNodeType.Element
+      && reader.LocalName.Equals("HitPoints", StringComparison.CurrentCultureIgnoreCase))
     {
-      if(reader.MoveToContent() == XmlNodeType.Element && reader.LocalName == "AbilityScore")
-      {
-        _hitPoints.Maximum = Int32.Parse(reader["Maximum"] ?? $"{System.MorkBorg.DefaultHitPointsMaximum}");
-        _hitPoints.Current = Int32.Parse(reader["Current"] ?? $"{System.MorkBorg.DefaultHitPointsCurrent}");
-      }
+      _hitPoints.Maximum = Int32.Parse(reader["Maximum"] ?? $"{System.MorkBorg.DefaultHitPointsMaximum}");
+      _hitPoints.Current = Int32.Parse(reader["Current"] ?? $"{System.MorkBorg.DefaultHitPointsCurrent}");
     }
     
-    if(reader.ReadToNextSibling("Omens"))
+    reader.ReadToNextSibling("Omens");
+    if(
+      reader.MoveToContent() == XmlNodeType.Element
+      && reader.LocalName.Equals("Omens", StringComparison.CurrentCultureIgnoreCase))
     {
-      if(reader.MoveToContent() == XmlNodeType.Element && reader.LocalName == "AbilityScore")
-      {
-        _omens.Maximum = Int32.Parse((reader["Die"]    ?? $"d{System.MorkBorg.DefaultOmensMaximum}")[1..]);
-        _omens.Current = Int32.Parse(reader["Current"] ??  $"{System.MorkBorg.DefaultOmensCurrent}");
-      }
+      _omens.Maximum = Int32.Parse((reader["Die"]    ?? $"d{System.MorkBorg.DefaultOmensMaximum}")[1..]);
+      _omens.Current = Int32.Parse(reader["Current"] ??  $"{System.MorkBorg.DefaultOmensCurrent}");
     }
   }
 
@@ -119,6 +115,7 @@ public partial class Scum : IXmlSerializable
     writer.WriteAttributeString("Name",Name);
     writer.WriteAttributeString("Version",Version.ToString());
 
+    writer.WriteStartElement("AbilityScores");
     foreach(AbilityScore abilityScore in AbilityScores.Values)
     {
         writer.WriteStartElement("AbilityScore");
@@ -126,6 +123,7 @@ public partial class Scum : IXmlSerializable
         writer.WriteAttributeString("Value",abilityScore.Value.ToString());
         writer.WriteEndElement();
     }
+    writer.WriteEndElement();
 
     writer.WriteStartElement("HitPoints");
     writer.WriteAttributeString("Maximum",HitPoints.Maximum.ToString());
@@ -139,6 +137,13 @@ public partial class Scum : IXmlSerializable
 
 
     writer.WriteEndElement();
+  }
+  #endregion
+
+  #region ToString()
+  public override string ToString()
+  {
+    return base.ToString() ?? "Scum";
   }
   #endregion
 }
