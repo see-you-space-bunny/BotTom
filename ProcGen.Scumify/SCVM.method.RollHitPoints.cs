@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using BotTom.DiceRoller;
 
 namespace BotTom.ProcGen.Scumify;
 

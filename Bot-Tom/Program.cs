@@ -11,11 +11,10 @@ namespace BotTom
 {
 	internal class Program
 	{
-
 		static async Task Main(string[] args)
 		{
 			Envy.Envy.Load(Path.Combine(Environment.CurrentDirectory, ".env"));
-
+			
 			var discordClient = new DiscordClient(new DiscordConfiguration
 			{
 				Token = Environment.GetEnvironmentVariable("DISCORD_TOKEN"),

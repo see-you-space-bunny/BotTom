@@ -1,3 +1,5 @@
+using BotTom.DiceRoller;
+
 namespace BotTom.ProcGen.Scumify;
 
 public partial class SCVM

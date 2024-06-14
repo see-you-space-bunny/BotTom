@@ -1,4 +1,3 @@
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,12 +8,12 @@ using org.mariuszgromada.math.mxparser;
 using System.Runtime.InteropServices;
 using System.Linq.Expressions;
 
-namespace BotTom.DiceRoller.SystemModules
+namespace BotTom.DiceRoller.GameSystems
 {
     /// <summary>
     /// Rolling dice for the Star Trek Adventures game system.
     /// </summary>
-    internal class StarTrekRoll
+    public class StarTrekRoll
     {
 
         public enum DifficultyClassType

@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BotTom.DiceRoller.SystemModules;
+using BotTom.DiceRoller.GameSystems;
 using BotTom.ProcGen.Scumify;
 
 namespace BotTom.DiceRoller

@@ -30,6 +30,7 @@
     <ProjectReference Include="..\FileManip\FileManip.csproj" />
     <ProjectReference Include="..\Envy\Envy.csproj" />
     <ProjectReference Include="..\ProcGen.Scumify\ProcGen.Scumify.csproj" />
+    <ProjectReference Include="..\DiceRoller\DiceRoller.csproj" />
   </ItemGroup>
 
 </Project>

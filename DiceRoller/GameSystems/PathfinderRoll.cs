@@ -1,4 +1,4 @@
-using Newtonsoft.Json.Linq;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,12 +9,12 @@ using org.mariuszgromada.math.mxparser;
 using System.Runtime.InteropServices;
 using System.Linq.Expressions;
 
-namespace BotTom.DiceRoller.SystemModules
+namespace BotTom.DiceRoller.GameSystems
 {
     /// <summary>
     /// Rolling dice for the Pathfinder 2nd Edition game system.
     /// </summary>
-    internal class PathfinderRoll
+    public class PathfinderRoll
     {
 
         public enum DifficultyClassType

@@ -1,4 +1,4 @@
-using Newtonsoft.Json.Linq;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +14,7 @@ namespace BotTom.DiceRoller
     /// <summary>
     /// Dice String Parser utilizing mXparser library.
     /// </summary>
-    internal class DiceParser
+    public class DiceParser
     {
         #region static random stuff
 
