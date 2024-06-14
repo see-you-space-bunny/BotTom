@@ -1,4 +1,4 @@
-namespace Charsheet.MorkBorg.Enum;
+namespace Charsheet.MorkBorg;
 
 internal enum Resources
 {

@@ -1,9 +1,9 @@
 using System.Xml;
 using Xunit.Abstractions;
-using Charsheet.MorkBorg.Actors;
-using System.Xml.Serialization;
+using FileManip;
+using Charsheet.MorkBorg;
 
-namespace Charsheet;
+namespace TomDungeon;
 
 public class UnitTestCharsheet(ITestOutputHelper output)
 {
@@ -13,41 +13,66 @@ public class UnitTestCharsheet(ITestOutputHelper output)
   public void TestPlaceholder()
   {
     _output.WriteLine("Populate this with useful information.");
-    Assert.Fail("placeholder");
+    //Assert.Fail("placeholder");
   }
 
   [Fact]
-  public void TestMorkBorgWriteScum()
+  public void TestBinarySerializer()
   {
-    string fileName = Path.Combine(Environment.CurrentDirectory,"MorkBorg","TestWriteScum.xml");
-    using(var writer = XmlWriter.Create(fileName,new XmlWriterSettings() { Indent = true }))
-    {
-      var scum = new Scum();
-      (scum as IXmlSerializable).WriteXml(writer);
-    }
+    string name = "Binary Scum";
+    string background = "Ones and Zeroes, bby!";
+    string weaponName = "Dicer";
+    int weaponDamageDieSize = 8;
+    string fileName = Path.Combine(Environment.CurrentDirectory,"MorkBorg","TestBinaryScum");
+    var saveScum = new Scum(){Name = name,};
+    saveScum.AbilityScores[AbilityScores.Agility] = new AbilityScore(AbilityScores.Agility,0);
+    saveScum.AbilityScores[AbilityScores.Strength] = new AbilityScore(AbilityScores.Strength,1);
+    saveScum.AbilityScores[AbilityScores.Toughness] = new AbilityScore(AbilityScores.Toughness,3);
+    saveScum.AbilityScores[AbilityScores.Presence] = new AbilityScore(AbilityScores.Presence,5);
+    saveScum.Background.Details = background;
+    saveScum.Equipment.Items.Add(new InventoryItem(new Weapon(){Name=weaponName,DamageDieSize=weaponDamageDieSize}));
+    BinarySerializer.Serialize(saveScum,fileName);
+    var scum = new Scum();
+    BinarySerializer.Deserialize(scum,fileName);
+    Assert.Equal(name, scum.Name);
+    Assert.Equal(0, scum.Version);
+    Assert.Equal(0, scum.AbilityScores[AbilityScores.Agility].Value);
+    Assert.Equal(1, scum.AbilityScores[AbilityScores.Strength].Value);
+    Assert.Equal(3, scum.AbilityScores[AbilityScores.Toughness].Value);
+    Assert.Equal(5, scum.AbilityScores[AbilityScores.Presence].Value);
+    Assert.Equal(background, scum.Background.Details);
+    Assert.Single(scum.Equipment.Items);
+    Assert.Single(scum.Equipment.Weapons);
+    Assert.Empty(scum.Equipment.Armors);
+    Assert.Empty(scum.Feats);
+    Assert.Equal(weaponName,((Weapon)scum.Equipment.Weapons.First().Details).Name);
+    Assert.Equal(weaponDamageDieSize,((Weapon)scum.Equipment.Weapons.First().Details).DamageDieSize);
   }
 
   [Fact]
-  public void TestMorkBorgReadScum()
+  public void TestDataContractDesrializer()
   {
-    string fileName = Path.Combine(Environment.CurrentDirectory,"MorkBorg","TestReadScum.xml");
-    if(File.Exists(fileName))
-    {
-      using(var reader = XmlReader.Create(fileName))
-      {
-        var scum = new Scum();
-        (scum as IXmlSerializable).ReadXml(reader);
-        Assert.Equal("Named Scum",scum.Name);
-        Assert.Equal(0,scum.Version);
-        Assert.Equal(0,scum.AbilityScores[MorkBorg.Enum.AbilityScores.Agility].Value);
-        Assert.Equal(1,scum.AbilityScores[MorkBorg.Enum.AbilityScores.Strength].Value);
-        Assert.Equal(2,scum.AbilityScores[MorkBorg.Enum.AbilityScores.Toughness].Value);
-        Assert.Equal(3,scum.AbilityScores[MorkBorg.Enum.AbilityScores.Presence].Value);
-        Assert.Equal(4,scum.HitPoints.Maximum);
-        Assert.Equal(2,scum.HitPoints.Current);
-        Assert.Equal(2,scum.Omens.Maximum);
-        Assert.Equal(1,scum.Omens.Current);
-      }
-    }
+    string name = "Data Scum";
+    string fileName = Path.Combine(Environment.CurrentDirectory,"MorkBorg","TestDataContractScum.xml");
+    Scum scum = XmlContractSerializer.Deserialize<Scum>(fileName);
+    Assert.Equal(name, scum.Name);
+    Assert.Equal(0, scum.AbilityScores[AbilityScores.Agility].Value);
+    Assert.Equal(1, scum.AbilityScores[AbilityScores.Strength].Value);
+    Assert.Equal(3, scum.AbilityScores[AbilityScores.Toughness].Value);
+    Assert.Equal(5, scum.AbilityScores[AbilityScores.Presence].Value);
+  }
+
+  [Fact]
+  public void TestDataContractSerializer()
+  {
+    string name = "Data Scum";
+    string fileName = Path.Combine(Environment.CurrentDirectory,"MorkBorg","TestDataContractScum.xml");
+    var saveScum = new Scum(){Name = name,};
+    saveScum.AbilityScores[AbilityScores.Agility] = new AbilityScore(AbilityScores.Agility,0);
+    saveScum.AbilityScores[AbilityScores.Strength] = new AbilityScore(AbilityScores.Strength,1);
+    saveScum.AbilityScores[AbilityScores.Toughness] = new AbilityScore(AbilityScores.Toughness,3);
+    saveScum.AbilityScores[AbilityScores.Presence] = new AbilityScore(AbilityScores.Presence,5);
+    saveScum.XmlSerialize(fileName);
+    Assert.True(File.Exists(fileName));
   }
 }

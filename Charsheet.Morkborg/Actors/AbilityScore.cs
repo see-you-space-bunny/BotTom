@@ -1,21 +1,24 @@
+using System.Runtime.Serialization;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using Charsheet.MorkBorg.Enum;
+using Microsoft.VisualBasic;
+using FileManip;
 
-namespace Charsheet.MorkBorg.Actors;
+namespace Charsheet.MorkBorg;
 
-internal readonly struct AbilityScore(AbilityScores abilityScore, int value)
+[DataContract(Namespace = "")]
+internal struct AbilityScore(AbilityScores abilityScore, int value) : IBinarySerializable
 {
-  #region F[-]
-  private readonly AbilityScores _info = abilityScore;
-  private readonly int _value = value;
-  #endregion
 
   #region P[~]
-  internal readonly AbilityScores EnumReference => _info;
-  internal readonly string Name => _info.ToString();
-  internal readonly int Value => _value;
+  [DataMember]
+  internal AbilityScores EnumReference { get; set; } = abilityScore;
+
+  internal readonly string Name => EnumReference.ToString();
+
+  [DataMember]
+  internal int Value { get; set; } = value;
   #endregion
 
   #region Operator ++
@@ -56,10 +59,17 @@ internal readonly struct AbilityScore(AbilityScores abilityScore, int value)
     new (abilityScore.EnumReference,value/abilityScore.Value);
   #endregion
 
-  #region Override
-  public override string ToString()
+  #region IBinarySerializable
+  void IBinarySerializable.Deserialize(BinaryReader reader)
   {
-      return $"{Name} {(_value<0?string.Empty:'+')}{_value}";
+    EnumReference = (AbilityScores)reader.ReadInt16();
+    Value = (int)reader.ReadByte()-32;
+  }
+
+  void IBinarySerializable.Serialize(BinaryWriter writer)
+  {
+    writer.Write((Int16)EnumReference);
+    writer.Write((byte)(Value+32));
   }
   #endregion
 }
