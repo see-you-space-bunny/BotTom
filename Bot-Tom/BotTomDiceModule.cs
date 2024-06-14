@@ -9,9 +9,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BotTom.DiceRoller.GameSystems;
+using BotTom.DiceRoller;
 using BotTom.ProcGen.Scumify;
 
-namespace BotTom.DiceRoller
+namespace BotTom
 {
 	/// <summary>
 	/// Class <c>EclipsePhaseDiceModule</c> 

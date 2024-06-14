@@ -1,7 +1,7 @@
 using FileManip;
 using BotTom.SessionManager;
 
-namespace BotTom;
+namespace BotTom.SessionManager;
 
 internal static class DefaultValues
 {
