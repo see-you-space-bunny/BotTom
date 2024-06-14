@@ -32,7 +32,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Bot-Tom\Bot-Tom.csproj" />
-    <ProjectReference Include="..\Charsheet\Charsheet.csproj" />
+    <ProjectReference Include="..\Charsheet.Morkborg\Charsheet.Morkborg.csproj" />
+    <ProjectReference Include="..\FileManip\FileManip.csproj" />
   </ItemGroup>
 
 </Project>

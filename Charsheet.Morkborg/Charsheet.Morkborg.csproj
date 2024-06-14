@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -9,5 +8,9 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="TomDungeon" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FileManip\FileManip.csproj" />
   </ItemGroup>
 </Project>
