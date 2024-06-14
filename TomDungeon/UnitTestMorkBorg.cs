@@ -1,6 +1,7 @@
 using Xunit.Abstractions;
 using Xunit.Sdk;
 using System.Text.RegularExpressions;
+using BotTom.ProcGen.Scumify;
 
 namespace BotTom;
 

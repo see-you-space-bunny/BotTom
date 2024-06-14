@@ -10,7 +10,6 @@
 
   <ItemGroup>
     <None Include="data/**" CopyToOutputDirectory="PreserveNewest" />
-    <None Include=".env" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

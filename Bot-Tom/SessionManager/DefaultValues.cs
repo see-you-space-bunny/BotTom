@@ -1,10 +1,12 @@
-using FileManip;
-using BotTom.SessionManager;
-
 namespace BotTom.SessionManager;
 
-internal static class DefaultValues
+public static class DefaultValues
 {
+  static DefaultValues()
+  {
+    SessionLibrary = new BotTom.SessionManager.SessionLibrary();
+  }
+  
   internal const string SessionData = "sessiondata";
-  internal static SessionLibrary SessionLibrary = new SessionLibrary();
+  internal static BotTom.SessionManager.SessionLibrary SessionLibrary;
 }

@@ -31,7 +31,11 @@ internal partial class SessionLibrary : IBinarySerializable
   {
     if(TryValidateSerialType(serializeable.GetType(), out var serialType))
     {
-      string filePath = Path.Combine(Environment.CurrentDirectory,DefaultValues.SessionData,userID.ToString(),guid);
+      string userDirectoryPath = Path.Combine(Environment.CurrentDirectory,DefaultValues.SessionData,userID.ToString());
+      if(!Directory.Exists(userDirectoryPath))
+        Directory.CreateDirectory(userDirectoryPath);
+
+      string filePath = Path.Combine(userDirectoryPath,guid);
       UserInfo userInfo = new UserInfo(){UserID=userID};
       
       if(!UserInfo.Keys.Contains(userID))
@@ -50,7 +54,7 @@ internal partial class SessionLibrary : IBinarySerializable
       if(UserInfo[userID].ModuleInfo[serialType].SaveSlotsCurrent > UserInfo[userID].ModuleInfo[serialType].SaveSlotsMaximum)
       {
         UserInfo[userID].ModuleInfo[serialType].SaveSlotsCurrent = UserInfo[userID].ModuleInfo[serialType].SaveSlotsMaximum;
-        throw new Exception($"User is at maximum allowable save slots {UserInfo[userID].ModuleInfo[serialType].SaveSlotsCurrent}/{UserInfo[userID].ModuleInfo[serialType].SaveSlotsMaximum}.\n> Data has been __discarded__!");
+        throw new ArgumentOutOfRangeException($"User is at maximum allowable save slots {UserInfo[userID].ModuleInfo[serialType].SaveSlotsCurrent}/{UserInfo[userID].ModuleInfo[serialType].SaveSlotsMaximum}.\n> Data has been __discarded__!");
       }
 
       BinarySerializer.Serialize(serializeable,filePath);

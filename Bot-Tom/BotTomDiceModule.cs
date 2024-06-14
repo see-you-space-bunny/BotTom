@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using BotTom.DiceRoller.GameSystems;
 using BotTom.DiceRoller;
 using BotTom.ProcGen.Scumify;
+using System.Formats.Asn1;
 using BotTom.SessionManager;
 
 namespace BotTom
@@ -203,11 +204,19 @@ namespace BotTom
 
 			try
 			{
-			DefaultValues.SessionLibrary.RegisterAndSave(scum,context.Interaction.User.Id,guid,scum.Name);
+				DefaultValues.SessionLibrary.RegisterAndSave(scum,context.Interaction.User.Id,guid,scum.Name);
+			}
+			catch (ArgumentOutOfRangeException e)
+			{
+				messageBody += $"\n\n> {e.Message}";
+				Console.WriteLine(e.Message);
+				Console.WriteLine(e.StackTrace);
 			}
 			catch (Exception e)
 			{
 				messageBody += $"\n\n> {e.Message}";
+				Console.WriteLine(e.Message);
+				Console.WriteLine(e.StackTrace);
 			}
 
 			// TODO: SCVM.ToString() seems to not work properly.
