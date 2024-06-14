@@ -6,6 +6,7 @@ namespace Charsheet.MorkBorg;
 [DataContract(Namespace = "")]
 internal class TextContainer : IBinarySerializable
 {
+  [DataMember]
   internal string Details = string.Empty;
 
   #region IBinarySerializable

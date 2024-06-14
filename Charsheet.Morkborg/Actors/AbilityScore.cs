@@ -8,17 +8,17 @@ using FileManip;
 namespace Charsheet.MorkBorg;
 
 [DataContract(Namespace = "")]
-internal struct AbilityScore(AbilityScores abilityScore, int value) : IBinarySerializable
+public struct AbilityScore(AbilityScores abilityScore, int value) : IBinarySerializable
 {
 
   #region P[~]
   [DataMember]
   internal AbilityScores EnumReference { get; set; } = abilityScore;
 
-  internal readonly string Name => EnumReference.ToString();
+  public readonly string Name => EnumReference.ToString();
 
   [DataMember]
-  internal int Value { get; set; } = value;
+  public int Value { get; set; } = value;
   #endregion
 
   #region Operator ++

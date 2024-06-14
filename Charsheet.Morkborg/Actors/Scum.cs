@@ -15,10 +15,50 @@ public partial class Scum : IBinarySerializable
   #region (~) Constructor
   internal Scum()
   {
-    AbilityScores.Add(MorkBorg.AbilityScores.Agility,  new AbilityScore(MorkBorg.AbilityScores.Agility,DefaultValues.AbilityScore));
-    AbilityScores.Add(MorkBorg.AbilityScores.Strength, new AbilityScore(MorkBorg.AbilityScores.Strength,DefaultValues.AbilityScore));
+    AbilityScores.Add(MorkBorg.AbilityScores.Agility,  new AbilityScore(MorkBorg.AbilityScores.Agility,  DefaultValues.AbilityScore));
+    AbilityScores.Add(MorkBorg.AbilityScores.Strength, new AbilityScore(MorkBorg.AbilityScores.Strength, DefaultValues.AbilityScore));
     AbilityScores.Add(MorkBorg.AbilityScores.Toughness,new AbilityScore(MorkBorg.AbilityScores.Toughness,DefaultValues.AbilityScore));
-    AbilityScores.Add(MorkBorg.AbilityScores.Presence, new AbilityScore(MorkBorg.AbilityScores.Presence,DefaultValues.AbilityScore));
+    AbilityScores.Add(MorkBorg.AbilityScores.Presence, new AbilityScore(MorkBorg.AbilityScores.Presence, DefaultValues.AbilityScore));
+  }
+  public Scum(
+    string? name = null,
+    string? background = null,
+    AbilityScore[]? abilityScores = null,
+    int? hitPoints = null,
+    int? omens = null
+  ) : base() 
+  {
+    Name = name ?? Name;
+    Background.Details = background ?? Background.Details;
+    if(abilityScores is not null)
+      foreach(AbilityScore abilityScore in abilityScores)
+        AbilityScores[abilityScore.EnumReference] = abilityScore;
+    HitPoints.Maximum = hitPoints ?? HitPoints.Maximum;
+    HitPoints.Current = hitPoints ?? HitPoints.Current;
+    Omens.Maximum = omens ?? Omens.Maximum;
+    Omens.Current = omens ?? Omens.Current;
+  }
+  public Scum(
+    string? name = null,
+    string? background = null,
+    int[]? abilityScores = null,
+    int? hitPoints = null,
+    int? omens = null
+  ) : base() 
+  {
+    Name = name ?? Name;
+    Background.Details = background ?? Background.Details;
+    if(abilityScores is not null && abilityScores.Length == 4)
+    {
+      AbilityScores[MorkBorg.AbilityScores.Agility  ] = new AbilityScore(MorkBorg.AbilityScores.Agility  ,abilityScores[0]);
+      AbilityScores[MorkBorg.AbilityScores.Strength ] = new AbilityScore(MorkBorg.AbilityScores.Strength ,abilityScores[1]);
+      AbilityScores[MorkBorg.AbilityScores.Toughness] = new AbilityScore(MorkBorg.AbilityScores.Toughness,abilityScores[2]);
+      AbilityScores[MorkBorg.AbilityScores.Presence ] = new AbilityScore(MorkBorg.AbilityScores.Presence ,abilityScores[3]);
+    }
+    HitPoints.Maximum = hitPoints ?? HitPoints.Maximum;
+    HitPoints.Current = hitPoints ?? HitPoints.Current;
+    Omens.Maximum = omens ?? Omens.Maximum;
+    Omens.Current = omens ?? Omens.Current;
   }
   #endregion
 

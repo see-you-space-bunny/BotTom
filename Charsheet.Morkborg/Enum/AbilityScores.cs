@@ -1,6 +1,6 @@
 namespace Charsheet.MorkBorg;
 
-internal enum AbilityScores
+public enum AbilityScores
 {
   Agility,
   Presence,
