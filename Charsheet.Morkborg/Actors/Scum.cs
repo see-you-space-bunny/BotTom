@@ -83,7 +83,7 @@ public partial class Scum : IBinarySerializable
   internal Resource HitPoints { get; private set; } = new (Resources.HitPoints,DefaultValues.HitPointsMaximum,DefaultValues.HitPointsCurrent);
 
   [DataMember]
-  internal string Name { get; set; } = DefaultValues.ScumName;
+  public string Name { get; set; } = DefaultValues.ScumName;
 
   [DataMember]
   internal Resource Omens { get; private set; } = new (Resources.Omens,DefaultValues.OmensMaximum,DefaultValues.OmensCurrent);

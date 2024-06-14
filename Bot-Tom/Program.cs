@@ -2,6 +2,7 @@
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using DSharpPlus.SlashCommands;
+using FileManip;
 using Microsoft.VisualBasic;
 using org.mariuszgromada.math.mxparser;
 
