@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace BotTom;
+namespace BotTom.DiceRoller.SystemModules;
 
 /// <summary>
 /// Rolling dice for Forged In The Dark game systems.

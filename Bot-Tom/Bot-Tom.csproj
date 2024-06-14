@@ -28,6 +28,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Charsheet.Morkborg\Charsheet.Morkborg.csproj" />
     <ProjectReference Include="..\FileManip\FileManip.csproj" />
+    <ProjectReference Include="..\Envy\Envy.csproj" />
+    <ProjectReference Include="..\ProcGen.Scumify\ProcGen.Scumify.csproj" />
   </ItemGroup>
 
 </Project>

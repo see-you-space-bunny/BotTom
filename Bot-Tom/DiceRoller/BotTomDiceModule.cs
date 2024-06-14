@@ -8,8 +8,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BotTom.DiceRoller.SystemModules;
+using BotTom.ProcGen.Scumify;
 
-namespace BotTom
+namespace BotTom.DiceRoller
 {
 	/// <summary>
 	/// Class <c>EclipsePhaseDiceModule</c> 

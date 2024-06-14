@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileManip", "FileManip\File
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Charsheet.Morkborg", "Charsheet.Morkborg\Charsheet.Morkborg.csproj", "{9C069CC3-B110-49DA-8029-851637CA9172}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Envy", "Envy\Envy.csproj", "{3042177B-833D-4B49-908C-925ACEF25629}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProcGen.Scumify", "ProcGen.Scumify\ProcGen.Scumify.csproj", "{8B84428F-6EAD-4ABA-833D-9E8C748E5CEC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +41,14 @@ Global
 		{9C069CC3-B110-49DA-8029-851637CA9172}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9C069CC3-B110-49DA-8029-851637CA9172}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9C069CC3-B110-49DA-8029-851637CA9172}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3042177B-833D-4B49-908C-925ACEF25629}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3042177B-833D-4B49-908C-925ACEF25629}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3042177B-833D-4B49-908C-925ACEF25629}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3042177B-833D-4B49-908C-925ACEF25629}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B84428F-6EAD-4ABA-833D-9E8C748E5CEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B84428F-6EAD-4ABA-833D-9E8C748E5CEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B84428F-6EAD-4ABA-833D-9E8C748E5CEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B84428F-6EAD-4ABA-833D-9E8C748E5CEC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

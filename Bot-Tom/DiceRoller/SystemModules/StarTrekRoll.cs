@@ -9,7 +9,7 @@ using org.mariuszgromada.math.mxparser;
 using System.Runtime.InteropServices;
 using System.Linq.Expressions;
 
-namespace BotTom
+namespace BotTom.DiceRoller.SystemModules
 {
     /// <summary>
     /// Rolling dice for the Star Trek Adventures game system.

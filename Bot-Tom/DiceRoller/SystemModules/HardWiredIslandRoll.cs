@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace BotTom;
+namespace BotTom.DiceRoller.SystemModules;
 
 /// <summary>
 /// Rolling dice for the Hard Wired Island game system.

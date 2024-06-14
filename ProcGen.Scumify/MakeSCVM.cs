@@ -10,8 +10,9 @@ using System.Runtime.InteropServices;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Xml;
+using BotTom.DiceRoller;
 
-namespace BotTom
+namespace BotTom.ProcGen.Scumify
 {
   public class MakeSCVM
   {

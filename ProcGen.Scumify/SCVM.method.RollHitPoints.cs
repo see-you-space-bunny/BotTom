@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 
-namespace BotTom;
+namespace BotTom.ProcGen.Scumify;
 
 public partial class SCVM
 {

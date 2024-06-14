@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace BotTom;
+namespace BotTom.ProcGen.Scumify;
 
 public partial class SCVM
 {
