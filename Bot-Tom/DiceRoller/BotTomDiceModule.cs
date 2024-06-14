@@ -1,3 +1,4 @@
+using Charsheet.MorkBorg;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
@@ -186,6 +187,14 @@ namespace BotTom
             )
         {
             MakeSCVM freshSCVM = new();
+            
+            Scum scum = new (name:null,background:$"Created by: {context.User.Username}",abilityScores:new int[]{0,0,0,0},hitPoints:6,omens:2);
+            var guid = System.Guid.NewGuid().ToString();
+
+            if(!Directory.Exists(Path.Combine(Environment.CurrentDirectory,DefaultValues.SessionData,context.Interaction.User.Id.ToString())))
+                Directory.CreateDirectory(Path.Combine(Environment.CurrentDirectory,DefaultValues.SessionData,context.Interaction.User.Id.ToString()));
+            if(!File.Exists(Path.Combine(Environment.CurrentDirectory,DefaultValues.SessionData,context.Interaction.User.Id.ToString(),guid)))
+                FileManip.BinarySerializer.Serialize(scum,Path.Combine(Environment.CurrentDirectory,DefaultValues.SessionData,context.Interaction.User.Id.ToString(),guid));
 
             var scvm = freshSCVM.Random();
             // TODO: SCVM.ToString() seems to not work properly.
