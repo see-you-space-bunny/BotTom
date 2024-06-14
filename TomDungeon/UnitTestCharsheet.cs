@@ -23,7 +23,7 @@ public class UnitTestCharsheet(ITestOutputHelper output)
     string background = "Ones and Zeroes, bby!";
     string weaponName = "Dicer";
     int weaponDamageDieSize = 8;
-    string fileName = Path.Combine(Environment.CurrentDirectory,"MorkBorg","TestBinaryScum");
+    string fileName = Path.Combine(Environment.CurrentDirectory,"TestData","TestBinaryScum");
     var saveScum = new Scum(){Name = name,};
     saveScum.AbilityScores[AbilityScores.Agility] = new AbilityScore(AbilityScores.Agility,0);
     saveScum.AbilityScores[AbilityScores.Strength] = new AbilityScore(AbilityScores.Strength,1);
@@ -53,7 +53,7 @@ public class UnitTestCharsheet(ITestOutputHelper output)
   public void TestDataContractDesrializer()
   {
     string name = "Data Scum";
-    string fileName = Path.Combine(Environment.CurrentDirectory,"MorkBorg","TestDataContractScum.xml");
+    string fileName = Path.Combine(Environment.CurrentDirectory,"TestData","TestDataContractScum.xml");
     Scum scum = XmlContractSerializer.Deserialize<Scum>(fileName);
     Assert.Equal(name, scum.Name);
     Assert.Equal(0, scum.AbilityScores[AbilityScores.Agility].Value);
@@ -66,7 +66,7 @@ public class UnitTestCharsheet(ITestOutputHelper output)
   public void TestDataContractSerializer()
   {
     string name = "Data Scum";
-    string fileName = Path.Combine(Environment.CurrentDirectory,"MorkBorg","TestDataContractScum.xml");
+    string fileName = Path.Combine(Environment.CurrentDirectory,"TestData","TestDataContractScum.xml");
     var saveScum = new Scum(){Name = name,};
     saveScum.AbilityScores[AbilityScores.Agility] = new AbilityScore(AbilityScores.Agility,0);
     saveScum.AbilityScores[AbilityScores.Strength] = new AbilityScore(AbilityScores.Strength,1);

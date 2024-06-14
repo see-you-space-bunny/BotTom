@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Scum xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<AbilityScores xmlns:d2p1="http://schemas.microsoft.com/2003/10/Serialization/Arrays">
+		<d2p1:KeyValueOfAbilityScoresAbilityScoreL0AP0apD>
+			<d2p1:Key>Agility</d2p1:Key>
+			<d2p1:Value>
+				<EnumReference>Agility</EnumReference>
+				<Value>0</Value>
+			</d2p1:Value>
+		</d2p1:KeyValueOfAbilityScoresAbilityScoreL0AP0apD>
+		<d2p1:KeyValueOfAbilityScoresAbilityScoreL0AP0apD>
+			<d2p1:Key>Strength</d2p1:Key>
+			<d2p1:Value>
+				<EnumReference>Strength</EnumReference>
+				<Value>1</Value>
+			</d2p1:Value>
+		</d2p1:KeyValueOfAbilityScoresAbilityScoreL0AP0apD>
+		<d2p1:KeyValueOfAbilityScoresAbilityScoreL0AP0apD>
+			<d2p1:Key>Toughness</d2p1:Key>
+			<d2p1:Value>
+				<EnumReference>Toughness</EnumReference>
+				<Value>3</Value>
+			</d2p1:Value>
+		</d2p1:KeyValueOfAbilityScoresAbilityScoreL0AP0apD>
+		<d2p1:KeyValueOfAbilityScoresAbilityScoreL0AP0apD>
+			<d2p1:Key>Presence</d2p1:Key>
+			<d2p1:Value>
+				<EnumReference>Presence</EnumReference>
+				<Value>5</Value>
+			</d2p1:Value>
+		</d2p1:KeyValueOfAbilityScoresAbilityScoreL0AP0apD>
+	</AbilityScores>
+	<Background />
+	<Credit />
+	<Equipment>
+		<Items />
+		<Silver>0</Silver>
+	</Equipment>
+	<Feats />
+	<HitPoints>
+		<Current>1</Current>
+		<Maximum>1</Maximum>
+		<Type>HitPoints</Type>
+	</HitPoints>
+	<Name>Data Scum</Name>
+	<Omens>
+		<Current>0</Current>
+		<Maximum>2</Maximum>
+		<Type>Omens</Type>
+	</Omens>
+	<Version>0</Version>
+</Scum>
