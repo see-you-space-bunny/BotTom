@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using BotTom.DiceRoller.GameSystems;
 using BotTom.DiceRoller;
 using BotTom.ProcGen.Scumify;
+using BotTom.SessionManager;
 
 namespace BotTom
 {
