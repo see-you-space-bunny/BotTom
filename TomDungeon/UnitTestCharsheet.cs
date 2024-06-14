@@ -13,7 +13,14 @@ public class UnitTestCharsheet(ITestOutputHelper output)
   public void TestPlaceholder()
   {
     _output.WriteLine("Populate this with useful information.");
-    //Assert.Fail("placeholder");
+    //Assert.Fail("placeholder");Bot-Tom/sessiondata/83295235429371904/3bebd3f8-97dc-4f28-92b3-101ddba39442
+  }
+
+  [Fact]
+  public void TestConversions()
+  {
+    string fileName = Path.Combine(Environment.CurrentDirectory,"TestData","3bebd3f8-97dc-4f28-92b3-101ddba39442");
+    XmlContractSerializer.ConvertBinaryToXml(new Scum(),fileName,$"{fileName}.xml");
   }
 
   [Fact]

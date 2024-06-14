@@ -9,6 +9,14 @@ namespace FileManip;
 
 public static class BinarySerializer
 {
+  #region Binary Conversion
+  public static void ConvertBinaryToXml<T>(string fileNameXml,string fileNameBinary)
+  {
+    var serializable = (IBinarySerializable)(XmlContractSerializer.Deserialize<T>(fileNameBinary) ?? throw new NullReferenceException($"Could not deserialize {fileNameXml}"));
+    Serialize(serializable,fileNameXml);
+  }
+  #endregion
+
   #region Binary Serialization
   public static void Deserialize<T>(T serializable,string fileName)
   {
