@@ -6,7 +6,7 @@ namespace FileManip;
 public static class XmlContractSerializer
 {
   #region Xml Conversion
-  public static void ConvertBinaryToXml<T>(T serializable, string fileNameBinary,string fileNameXml)
+  public static void ConvertBinaryToXml<T>(T serializable, string fileNameBinary,string fileNameXml) where T : IBinarySerializable
   {
     BinarySerializer.Deserialize<T>(serializable, fileNameBinary);
     serializable.XmlSerialize<T>(fileNameXml);

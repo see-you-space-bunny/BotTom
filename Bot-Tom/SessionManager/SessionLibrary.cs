@@ -41,20 +41,25 @@ internal partial class SessionLibrary : IBinarySerializable
       if(!UserInfo.Keys.Contains(userID))
         UserInfo[userID] = userInfo;
         
-      if(UserInfo[userID].ModuleInfo.Keys.Contains(serialType))
-        UserInfo[userID].ModuleInfo[serialType].SaveSlotsCurrent++;
+      if(userInfo.ModuleInfo.Keys.Contains(serialType))
+        userInfo.ModuleInfo[serialType].SaveSlotsCurrent++;
       else
-        UserInfo[userID].ModuleInfo.Add(serialType,new ModuleInfo(UserInfo[userID]){ModuleType=serialType,SaveSlotsCurrent=1});
+        userInfo.ModuleInfo.Add(serialType,new ModuleInfo(userInfo){ModuleType=serialType,SaveSlotsCurrent=1});
 
-      if(UserInfo[userID].Index.Keys.Contains(guid))
-        UserInfo[userID].Index[guid] = (serialType,searchableName,serializeable);
+      ModuleInfo moduleInfo = userInfo.ModuleInfo[serialType];
+
+      if(moduleInfo.SaveSlotsCurrent == 1) 
+        moduleInfo.ActiveSaveFile = guid;
+
+      if(userInfo.Index.Keys.Contains(guid))
+        userInfo.Index[guid] = (serialType,searchableName,serializeable);
       else
-        UserInfo[userID].Index.Add(guid,(serialType,searchableName,serializeable));
+        userInfo.Index.Add(guid,(serialType,searchableName,serializeable));
 
-      if(UserInfo[userID].ModuleInfo[serialType].SaveSlotsCurrent > UserInfo[userID].ModuleInfo[serialType].SaveSlotsMaximum)
+      if(moduleInfo.SaveSlotsCurrent > moduleInfo.SaveSlotsMaximum)
       {
-        UserInfo[userID].ModuleInfo[serialType].SaveSlotsCurrent = UserInfo[userID].ModuleInfo[serialType].SaveSlotsMaximum;
-        throw new ArgumentOutOfRangeException($"User is at maximum allowable save slots {UserInfo[userID].ModuleInfo[serialType].SaveSlotsCurrent}/{UserInfo[userID].ModuleInfo[serialType].SaveSlotsMaximum}.\n> Data has been __discarded__!");
+        moduleInfo.SaveSlotsCurrent = moduleInfo.SaveSlotsMaximum;
+        throw new ArgumentOutOfRangeException($"User is at maximum allowable save slots {moduleInfo.SaveSlotsCurrent}/{moduleInfo.SaveSlotsMaximum}.\n> Data has been __discarded__!");
       }
 
       BinarySerializer.Serialize(serializeable,filePath);

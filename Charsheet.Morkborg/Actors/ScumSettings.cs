@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Charsheet.Morkborg
+namespace Charsheet.MorkBorg
 {
     public struct ScumSettings(
         string? name              = null,

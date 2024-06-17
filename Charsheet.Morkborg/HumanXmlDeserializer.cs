@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace ProcGen.Scumify
+namespace Charsheet.MorkBorg
 {
     internal static class HumanXmlDeserializer
     {
@@ -26,8 +26,8 @@ namespace ProcGen.Scumify
             int? strengthMod  = Convert.ToInt32( mbClass.SelectSingleNode("/root-element/abilities")!.Attributes!["strength" ]!.Value.Replace("+","") );
             int? toughnessMod = Convert.ToInt32( mbClass.SelectSingleNode("/root-element/abilities")!.Attributes!["toughness"]!.Value.Replace("+","") );
 
-            string? weaponFormula = mbClass.SelectSingleNode("/root-element/equipment")!.Attributes!["weapon"]!.Value.Replace("d","");
-            string? armorFormula  = mbClass.SelectSingleNode("/root-element/equipment")!.Attributes!["armor" ]!.Value.Replace("d","");
+            string? weaponFormula = mbClass.SelectSingleNode("/root-element/equipment")!.Attributes!["weapon"]!.Value;
+            string? armorFormula  = mbClass.SelectSingleNode("/root-element/equipment")!.Attributes!["armor" ]!.Value;
             string? silverFormula = mbClass.SelectSingleNode("/root-element/equipment")!.Attributes!["silver"]!.Value;
 
             string? hitPointsFormula = mbClass.SelectSingleNode("/root-element/survival")!.Attributes!["hitpoints"]!.Value;

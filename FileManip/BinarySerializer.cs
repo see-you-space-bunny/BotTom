@@ -10,25 +10,23 @@ namespace FileManip;
 public static class BinarySerializer
 {
   #region Binary Conversion
-  public static void ConvertBinaryToXml<T>(string fileNameXml,string fileNameBinary)
+  public static void ConvertBinaryToXml<T>(string fileNameXml,string fileNameBinary) where T : IBinarySerializable
   {
-    var serializable = (IBinarySerializable)(XmlContractSerializer.Deserialize<T>(fileNameBinary) ?? throw new NullReferenceException($"Could not deserialize {fileNameXml}"));
+    var serializable = XmlContractSerializer.Deserialize<T>(fileNameBinary) ?? throw new NullReferenceException($"Could not deserialize {fileNameXml}");
     Serialize(serializable,fileNameXml);
   }
   #endregion
 
   #region Binary Serialization
-  public static void Deserialize<T>(T serializable,string fileName)
+  public static void Deserialize<T>(T serializable,string fileName) where T : IBinarySerializable
   {
-    if(!typeof(T).GetInterfaces().Contains(typeof(IBinarySerializable)))
-      throw new ArgumentException($"{typeof(T)} {nameof(serializable)} is does not implement {typeof(IBinarySerializable)}");
-
     using(var reader = new BinaryReader(File.Open(fileName,FileMode.Open),Encoding.UTF8,false))
     {
-      (serializable as IBinarySerializable)!.Deserialize(reader);
+      serializable.Deserialize(reader);
     }
   }
-  public static void Serialize(IBinarySerializable serializable,string fileName)
+
+  public static void Serialize<T>(T serializable,string fileName) where T : IBinarySerializable
   {
     try
     {

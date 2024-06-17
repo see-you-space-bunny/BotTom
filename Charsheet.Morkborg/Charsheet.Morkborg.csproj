@@ -12,5 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FileManip\FileManip.csproj" />
+    <ProjectReference Include="..\DiceRoller\DiceRoller.csproj" />
   </ItemGroup>
 </Project>
