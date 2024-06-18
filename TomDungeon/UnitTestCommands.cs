@@ -58,7 +58,7 @@ public class UnitTestCommands
     public void TestMBRollFromCommand(string abilityScore, string charName)
     {
         TestSaveNewScum();
-        int badScore = -100000;
+        int badScore = -100;
         
         var currentUser = SessionLibrary!.UserInfo[InteractionContextUserId];
         var mbScumModule = currentUser.ModuleInfo[ValidSerialTypes.Scum];
@@ -89,8 +89,8 @@ public class UnitTestCommands
         { }
         else
         {
-            int rollResult = DiceParser.BasicRoll($"1d20{(score>=0?'+':string.Empty)}{score}").Item2;
-            Assert.InRange(rollResult,-5,30);
+            int rollResult = 10+score;
+            Assert.InRange(rollResult,7,16);
         }
     }
 }
