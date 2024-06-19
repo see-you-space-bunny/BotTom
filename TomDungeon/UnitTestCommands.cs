@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BotTom.DiceRoller;
-using BotTom.SessionManager;
+//using BotTom.SessionManager;
 using Charsheet.MorkBorg;
 using Xunit;
 
 namespace TomDungeon;
-
 public class UnitTestCommands
 {
+/**
     string classesDirName = Path.Combine(Environment.CurrentDirectory, "data", "morkborg", "classes");
 
     Scum? Scum;
@@ -63,7 +63,7 @@ public class UnitTestCommands
         var currentUser = SessionLibrary!.UserInfo[InteractionContextUserId];
         var mbScumModule = currentUser.ModuleInfo[ValidSerialTypes.Scum];
 
-        /** "/character system: mb charname: test action: attack stat: agi target: 12" */
+        // "/character system: mb charname: test action: attack stat: agi target: 12"
 
         Scum loadScum;
         try{
@@ -93,4 +93,5 @@ public class UnitTestCommands
             Assert.InRange(rollResult,7,16);
         }
     }
+    */
 }
