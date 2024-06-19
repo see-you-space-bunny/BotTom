@@ -222,8 +222,11 @@ partial class Program
 	#region RegisterCommandsOnReadyAsync
 	private static async Task RegisterCommandsOnReadyAsync()
 	{
-		RegisteredCommands.Add(ListRolesModule.Name,  new ListRolesModule(ControlPanel.PrivateGuilds.First().Key));
-		RegisteredCommands.Add(PathfinderModule.Name, new PathfinderModule());
+		RegisteredCommands.Add(ListRolesModule.Name,				new ListRolesModule(ControlPanel.PrivateGuilds.First().Key));
+		RegisteredCommands.Add(StarTrekModule.Name,					new StarTrekModule());
+		RegisteredCommands.Add(PathfinderModule.Name,				new PathfinderModule());
+		RegisteredCommands.Add(StorytellerModule.Name,			new StorytellerModule());
+		RegisteredCommands.Add(ForgedInTheDarkModule.Name,	new ForgedInTheDarkModule());
 
 		foreach(IUserDefinedCommand userDefinedCommand in RegisteredCommands.Values)
 			await userDefinedCommand.RegisterCommand();

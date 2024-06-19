@@ -11,16 +11,51 @@ using Newtonsoft.Json;
 namespace BotTom.Commands.Global;
 
 /// <summary>
-/// Creates and registers a /pf guild command
+/// Creates and registers a /pf global command
 /// </summary>
 internal class PathfinderModule : IUserDefinedCommand
 {
 	#region C(~)
-	internal const string Name = "pathfinder";
+	internal const string Name = "pf";
+	internal const string Description = "Roll a d20 for Pathfinder. Adding a Difficulty Class (DC) will display degree of success";
+	#endregion
+	
+	#region C(-)
+	private static readonly CommandOption<long>		DiceModifier 		= new ("dm","The bonus or penalty you have to your roll.",null,isRequired: true);
+	private static readonly CommandOption<long>		DifficultyClass = new ("dc","An optional field to specify the roll's Difficulty Class (DC)",null);
+	private static readonly CommandOption<string>	SpecialDC				= new ("specialdc","An optional field to set the Difficulty Class (DC) from \"level\" or \"spell\".",null);
+	private static readonly CommandOption<string>	Label						= new ("label","A label to identify what the roll is for. (default: none)",null);
+	private static readonly CommandOption<bool>		Private					= new ("private","Hide the result from everyone except you. (default: {0})",false);
 	#endregion
 
 	internal PathfinderModule()
 	{ }
+
+	private static Tuple<PathfinderRoll.DifficultyClassType,long?>? GetDifficultyClassTup(long? difficultyClass, string? specialDC)
+	{
+
+		Tuple<PathfinderRoll.DifficultyClassType,long?>? difficultyClassTup;
+
+		if (difficultyClass == null)
+		{
+			difficultyClassTup = null;
+		}
+		else if (!(specialDC == null))
+		{
+			var difficultyClassType = specialDC switch
+			{
+					"level" => PathfinderRoll.DifficultyClassType.Level,
+					"spell" => PathfinderRoll.DifficultyClassType.SpellLevel,
+					_       => PathfinderRoll.DifficultyClassType.None,
+			};
+			difficultyClassTup = new Tuple<PathfinderRoll.DifficultyClassType,long?> (difficultyClassType, difficultyClass);
+		}
+		else
+		{
+			difficultyClassTup = new Tuple<PathfinderRoll.DifficultyClassType,long?> (PathfinderRoll.DifficultyClassType.Basic, difficultyClass);
+		}
+		return difficultyClassTup;
+	}
 
 	async Task IUserDefinedCommand.RegisterCommand()
 	{
@@ -28,11 +63,12 @@ internal class PathfinderModule : IUserDefinedCommand
 
 			// Note: Names have to be all lowercase and match the regular expression ^[\w-]{3,32}$
 			command.WithName(Name);
-			command.WithDescription("Roll a d20 for Pathfinder. Adding a Difficulty Class (DC) will display degree of success");
-			command.AddOption("dm", 			 ApplicationCommandOptionType.Number,"The bonus or penalty you have to your roll.", isRequired: true);
-			command.AddOption("dc", 			 ApplicationCommandOptionType.Number, "An optional field to specify the roll's Difficulty Class (DC)", isRequired: false);
-			command.AddOption("specialdc", ApplicationCommandOptionType.String, "An optional field to set the Difficulty Class (DC) from \"level\" or \"spell\".", isRequired: false);
-			command.AddOption("label", 		 ApplicationCommandOptionType.String, "An optional label to identify what the roll is for.", isRequired: false);
+			command.WithDescription(Description);
+			DiceModifier		.AddOption(command);
+			DifficultyClass	.AddOption(command);
+			SpecialDC				.AddOption(command);
+			Label			 			.AddOption(command);
+			Private		 			.AddOption(command);
 
 			try
 			{
@@ -48,50 +84,18 @@ internal class PathfinderModule : IUserDefinedCommand
 	async Task IUserDefinedCommand.HandleSlashCommand(SocketSlashCommand command)
 	{
 		// First lets extract our variables
-		
-		long diceModifier = Convert.ToInt64(command.Data.Options.First((o)=>o.Name=="dm").Value);
 
-		var __difficultyClass = command.Data.Options.FirstOrDefault((o)=>o!.Name=="dc", null);
-		long? difficultyClass = __difficultyClass != null ? Convert.ToInt64(__difficultyClass.Value) : null;
-
-		var __specialDC = command.Data.Options.FirstOrDefault((o)=>o!.Name=="specialdc", null);
-		string? specialDC = __specialDC != null ? ((string)__specialDC.Value).Trim() : null;
-
-		var __label = command.Data.Options.FirstOrDefault((o)=>o!.Name=="label", null);
-		string? label = __label != null ? (string)__label.Value : null;
-
-		Tuple<PathfinderRoll.DifficultyClassType,long?>? difficultyClassTup;
-
-		if (difficultyClass == null)
-		{
-			difficultyClassTup = null;
-		}
-		else if (!(specialDC == null))
-		{
-			PathfinderRoll.DifficultyClassType difficultyClassType;
-			switch(specialDC)
-			{
-				case "level":
-					difficultyClassType = PathfinderRoll.DifficultyClassType.Level;
-					break;
-				case "spell":
-					difficultyClassType = PathfinderRoll.DifficultyClassType.SpellLevel;
-					break;
-				default:
-					difficultyClassType = PathfinderRoll.DifficultyClassType.None;
-					break;
-			}
-			difficultyClassTup = new Tuple<PathfinderRoll.DifficultyClassType,long?> (difficultyClassType, difficultyClass);
-		}
-		else
-		{
-			difficultyClassTup = new Tuple<PathfinderRoll.DifficultyClassType,long?> (PathfinderRoll.DifficultyClassType.Basic, difficultyClass);
-		}
-
-		var p2e_r = new PathfinderRoll(diceModifier, difficultyClassTup, label);
+		var p2e_r = new PathfinderRoll(
+			DiceModifier	.GetValue(command),
+			DifficultyClass.Defaults(command) ? null : GetDifficultyClassTup(
+				DifficultyClass.GetValue(command),
+				SpecialDC			 .GetValue(command)
+			),
+			Label.GetValue(command)
+		);
 		p2e_r.Roll();
 
-		await command.RespondAsync(p2e_r.ToString());
+		await command.RespondAsync(p2e_r.ToString(), ephemeral: Private.GetValue(command));
 	}
 
 	#pragma warning disable CS1998
