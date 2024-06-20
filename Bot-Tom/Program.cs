@@ -227,6 +227,10 @@ partial class Program
 		RegisteredCommands.Add(PathfinderModule.Name,				new PathfinderModule());
 		RegisteredCommands.Add(StorytellerModule.Name,			new StorytellerModule());
 		RegisteredCommands.Add(ForgedInTheDarkModule.Name,	new ForgedInTheDarkModule());
+		RegisteredCommands.Add(DisplayObjectModule.Name,		new DisplayObjectModule());
+		RegisteredCommands.Add(NewObjectModule.Name,				new NewObjectModule());
+		RegisteredCommands.Add(UpdateObjectModule.Name,			new UpdateObjectModule());
+		RegisteredCommands.Add(DeleteObjectModule.Name,			new DeleteObjectModule());
 
 		foreach(IUserDefinedCommand userDefinedCommand in RegisteredCommands.Values)
 			await userDefinedCommand.RegisterCommand();

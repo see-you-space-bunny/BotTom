@@ -59,26 +59,27 @@ internal class PathfinderModule : IUserDefinedCommand
 
 	async Task IUserDefinedCommand.RegisterCommand()
 	{
-			var command = new SlashCommandBuilder();
+		var command = new SlashCommandBuilder();
 
-			// Note: Names have to be all lowercase and match the regular expression ^[\w-]{3,32}$
-			command.WithName(Name);
-			command.WithDescription(Description);
-			DiceModifier		.AddOption(command);
-			DifficultyClass	.AddOption(command);
-			SpecialDC				.AddOption(command);
-			Label			 			.AddOption(command);
-			Private		 			.AddOption(command);
+		// Note: Names have to be all lowercase and match the regular expression ^[\w-]{3,32}$
+		command.WithName(Name);
+		command.WithDescription(Description);
+		
+		DiceModifier		.AddOption(command);
+		DifficultyClass	.AddOption(command);
+		SpecialDC				.AddOption(command);
+		Label			 			.AddOption(command);
+		Private		 			.AddOption(command);
 
-			try
-			{
-					await Program.DiscordClient.Rest.CreateGlobalCommand(command.Build());
-			}
-			catch(HttpException exception)
-			{
-					var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
-					Console.WriteLine(json);
-			}
+		try
+		{
+				await Program.DiscordClient.Rest.CreateGlobalCommand(command.Build());
+		}
+		catch(HttpException exception)
+		{
+				var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
+				Console.WriteLine(json);
+		}
 	}
 
 	async Task IUserDefinedCommand.HandleSlashCommand(SocketSlashCommand command)
@@ -86,12 +87,12 @@ internal class PathfinderModule : IUserDefinedCommand
 		// First lets extract our variables
 
 		var p2e_r = new PathfinderRoll(
-			DiceModifier	.GetValue(command),
-			DifficultyClass.Defaults(command) ? null : GetDifficultyClassTup(
-				DifficultyClass.GetValue(command),
-				SpecialDC			 .GetValue(command)
+			DiceModifier			.GetValue(command),
+			DifficultyClass		.Defaults(command) ? null : GetDifficultyClassTup(
+				DifficultyClass	.GetValue(command),
+				SpecialDC				.GetValue(command)
 			),
-			Label.GetValue(command)
+			Label	.GetValue(command)
 		);
 		p2e_r.Roll();
 

@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProcGen.Scumify", "ProcGen.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiceRoller", "DiceRoller\DiceRoller.csproj", "{333421A0-DB08-4F6A-A11D-EB59389FC685}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Charsheet.ForgedInTheDark", "Charsheet.ForgedInTheDark\Charsheet.ForgedInTheDark.csproj", "{B1158F79-308E-4B28-8885-130301EDECFD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,10 @@ Global
 		{333421A0-DB08-4F6A-A11D-EB59389FC685}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{333421A0-DB08-4F6A-A11D-EB59389FC685}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{333421A0-DB08-4F6A-A11D-EB59389FC685}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1158F79-308E-4B28-8885-130301EDECFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1158F79-308E-4B28-8885-130301EDECFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1158F79-308E-4B28-8885-130301EDECFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1158F79-308E-4B28-8885-130301EDECFD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

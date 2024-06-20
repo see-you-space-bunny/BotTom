@@ -9,6 +9,13 @@ namespace BotTom.DiceRoller.GameSystems;
 /// <param name="label"></param>
 public class ForgedInTheDarkRoll
 {
+  #region Const
+  private const string CritMessage = "**Critical Success!** Things go well __and__ you gain some additional advantage.";
+  private const string SuccessMessage = "**Full Success!** Things go well.";
+  private const string MixedMessage = "**Partial Success!** You do what you were trying to do, but there are consequences: trouble, harm, reduced effect, etc.";
+  private const string FailMessage = "**Bad outcome!** Things go poorly. You probably don't achieve your goal and you suffer complications, too.";
+  #endregion
+
   #region enums
   private enum Keep
   {
@@ -45,7 +52,7 @@ public class ForgedInTheDarkRoll
     StringBuilder sb    = new();
     int[] diceRolls     = DiceParser.RollDice(_dicePool, 6);
     int keepTarget      = _mode == Keep.High ? diceRolls.Max() : diceRolls.Min();
-    bool critical       = (keepTarget == 6 || keepTarget == 1) && diceRolls.AsEnumerable().Count((r)=>r==keepTarget) > 1;
+    bool critical       = keepTarget == 6 && diceRolls.AsEnumerable().Count((r)=>r==keepTarget) > 1;
     bool firstHighlight = false;
 
     for(int i=0;i<diceRolls.Length;)
@@ -56,7 +63,7 @@ public class ForgedInTheDarkRoll
         firstHighlight = true;
       }
       else
-        sb.Append($"~~` {diceRolls[i]} `~~");
+        sb.Append($"` {diceRolls[i]} `");
 
       if(++i<diceRolls.Length)
         sb.Append(", ");
@@ -79,18 +86,12 @@ public class ForgedInTheDarkRoll
       sb.Append(_result.Item1);
       sb.Append(" → ");
 
-      if (_result.Item3)
-        sb.Append("**Critical ");
-
       sb.Append(_result.Item2 switch {
-        int n when n < 3 => "Failure",
-        int n when n == 4 || n == 5 => "Mixed Success",
-        6 => "Success",
+        int n when n <= 3 => FailMessage,
+        int n when n == 4 || n == 5 => MixedMessage,
+        int n when n == 6 => _result.Item3 ? CritMessage : SuccessMessage,
         _ => throw new Exception($"Impossible result ({_result.Item1},{_result.Item2},{_result.Item3}) in ForgedInTheDarkRoll"),
       });
-      
-      if (_result.Item3)
-        sb.Append("!**");
 
       return sb.ToString();
   }
