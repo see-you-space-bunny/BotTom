@@ -16,7 +16,7 @@ namespace BotTom.Commands.Global;
 internal class StorytellerModule : IUserDefinedCommand
 {
 	#region C(~)
-	internal const string Name = "st";
+	internal const string Name = "storyteller";
 	internal const string Description = "Roll d10s for Chronicles of Darkness (and other Storyteller systems).";
 	#endregion
 

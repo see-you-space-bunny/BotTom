@@ -24,21 +24,23 @@ internal class CommandOption<T>(string keyWord, string description, object? defa
     internal string DescriptionText = description;
     internal object? DefaultValue = defaultValue;
 
-    internal bool Defaults(SocketSlashCommand command) => !command.Data.Options.Select((o)=>o.Name).Contains(KeyWord);
+    internal bool Defaults(SocketSlashCommand command) => !command.Data.Options.Any((o)=>o.Name==KeyWord&&o.Value!=null);
+    internal bool Defaults(SocketSlashCommandData data) => !data.Options.Any((o)=>o.Name==KeyWord&&o.Value!=null);
+    internal bool Defaults(SocketSlashCommandDataOption option) => !option.Options.Any((o)=>o.Name==KeyWord&&o.Value!=null);
     
     internal T? GetValue(SocketSlashCommand command) => command.Data.Options
-        .Where(o => o?.Name == KeyWord)
-        .Select(o => (T?)(o.Value ?? DefaultValue))
+        .Where(o => o.Name == KeyWord)
+        .Select(o => (T?)(o.Value??DefaultValue))
         .FirstOrDefault();
 
     internal T? GetValue(SocketSlashCommandData data) => data.Options
-        .Where(o => o?.Name == KeyWord)
-        .Select(o => (T?)(o.Value ?? DefaultValue))
+        .Where(o => o.Name == KeyWord)
+        .Select(o => (T?)(o.Value??DefaultValue))
         .FirstOrDefault();
     
     internal T? GetValue(SocketSlashCommandDataOption option) => option.Options
-        .Where(o => o?.Name == KeyWord)
-        .Select(o => (T?)(o.Value ?? DefaultValue))
+        .Where(o => o.Name == KeyWord)
+        .Select(o => (T?)(o.Value??DefaultValue))
         .FirstOrDefault();
 
     internal void AddOption(SlashCommandBuilder command) => command.AddOption(KeyWord,OptionType,Description,isRequired: IsRequired);

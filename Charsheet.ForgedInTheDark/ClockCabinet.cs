@@ -27,20 +27,24 @@ public static class ClockCabinet
         string serialPath = Path.Combine(Environment.CurrentDirectory,FilePath,FileName);
         if (File.Exists(serialPath))
         {
-            BinaryReader reader = new (File.Open(serialPath,FileMode.Create),Encoding.UTF8,false);
+            var stream = File.Open(serialPath,FileMode.Open);
+            BinaryReader reader = new (stream,Encoding.UTF8,false);
 
-            for(uint i=reader.ReadUInt32();i>0;i--)
-            {
-                ulong newUser = reader.ReadUInt64();
-                Dictionary<string,Clock> newUserClocks = [];
-                for(uint j=reader.ReadUInt32();j>0;j--)
+            uint cabinetSize = reader.ReadUInt32();
+            if (cabinetSize > 0)
+                for(uint i=cabinetSize;i>0;i--)
                 {
-                    Clock newClock = new();
-                    newClock.Deserialize(reader);
-                    newUserClocks.Add(newClock.Label,newClock);
+                    ulong newUser = reader.ReadUInt64();
+                    Dictionary<string,Clock> newUserClocks = [];
+                    for(uint j=reader.ReadUInt32();j>0;j--)
+                    {
+                        Clock newClock = new();
+                        newClock.Deserialize(reader);
+                        newUserClocks.Add(newClock.Label,newClock);
+                    }
+                    _clocks.Add(newUser,newUserClocks);
                 }
-                _clocks.Add(newUser,newUserClocks);
-            }
+            stream.Dispose();
         }
     }
 
@@ -53,7 +57,8 @@ public static class ClockCabinet
 		
         serialPath = Path.Combine(serialPath,FileName);
 		
-        BinaryWriter writer = new (File.Open(serialPath,FileMode.Open),Encoding.UTF8,false);
+        var stream = File.Open(serialPath,FileMode.Create);
+        BinaryWriter writer = new (stream,Encoding.UTF8,false);
         
         writer.Write((UInt32)_clocks.Count);
         foreach(var userClocks in _clocks)
@@ -65,5 +70,6 @@ public static class ClockCabinet
                 clock.Serialize(writer);
             }
         }
+        stream.Dispose();
     }
 }

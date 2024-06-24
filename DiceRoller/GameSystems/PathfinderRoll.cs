@@ -59,34 +59,25 @@ public class PathfinderRoll
     /// <remarks>
     /// ...
     /// </remarks>
-    public PathfinderRoll(long diceModifier, Tuple<DifficultyClassType,long?>? difficultyClass, string? label)
+    public PathfinderRoll(long diceModifier, Tuple<DifficultyClassType,int> difficultyClass, string? label)
     {
         _diceModifier = diceModifier;
         _label = label;
-        if (!(difficultyClass == null) && !(difficultyClass.Item2 == null))
+        _difficultyClassType = difficultyClass.Item1;
+        switch(_difficultyClassType)
         {
-            _difficultyClassType = difficultyClass.Item1;
-            if (_difficultyClassType == DifficultyClassType.Basic)
-            {
+            case DifficultyClassType.Basic:
                 _difficultyClass = difficultyClass.Item2;
-            }
-            
-            if (_difficultyClassType == DifficultyClassType.Level)
-            {
-                // 14+Level+min(floor(Level/3),7)+max(Level-21,0)
-                _difficultyClass = difficultyClass.Item2;
+            break;
+            case DifficultyClassType.Level:
                 _difficultyClass = 14 + difficultyClass.Item2 + (long)Math.Min(Math.Floor((decimal)difficultyClass.Item2/3),7) + (long)Math.Max((decimal)difficultyClass.Item2-21,0);
-            }
-            
-            if (_difficultyClassType == DifficultyClassType.SpellLevel)
-            {
-                // 12+SpellLevel*2+floor((1+SpellLevel)/3*2))
+                break;
+            case DifficultyClassType.SpellLevel:
                 _difficultyClass = 12 + difficultyClass.Item2 * 2 + (long) Math.Floor((1 + (decimal)difficultyClass.Item2)/3*2);
-            }
-        }
-        else
-        {
-            _difficultyClassType = DifficultyClassType.None;
+            break;
+            case DifficultyClassType.None:
+                _difficultyClass = 0;
+            break;
         }
     }
     #endregion

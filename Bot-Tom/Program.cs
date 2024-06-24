@@ -10,6 +10,7 @@ using org.mariuszgromada.math.mxparser;
 using BotTom.Commands;
 using BotTom.Commands.Global;
 using BotTom.Commands.Guild;
+using BotTom.Machines;
 
 namespace BotTom;
 
@@ -83,10 +84,13 @@ partial class Program
 	#pragma warning restore CS8618
 
 	#region F(~)
-	internal static DiscordSocketClient DiscordClient => _client;
+	private static List<IStateMachine> _stateMachines = [];
 	#endregion
 
 	#region P(~)
+	internal static DiscordSocketClient DiscordClient => _client;
+	internal static List<IStateMachine> StateMachines => _stateMachines;
+	internal static IEnumerable<SimpleConfirmationMachine> ConfirmationMachines => _stateMachines.OfType<SimpleConfirmationMachine>();
 	internal static Dictionary<string,IUserDefinedCommand> RegisteredCommands { get; } = [];
 	#endregion
   
@@ -227,10 +231,8 @@ partial class Program
 		RegisteredCommands.Add(PathfinderModule.Name,				new PathfinderModule());
 		RegisteredCommands.Add(StorytellerModule.Name,			new StorytellerModule());
 		RegisteredCommands.Add(ForgedInTheDarkModule.Name,	new ForgedInTheDarkModule());
-		RegisteredCommands.Add(DisplayObjectModule.Name,		new DisplayObjectModule());
+		RegisteredCommands.Add(ClockModule.Name,						new ClockModule());
 		RegisteredCommands.Add(NewObjectModule.Name,				new NewObjectModule());
-		RegisteredCommands.Add(UpdateObjectModule.Name,			new UpdateObjectModule());
-		RegisteredCommands.Add(DeleteObjectModule.Name,			new DeleteObjectModule());
 
 		foreach(IUserDefinedCommand userDefinedCommand in RegisteredCommands.Values)
 			await userDefinedCommand.RegisterCommand();

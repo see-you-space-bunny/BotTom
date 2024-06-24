@@ -32,10 +32,11 @@ internal class NewObjectModule : IUserDefinedCommand
 	#endregion
 
 	#region C(-)
-	private static readonly CommandOption<bool>		Private  		= new ("private","Hide the result from everyone except you. (default: {0})",false);
-	private static readonly CommandOption<string>	Label 			= new ("label","Label of the clock you wish to create.",null,isRequired: true);
-	private static readonly CommandOption<long>		Faces 			= new ("faces","The number of faces the new clock should have.",null,isRequired: true);
-	private static readonly CommandOption<string>	Group 			= new ("group","Group of clocks the new clock should belong to.",null);
+	private static readonly CommandOption<bool>		Private = new ("private","Hide the result from everyone except you. (default: {0})",false);
+	private static readonly CommandOption<string>	Label 	= new ("label","Label of the clock you wish to create.",null,isRequired: true);
+	private static readonly CommandOption<long>		Faces 	= new ("faces","The number of faces the new clock should have.",null,isRequired: true);
+	private static readonly CommandOption<string>	DescriptionOpt 	= new ("description","The description you want to assign the clock.",null);
+	private static readonly CommandOption<string>	Group 	= new ("group","Group of clocks the new clock should belong to.",null);
 	#endregion
 
 	internal NewObjectModule()
@@ -50,11 +51,14 @@ internal class NewObjectModule : IUserDefinedCommand
 	
 		#region Build: new clock
 		var clockNew = new SlashCommandOptionBuilder()
-			.WithName(ClockOption1)
-			.WithDescription(Description);
-		Label			.AddOption(clockNew);
-		Faces			.AddOption(clockNew);
-		Private		.AddOption(clockNew);
+			.WithName(Option1.Clock.ToString().ToLower())
+			.WithDescription(Description)
+			.WithType(ApplicationCommandOptionType.SubCommand);
+		Label						.AddOption(clockNew);
+		DescriptionOpt	.AddOption(clockNew);
+		Group						.AddOption(clockNew);
+		Faces						.AddOption(clockNew);
+		Private					.AddOption(clockNew);
 
 		command.AddOption(clockNew);
 		#endregion
@@ -79,7 +83,6 @@ internal class NewObjectModule : IUserDefinedCommand
 				ClockCabinet.Serialize();
 				break;
 		}
-		await command.RespondAsync(string.Empty, ephemeral: Private.GetValue(command));
 	}
 
 	#pragma warning disable CS1998
@@ -92,29 +95,38 @@ internal class NewObjectModule : IUserDefinedCommand
 		var options									= command.Data.Options.First();
 		SocketGuildUser? guildUser 	= command.User as SocketGuildUser;
 
-		string title			= string.Empty;
-		StringBuilder sb	= new ();
-		string label 			= Label				.GetValue(options)!;
-		string? group			= Group				.GetValue(options);
-		int faces 				= (int)Faces	.GetValue(options);
-		bool ephemeral		= Private			.GetValue(command);
+		string title				= string.Empty;
+		StringBuilder sb		= new ();
+		string label 				= Label						.GetValue(options)!;
+		string group				= Group						.GetValue(options) ?? string.Empty;
+		string description	= DescriptionOpt	.GetValue(options) ?? string.Empty;
+		int faces 					= (int)Faces			.GetValue(options);
+		bool ephemeral			= Private					.GetValue(options);
 
-		Dictionary<string,Clock> allClocks = ClockCabinet.Clocks[command.User.Id];
-		bool errorCase01 	 = allClocks.Keys.Any((k)=>k.Equals(label,StringComparison.CurrentCultureIgnoreCase));
-		Color errorColor = Color.DarkRed;
+		Dictionary<string,Clock> allClocks;
+		if(ClockCabinet.Clocks.Keys.Contains(command.User.Id))
+			allClocks = ClockCabinet.Clocks[command.User.Id];
+		else
+		{
+			allClocks = [];
+			ClockCabinet.Clocks.Add(command.User.Id,allClocks);
+		}
+		bool errorCase01	= allClocks.Keys.Any((k)=>k.Equals(label,StringComparison.CurrentCultureIgnoreCase));
+		Color errorColor	= Color.DarkRed;
 
 		if (errorCase01)
 		{
 			title 		= $"[Error: NewClock01] Failed to create clock:";
 			sb.AppendLine($"A clock with the Label \"{label}\" already exists.");
-			sb.AppendLine( "Labels and Groups are case-insensitive.");
+			sb.AppendLine( "(Labels and Groups are case-insensitive.)");
 			ephemeral = true;
 		}
 		else
 		{
 			allClocks.Add(label.ToLower(),new Clock(label,group ?? string.Empty,faces));
+			allClocks[label.ToLower()].AddDescription(description);
 			title = $"Created new clock:";
-			sb.AppendLine(allClocks[label].ToString());
+			sb.AppendLine(allClocks[label.ToLower()].ToStringWithDescription());
 		}
 
 		var embedBuilder = new EmbedBuilder();
@@ -123,12 +135,14 @@ internal class NewObjectModule : IUserDefinedCommand
 		{
 			embedBuilder.WithAuthor(
 				guildUser.DisplayName,
-				guildUser.GetAvatarUrl() ?? guildUser.GetDefaultAvatarUrl());
+				guildUser.GetAvatarUrl() ?? guildUser.GetDefaultAvatarUrl()
+			);
 		}
 		else
 			embedBuilder.WithAuthor(
 				command.User.GlobalName,
-				command.User.GetAvatarUrl() ?? command.User.GetDefaultAvatarUrl());
+				command.User.GetAvatarUrl() ?? command.User.GetDefaultAvatarUrl()
+			);
 
 		if (title != string.Empty)
 			embedBuilder.WithTitle(title);
@@ -139,7 +153,7 @@ internal class NewObjectModule : IUserDefinedCommand
 
 		embedBuilder.WithCurrentTimestamp();
 
-		await command.RespondAsync(embedBuilder.ToString(), ephemeral: ephemeral);
+		await command.RespondAsync(embed: embedBuilder.Build(), ephemeral: ephemeral);
 	}
 
 	bool IUserDefinedCommand.IsGlobal => true;

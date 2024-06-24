@@ -20,22 +20,23 @@ public class StarTrekRoll
     private readonly long _targetNumber;
 
     /// <value></value>
-    private readonly long? _dice;
+    private readonly long _dice;
 
     /// <value></value>
-    private readonly long? _focusNumber;
+    private readonly long _focusNumber;
 
     /// <value></value>
-    private readonly long? _threatNumber;
+    private readonly long _threatNumber;
 
     /// <value></value>
-    private readonly long? _computerTargetNumber;
+    private readonly long _computerTargetNumber;
 
     /// <value></value>
-    private readonly long? _computerFocusNumber;
+    private readonly long _computerFocusNumber;
 
     /// <value>.</value>
     private readonly string? _label;
+    private readonly int _computerDieOffset;
 
     /// <value>Result of the roll.</value>
     private Tuple<int[],int,int,int>? _result;
@@ -52,35 +53,24 @@ public class StarTrekRoll
     /// <param name="computerTargetNumber"></param>
     /// <param name="computerFocusNumber"></param>
     /// <param name="label"></param>
-    public StarTrekRoll(long targetNumber, long? focusNumber, long? dice, long? threatNumber, long? computerTargetNumber, long? computerFocusNumber, string? label)
+    public StarTrekRoll(long targetNumber, long focusNumber, long dice, long threatNumber, long? computerTargetNumber, long computerFocusNumber, string? label)
     {
         _targetNumber = targetNumber;
-        if (focusNumber is not null)
-            _focusNumber = focusNumber;
-        else
-            _focusNumber = 1;
-        if (dice is not null)
-            _dice = dice;
-        else
-            _dice = 2;
-        if (threatNumber is not null)
-            _threatNumber = threatNumber;
-        else
-            _threatNumber = 20;
-        _computerTargetNumber = computerTargetNumber;
-        if (computerFocusNumber is not null)
-            _computerFocusNumber = computerFocusNumber;
-        else
-            _computerFocusNumber = 1;
+        _focusNumber = focusNumber;
+        _dice = dice;
+        _threatNumber = threatNumber;
+        _computerTargetNumber = computerTargetNumber ?? long.MinValue;
+        _computerFocusNumber = computerFocusNumber;
         _label = label;
+        _computerDieOffset = 0;
+        if (computerTargetNumber > 0)
+            _computerDieOffset = 1;
     }
     #endregion
 
     #region Roll
     public void Roll()
     {
-        if (_dice is null)
-            return;
         int[] rolls = DiceParser.RollDice((int)_dice, 20);
         int hits = 0;
         int threat = 0;
@@ -88,9 +78,9 @@ public class StarTrekRoll
 
         for (int i = 0; i < rolls.Length; i++)
         {
-            if (i + 1 >= rolls.Length && _computerTargetNumber is not null)
+            if (i + 1 >= rolls.Length && _computerDieOffset > 0)
             {
-                if (_computerFocusNumber is not null && rolls[i] <= _computerFocusNumber)
+                if (rolls[i] <= _computerFocusNumber)
                 {
                     hits += 2;
                 }
@@ -109,7 +99,7 @@ public class StarTrekRoll
             }
             else
             {
-                if (rolls[i] == 1 || (_focusNumber is not null && rolls[i] <= _focusNumber))
+                if (rolls[i] == 1 || (rolls[i] <= _focusNumber))
                 {
                     hits += 2;
                 }
@@ -123,7 +113,11 @@ public class StarTrekRoll
                 }
                 else if (rolls[i] == 20)
                 {
-                    threat += 2;
+                    threat += 1;
+                }
+                if (rolls[i] >= _threatNumber)
+                {
+                    threat += 1;
                 }
             }
         }
@@ -143,21 +137,17 @@ public class StarTrekRoll
         if (_result == null)
             return "Not yet rolled";
 
-        int computerDieOffset = 0;
-        if (_computerTargetNumber is not null)
-            computerDieOffset = 1;
-
-        sb.Append($"{_dice-computerDieOffset}d20[`");
-        for (int i = 0; i + computerDieOffset < _result.Item1.Length; i++)
+        sb.Append($"{_dice-_computerDieOffset}d20[`");
+        for (int i = 0; i + _computerDieOffset < _result.Item1.Length; i++)
         {
             sb.Append(_result.Item1[i]);
-            if (i + 1 + computerDieOffset < _result.Item1.Length)
+            if (i + 1 + _computerDieOffset < _result.Item1.Length)
                 sb.Append(", ");
         }
-        sb.Append($"`] vs TN/F __**` {_targetNumber}/{_focusNumber} `**__");
+        sb.Append($"`] vs TN/F ` {_targetNumber}/{_focusNumber} `");
 
-        if (computerDieOffset > 0)
-            sb.Append($", 1d20[`{_result.Item1[^1]}`] vs TN/F __**` {_computerTargetNumber}/{_computerFocusNumber} `**__");
+        if (_computerDieOffset > 0)
+            sb.Append($", 1d20[`{_result.Item1[^_computerDieOffset]}`] vs TN/F ` {_computerTargetNumber}/{_computerFocusNumber} `");
 
         sb.Append($"\n- Successes achieved: __**` {_result.Item2} `**__");
         if (_result.Item3 > 0)
