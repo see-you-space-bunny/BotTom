@@ -174,21 +174,18 @@ internal class ClockModule : IUserDefinedCommand
 				.WithName(Option1.All.ToString().ToLower())
 				.WithDescription(Descriptions[Delete])
 				.WithType(ApplicationCommandOptionType.SubCommand);
-		Private			.AddOption(deleteClockAll);
 
 		var deleteClockSingle = new SlashCommandOptionBuilder()
 				.WithName(Option1.Single.ToString().ToLower())
 				.WithDescription(Descriptions[Delete])
 				.WithType(ApplicationCommandOptionType.SubCommand);
 		Label[Delete]	.AddOption(deleteClockSingle);
-		Private			.AddOption(deleteClockSingle);
 
 		var deleteClockGroup = new SlashCommandOptionBuilder()
 				.WithName(Option1.Group.ToString().ToLower())
 				.WithDescription(Descriptions[Delete])
 				.WithType(ApplicationCommandOptionType.SubCommand);
 		Group[Delete]	.AddOption(deleteClockGroup);
-		Private			.AddOption(deleteClockGroup);
 
 		deleteClock.AddOption(deleteClockAll);
 		deleteClock.AddOption(deleteClockSingle);
@@ -346,13 +343,14 @@ internal class ClockModule : IUserDefinedCommand
 			ClockCabinet.Clocks.Add(command.User.Id,allClocks);
 		}
 
-		string title 	    = string.Empty;
-		StringBuilder sb    = new ();
-		string label 			= (Label[Display]		.GetValue(options) ?? string.Empty).ToLower();
-		string group 			= (Group[Display]		.GetValue(options) ?? string.Empty).ToLower();
-		int? faces 		    = Faces[Update]	    .Defaults(options) ? null : (int)Faces[Update]		.GetValue(options);
-		int? progress	    = Progress[Update]	.Defaults(options) ? null : (int)Progress[Update]	.GetValue(options);
-		bool ephemeral 	    = Private		    	.GetValue(options);
+		string title 	    	 = string.Empty;
+		StringBuilder sb     = new ();
+		string label 				 = (Label[Display]		.GetValue(options) ?? string.Empty).ToLower();
+		string group 				 = (Group[Display]		.GetValue(options) ?? string.Empty).ToLower();
+		int? faces 		    	 = Faces[Update]	    .Defaults(options) ? null : (int)Faces[Update]		.GetValue(options);
+		int? progress	    	 = Progress[Update]		.Defaults(options) ? null : (int)Progress[Update]	.GetValue(options);
+		string? description  = DescriptionOpt[Update]	.Defaults(options) ? null : (string)DescriptionOpt[Update]	.GetValue(options)!;
+		bool ephemeral 	  	 = Private		    	.GetValue(options);
 
 		bool errorCase01 	 = allClocks.Count == 0;
 		bool errorCase02 	 = mode==Option1.Single&&!allClocks.Values.Any((c)=>c.Label.Equals(label,StringComparison.CurrentCultureIgnoreCase));
@@ -382,8 +380,10 @@ internal class ClockModule : IUserDefinedCommand
 					allClocks[label].AddProgress((int)faces!);
 				if (progress != null)
 					allClocks[label].AddProgress((int)progress!);
+				if (description != null)
+					allClocks[label].AddDescription(description!);
 				sb.AppendLine($"The clock is now:");
-				sb.AppendLine($"> {allClocks[label].ToStringWithDescription()}");
+				sb.AppendLine($"{allClocks[label].ToStringWithDescription()}");
 				break;
 
 			case Option1.Group:
@@ -443,14 +443,14 @@ internal class ClockModule : IUserDefinedCommand
 
 		await command.RespondAsync(embed: embedBuilder.Build(), ephemeral: ephemeral);
 	}
-    #endregion
+	#endregion
 
-    #region HandleDelete
+	#region HandleDelete
 	async Task HandleDeleteClockOption(SocketSlashCommand command)
 	{
 		var options									= command.Data.Options.First((o)=>o.Name==Delete).Options.First();
 		SocketGuildUser? guildUser 	= command.User as SocketGuildUser;
-        Option1 mode = Enum.Parse<Option1>(options.Name,true);
+		Option1 mode = Enum.Parse<Option1>(options.Name,true);
 
 		Dictionary<string,Clock> allClocks;
 		if(ClockCabinet.Clocks.TryGetValue(command.User.Id, out Dictionary<string, Clock>? value))
@@ -465,12 +465,14 @@ internal class ClockModule : IUserDefinedCommand
 		StringBuilder sb 	= new ();
 		string label 			= (Label[Display].GetValue(options) ?? string.Empty).ToLower();
 		string group 			= (Group[Display].GetValue(options) ?? string.Empty).ToLower();
-		bool ephemeral 		= Private.GetValue(options);
+		bool ephemeral 		= true;
 
 		bool errorCase01    = allClocks.Count == 0;
 		bool errorCase02    = mode==Option1.Single&&!allClocks.Values.Any((c)=>c.Label.Equals(label,StringComparison.CurrentCultureIgnoreCase));
 		bool errorCase03    = mode==Option1.Group &&!allClocks.Values.Any((c)=>c.Group.Equals(group,StringComparison.CurrentCultureIgnoreCase));
-        Color errorColor    = Color.DarkRed;
+		Color errorColor    = Color.DarkRed;
+
+		SimpleConfirmationMachine confirmationMachine;
 
 		if (errorCase01)
 		{
@@ -490,26 +492,31 @@ internal class ClockModule : IUserDefinedCommand
 		switch(mode)
 		{
 			case Option1.Single:
-				var confirmationMachine = new SimpleConfirmationMachine(command.User.Id,SimpleConfirmationMachine.ValidTarget.DeleteClockSingle,label);
+				confirmationMachine = new SimpleConfirmationMachine(command.User.Id,SimpleConfirmationMachine.ValidTarget.DeleteClockSingle,label);
 				confirmationMachine.AdvanceState(SimpleConfirmationMachine.Event.Initiate);
 				Program.StateMachines.Add(confirmationMachine);
-				title = $"Deleted clock with the Label '{label}'.";
-				sb.AppendLine($"At time of deletion, the clock was:\n{allClocks[label].ToStringWithDescription()}");
-				allClocks.Remove(label);
+				title = $"This will delete the clock with the Label '{confirmationMachine.TargetValue}'.";
+				sb.AppendLine($"Currently this clock is:\n{allClocks[label].ToStringWithDescription()}");
+				sb.AppendLine($"Use the `/confirm` command to proceed with the operation.");
 				break;
 
 			case Option1.Group:
-				int clocksCount = allClocks.Values.Where((c)=>c.Group.Equals(group,StringComparison.CurrentCultureIgnoreCase)).ToList().Count;
-				title = $"Deleted all clocks in Group '{group}'.";
-				sb.AppendLine($"{clocksCount} clocks were deleted.");
-				foreach(Clock groupedClock in allClocks.Values.Where((c)=>c.Group.Equals(group,StringComparison.CurrentCultureIgnoreCase)))
-					allClocks.Remove(groupedClock.Group.ToLower());
+				confirmationMachine = new SimpleConfirmationMachine(command.User.Id,SimpleConfirmationMachine.ValidTarget.DeleteClockGroup,group);
+				confirmationMachine.AdvanceState(SimpleConfirmationMachine.Event.Initiate);
+				Program.StateMachines.Add(confirmationMachine);
+				var groupClocks = allClocks.Values.Where((c)=>c.Group.Equals(group,StringComparison.CurrentCultureIgnoreCase)).ToList();
+				title = $"This will delete all clocks in Group '{groupClocks.First().Group}'!";
+				sb.AppendLine($"{groupClocks.Count} clocks will be deleted.");
+				sb.AppendLine($"Use the `/confirm` command to proceed with the operation.");
 				break;
 
 			case Option1.All:
-				title = $"Deleted all {allClocks.Count} clocks.";
-				sb.AppendLine($"{allClocks.Count} clocks were deleted.");
-				allClocks.Clear();
+				confirmationMachine = new SimpleConfirmationMachine(command.User.Id,SimpleConfirmationMachine.ValidTarget.DeleteClockAll,string.Empty);
+				confirmationMachine.AdvanceState(SimpleConfirmationMachine.Event.Initiate);
+				Program.StateMachines.Add(confirmationMachine);
+				title = $"This will delete all of your clocks.";
+				sb.AppendLine($"{allClocks.Count} clocks will be deleted.");
+				sb.AppendLine($"Use the `/confirm` command to proceed with the operation.");
 				break;
 		}
 

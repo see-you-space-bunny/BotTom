@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BotTom.Machines;
+using Charsheet.ForgedInTheDark;
 using Discord;
 using Discord.Net;
 using Discord.WebSocket;
@@ -19,7 +20,7 @@ internal class ConfirmationModule : IUserDefinedCommand
 	internal const string Name = "confirm";
 	internal const string Description = "Confirms your currently pending interaction.";
     internal readonly CommandOption<string> Passphase = new ("passphrase","Leave this blank if you were not given a passphrase. (default: none)",null);
-	private static readonly CommandOption<bool> Private = new ("private","Hide the result from everyone except you. (default: {0})",false);
+	private static readonly CommandOption<bool> Private = new ("private","Hide the result from everyone except you. (default: {0})",true);
     #endregion
 
     async Task IUserDefinedCommand.RegisterCommand()
@@ -48,18 +49,18 @@ internal class ConfirmationModule : IUserDefinedCommand
 		string? passphrase  = Passphase .Defaults(command) ? null                           : (string)Passphase .GetValue(command)!;
 		bool ephemeral      = Private   .Defaults(command) ? (bool)Private.DefaultValue!    : (bool)Private .GetValue(command)!;
 		var confirmationMachine = Program.ConfirmationMachines.First((m)=>m.UserId==command.User.Id);
-        string title, message;
-        if (passphrase is null || (passphrase is not null && passphrase.Trim() == confirmationMachine.Passphrase))
-        {
-            var (Title, Message) = PerformConfirmedAction(confirmationMachine);
-            title = Title;
-            message = Message;
-        }
-        else
-        {
-            title = "Wrong passphrase!!";
-            message = "Operation cancelled.";
-        }
+		string title, message;
+		if (passphrase is null || (passphrase is not null && passphrase.Trim() == confirmationMachine.Passphrase))
+		{
+				var (Title, Message) = PerformConfirmedAction(confirmationMachine);
+				title = Title;
+				message = Message;
+		}
+		else
+		{
+				title = "Wrong passphrase!!";
+				message = "Operation cancelled.";
+		}
 
 		var embedBuilder = new EmbedBuilder();
 
@@ -77,31 +78,54 @@ internal class ConfirmationModule : IUserDefinedCommand
 		if (title != string.Empty)
 			embedBuilder.WithTitle(title);
 		
-		embedBuilder.WithColor(guildUser != null ? guildUser.Roles.First().Color : Color.Default);
-
-		embedBuilder.WithDescription(message);
-
-		embedBuilder.WithCurrentTimestamp();
+		embedBuilder.WithColor(guildUser != null ? guildUser.Roles.First().Color : Color.Default)
+			.WithDescription(message)
+			.WithCurrentTimestamp();
 
 		await command.RespondAsync(embed: embedBuilder.Build(), ephemeral: ephemeral);
 	}
 
     private (string Title,string Message) PerformConfirmedAction(SimpleConfirmationMachine confirmationMachine)
     {
-        switch(confirmationMachine.Target)
-        {
-            case SimpleConfirmationMachine.ValidTarget.DeleteClockSingle:
-                return (string.Empty,string.Empty);
-                
-            case SimpleConfirmationMachine.ValidTarget.DeleteClockGroup:
-                return (string.Empty,string.Empty);
+			confirmationMachine.AdvanceState(SimpleConfirmationMachine.Event.Confirm);
+			string title;
+			string message;
+			if(!(confirmationMachine.CurrentState == SimpleConfirmationMachine.State.Confirmed))
+			{
+				title = "Could not confirm the action!";
+				message = confirmationMachine.StateInfo;
+			}
+			else
+			switch(confirmationMachine.Target)
+			{
+				case SimpleConfirmationMachine.ValidTarget.DeleteClockSingle:
+					var allClocksSingle = ClockCabinet.Clocks[confirmationMachine.UserId];
+					title = $"Deleted clock with the Label '{confirmationMachine.TargetValue}'.";
+					message = $"At time of deletion, the clock was:\n{allClocksSingle[confirmationMachine.TargetValue.ToLower()].ToStringWithDescription()}";
+					allClocksSingle.Remove(confirmationMachine.TargetValue);
+					break;
+						
+				case SimpleConfirmationMachine.ValidTarget.DeleteClockGroup:
+					var allClocksGroup = ClockCabinet.Clocks[confirmationMachine.UserId];
+					var groupClocks = allClocksGroup.Values.Where((c)=>c.Group.Equals(confirmationMachine.TargetValue,StringComparison.CurrentCultureIgnoreCase)).ToList();
+					title = $"Deleted all clocks in Group '{groupClocks.First().Group}'.";
+					message = $"{groupClocks.Count} clocks were deleted.";
+					foreach(Clock groupedClock in allClocksGroup.Values.Where((c)=>c.Group.Equals(confirmationMachine.TargetValue,StringComparison.CurrentCultureIgnoreCase)))
+						allClocksGroup.Remove(groupedClock.Group.ToLower());
+					break;
 
-            case SimpleConfirmationMachine.ValidTarget.DeleteClockAll:
-                return (string.Empty,string.Empty);
+				case SimpleConfirmationMachine.ValidTarget.DeleteClockAll:
+					var allClocksAll = ClockCabinet.Clocks[confirmationMachine.UserId];
+					title = $"Deleted all {allClocksAll.Count} clocks.";
+					message = $"{allClocksAll.Count} clocks were deleted.";
+					allClocksAll.Clear();
+					break;
 
-            default:
-                return ("An error has ocurred!","Unable to perform the desired action.");
-        }
+				default:
+					return ("An error has ocurred!","Unable to perform the desired action.");
+			}
+			Program.CheckStateMachines();
+			return (title,message);
     }
     
     bool IUserDefinedCommand.IsGlobal => true;

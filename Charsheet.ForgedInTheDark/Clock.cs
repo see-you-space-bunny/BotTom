@@ -46,7 +46,7 @@ public class Clock : IBinarySerializable
     _group = string.Empty;
   }
 
-  public void AddDescription(string description) => _description = $"> {description.Replace("\\n","\n> ")}";
+  public void AddDescription(string description) => _description = description!=string.Empty?$"\n> {description.Replace("\\n","\n> ")}":string.Empty;
   public void AddProgress(int progress) => AddProgress((ushort)progress);
   public void AddProgress(ushort progress) => _progressFilled = (ushort)Math.Min(_progressFilled+progress,_faceSize);
 
@@ -72,7 +72,7 @@ public class Clock : IBinarySerializable
   }
 
   public override string ToString() => 
-    $"{(IsComplete?"**":string.Empty)}` {_progressFilled.ToString().PadLeft(2,' ')} `​`/`​` {_faceSize.ToString().PadLeft(2,' ')} ` {_label}{(Group!=string.Empty?$" ({Group})":string.Empty)}{(IsComplete?"**":string.Empty)}";
+    $"{(IsComplete?"**":string.Empty)}`{_progressFilled.ToString().PadLeft(2,' ')}`​`/`​`{_faceSize.ToString().PadLeft(2,' ')}` {_label}{(Group!=string.Empty?$" ({Group})":string.Empty)}{(IsComplete?"**":string.Empty)}";
 
   public string ToStringWithDescription() =>
     ToString()+$"{(Description!=string.Empty?Description:string.Empty)}" ;

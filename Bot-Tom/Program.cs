@@ -233,6 +233,7 @@ partial class Program
 		RegisteredCommands.Add(ForgedInTheDarkModule.Name,	new ForgedInTheDarkModule());
 		RegisteredCommands.Add(ClockModule.Name,						new ClockModule());
 		RegisteredCommands.Add(NewObjectModule.Name,				new NewObjectModule());
+		RegisteredCommands.Add(ConfirmationModule.Name,			new ConfirmationModule());
 
 		foreach(IUserDefinedCommand userDefinedCommand in RegisteredCommands.Values)
 			await userDefinedCommand.RegisterCommand();
@@ -243,6 +244,13 @@ partial class Program
 	private static async Task SlashCommandHandler(SocketSlashCommand command)
 	{
 			await RegisteredCommands[command.Data.Name].HandleSlashCommand(command);
+	}
+	#endregion
+
+	#region CheckStateMachines
+	public static void CheckStateMachines()
+	{
+		_stateMachines.RemoveAll((m)=>m.AtTerminalStage||m.IsExpired);
 	}
 	#endregion
 
