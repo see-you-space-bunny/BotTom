@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiceRoller", "DiceRoller\Di
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Charsheet.ForgedInTheDark", "Charsheet.ForgedInTheDark\Charsheet.ForgedInTheDark.csproj", "{B1158F79-308E-4B28-8885-130301EDECFD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Charsheet.LevelGame", "Charsheet.LevelGame\Charsheet.LevelGame.csproj", "{005C46AD-D18B-467E-8BF3-2E310CACAF17}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -65,6 +67,10 @@ Global
 		{B1158F79-308E-4B28-8885-130301EDECFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B1158F79-308E-4B28-8885-130301EDECFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B1158F79-308E-4B28-8885-130301EDECFD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{005C46AD-D18B-467E-8BF3-2E310CACAF17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{005C46AD-D18B-467E-8BF3-2E310CACAF17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{005C46AD-D18B-467E-8BF3-2E310CACAF17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{005C46AD-D18B-467E-8BF3-2E310CACAF17}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

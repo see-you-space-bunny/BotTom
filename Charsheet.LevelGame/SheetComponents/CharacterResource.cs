@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Charsheet.ForgedInTheDark.SheetComponents;
+namespace Charsheet.LevelGame.SheetComponents;
 
-public class Resource(int current = 0,int hardLimit = -1,int softLimit = -1,bool moreIsBetter = true)
+public class CharacterResource(int current = 0,int hardLimit = -1,int softLimit = -1,bool moreIsBetter = true)
 {
     private int _current = current;
 
