@@ -109,7 +109,12 @@ public class Actor : GameObject
     #region Actor Extensions
     public Actor LevelUp(int levels = 1)
     {
-        _classLevels[_activeClass].Level += levels;
+        if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
+            activeClassLevels.Level += levels;
+        // TODO: deposit deserialized classes in a centrally accessible place from which
+        //       to draw from!!
+        //else
+        //    _classLevels.Add(_activeClass,new ClassLevels( TODO:GetActiveClassInfoFromCentral ,levels));
         ReCalculateDerivedStatistics();
         return this;
     }
