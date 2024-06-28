@@ -58,7 +58,8 @@ public class Actor : GameObject
 
         _classLevels = [];
 
-        Console.WriteLine(DescriptionAttribute.GetEnumDescription(Ability.Power));
+        // Causes StackOverFlowException!! ???
+        // Console.WriteLine(DescriptionAttribute.GetEnumDescription(Ability.Power));
     }
 
     public Actor ReCalculateDerivedStatistics()
