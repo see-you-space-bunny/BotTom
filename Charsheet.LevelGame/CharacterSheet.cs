@@ -24,7 +24,7 @@ public class CharacterSheet : Actor
     #endregion
 
     #region Private Constructor
-    private CharacterSheet()
+    private CharacterSheet() : base()
     {
         _userId                 = 0;
         _uniqueCharacterName    = string.Empty;
@@ -47,6 +47,31 @@ public class CharacterSheet : Actor
         _userId                     = userId;
         _characterName              = characterName ?? string.Empty;
         CharacterNameIsIdentifier   = false;
+    }
+    #endregion
+
+
+
+    #region Assignment Methods
+    public CharacterSheet ClearNickname()
+    {
+        _characterNickname = null;
+        return this;
+    }
+    public CharacterSheet WithNickname(string? nickname, bool? useOnlyNickname = null)
+    {
+        _characterNickname = nickname;
+        if (useOnlyNickname != null)
+            _useOnlyNickname = (bool)useOnlyNickname;
+        return this;
+    }
+    #endregion
+
+    #region Toggle Mothods
+    public CharacterSheet ToggleUsingOnlyNickname()
+    {
+        _useOnlyNickname = !_useOnlyNickname;
+        return this;
     }
     #endregion
 }

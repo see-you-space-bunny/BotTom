@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
@@ -8,11 +9,11 @@ using Charsheet.LevelGame.SheetComponents;
 
 namespace Charsheet.LevelGame;
 
-internal static class HumanXmlDeserializer
+public static class HumanXmlDeserializer
 {
     #region 
     private const string CharacterClassXPath = "/RootElement/CharacterClass";
-    private const string CurrentCharacterClassXPath = "/RootElement/CharacterClass[Name={0}]";
+    private const string CurrentCharacterClassXPath = "/RootElement/CharacterClass[Name=\"{0}\"]";
     private const string NameAttribute = "Name";
     private const string Resources = "descendant::Resources";
     private const string HitPoints = "descendant::HitPoints";
@@ -26,6 +27,8 @@ internal static class HumanXmlDeserializer
     private const string HardLimitAttribute = "HardLimit";
     #endregion
 
+    private static readonly CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
+
     public static void /** ItemSettings */ GetItemSettings(string filePath) { }
 
     public static void /** FeatSettings */ GetFeatSettings(string filePath) { }
@@ -33,19 +36,22 @@ internal static class HumanXmlDeserializer
     public static IEnumerable<CharacterClass> GetClasses(string filePath)
     {
         XmlDocument xmlDocument = new();
+        
         xmlDocument.Load(filePath);
                 
-        foreach(ClassName className in Enum.GetValues(typeof(ClassName)).Cast<ClassName>())
+        foreach(XmlNode characterClass in xmlDocument.SelectNodes(CharacterClassXPath)!)
         {
-            string currentCharacterClassXPath = string.Format(CurrentCharacterClassXPath,className.ToString());
-            CharacterClassBuilder ccb = new();
+            if (characterClass.Attributes != null && characterClass.Attributes[NameAttribute] != null)
+            {
+                CharacterClassBuilder ccb = new();
+                
+                ccb.WithName(characterClass.Attributes[NameAttribute]!.Value);
 
-            XmlNode characterClass = xmlDocument.SelectSingleNode(currentCharacterClassXPath)!;
-            
-            ccb.WithName(className);
-            GetResources(characterClass, ccb);
+                if (characterClass != null)
+                    GetResources(characterClass, ccb);
 
-            yield return ccb.Build();
+                yield return ccb.Build();
+            }
         }
     }
 
@@ -68,7 +74,7 @@ internal static class HumanXmlDeserializer
             if (healthPoints.Attributes != null)
             {
                 if (healthPoints.Attributes[BaseValueAttribute] != null)
-                    ccb.WithResourceModifier(Resource.HealthPoints,ResourceModifier.BaseValue,float.Parse(healthPoints.Attributes[BaseValueAttribute]!.Value));
+                    ccb.WithResourceModifier(Resource.HealthPoints,ResourceModifier.BaseValue,float.Parse(healthPoints.Attributes[BaseValueAttribute]!.Value,culture));
             }
 
             XmlNode? healthLimits = healthPoints.SelectSingleNode(Limits);
@@ -87,7 +93,7 @@ internal static class HumanXmlDeserializer
         {
             foreach(Ability ability in Enum.GetValues(typeof(Ability)).Cast<Ability>())
                 if (resourceAbilities.Attributes[ability.ToString()] != null)
-                    ccb.WithResourceAbilityScales(resource,ability,float.Parse(resourceAbilities.Attributes[ability.ToString()]!.Value));
+                    ccb.WithResourceAbilityScales(resource,ability,float.Parse(resourceAbilities.Attributes[ability.ToString()]!.Value,culture));
         }
     }
 
@@ -96,10 +102,10 @@ internal static class HumanXmlDeserializer
         if (resourceLimits.Attributes != null)
         {
             if (resourceLimits.Attributes[SoftLimitAttribute] != null)
-                ccb.WithResourceModifier(resource,ResourceModifier.SoftLimit,float.Parse(resourceLimits.Attributes[SoftLimitAttribute]!.Value));
+                ccb.WithResourceModifier(resource,ResourceModifier.SoftLimit,float.Parse(resourceLimits.Attributes[SoftLimitAttribute]!.Value,culture));
 
             if (resourceLimits.Attributes[HardLimitAttribute] != null)
-                ccb.WithResourceModifier(resource,ResourceModifier.HardLimit,float.Parse(resourceLimits.Attributes[HardLimitAttribute]!.Value));
+                ccb.WithResourceModifier(resource,ResourceModifier.HardLimit,float.Parse(resourceLimits.Attributes[HardLimitAttribute]!.Value,culture));
         }
 
         XmlNode? resourceAbilityLimits = resourceLimits.SelectSingleNode(Abilities);
@@ -114,7 +120,7 @@ internal static class HumanXmlDeserializer
             /** TODO: Add "health ability limits" to CharacterClass / CharacterClassBuilder
             foreach(Ability ability in Enum.GetValues(typeof(Ability)).Cast<Ability>())
                 if (healthAbilities.Attributes[ability.ToString()] != null)
-                    ccb.WithHealthAbilityLimit(ability,float.Parse(healthAbilities.Attributes[ability.ToString()]!.Value));
+                    ccb.WithHealthAbilityLimit(ability,float.Parse(healthAbilities.Attributes[ability.ToString()]!.Value,culture));
             */
         }
     }

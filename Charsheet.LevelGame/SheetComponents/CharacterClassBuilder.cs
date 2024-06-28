@@ -8,9 +8,15 @@ namespace Charsheet.LevelGame.SheetComponents;
 
 public class CharacterClassBuilder
 {
+  #region Constants
+  private const float DefaultDamageAbilityScales = 0.00f;
+  private const float DefaultDamageAbilityGroupScales = 1.00f;
+  private const float DefaultResourceModifier = 1.00f;
+  private const float DefaultResourceAbilityScales = 0.00f;
+  #endregion
+
   #region Properties
   private ClassName _name;
-  readonly Dictionary<Ability,float> _healthPointAbilityScales;
   readonly Dictionary<Ability,float> _damageAbilityScales;
   readonly Dictionary<AbilityGroup,float> _damageAbilityGroupScales;
   readonly Dictionary<Resource,Dictionary<ResourceModifier,float>> _resourceModifiers;
@@ -19,26 +25,21 @@ public class CharacterClassBuilder
 
   public CharacterClassBuilder()
   {
-    _healthPointAbilityScales = [];
-    foreach(Ability ability in Enum.GetValues(typeof(Ability)).Cast<Ability>())
-      _healthPointAbilityScales.Add(ability,0.00f);
-
     _damageAbilityScales = [];
     foreach(Ability ability in Enum.GetValues(typeof(Ability)).Cast<Ability>())
-      _damageAbilityScales.Add(ability,1.00f);
+      _damageAbilityScales.Add(ability,DefaultDamageAbilityScales);
     
-
     _damageAbilityGroupScales = [];
     foreach(AbilityGroup abilityGroup in Enum.GetValues(typeof(AbilityGroup)).Cast<AbilityGroup>())
-      _damageAbilityGroupScales.Add(abilityGroup,1.00f);
+      _damageAbilityGroupScales.Add(abilityGroup,DefaultDamageAbilityGroupScales);
 
     _resourceModifiers = [];
     foreach(Resource resource in Enum.GetValues(typeof(Resource)).Cast<Resource>())
     {
       Dictionary<ResourceModifier,float> _resourceEntry = [];
-      foreach(ResourceModifier resourceMultiplier in Enum.GetValues(typeof(ResourceModifier)).Cast<ResourceModifier>())
+      foreach(ResourceModifier resourceModifier in Enum.GetValues(typeof(ResourceModifier)).Cast<ResourceModifier>())
       {
-        _resourceEntry.Add(resourceMultiplier,1.00f);
+        _resourceEntry.Add(resourceModifier,DefaultResourceModifier);
       }
       _resourceModifiers.Add(resource,_resourceEntry);
     }
@@ -49,19 +50,10 @@ public class CharacterClassBuilder
       Dictionary<Ability,float> _resourceEntry = [];
       foreach(Ability ability in Enum.GetValues(typeof(Ability)).Cast<Ability>())
       {
-        _resourceEntry.Add(ability,1.00f);
+        _resourceEntry.Add(ability,DefaultResourceAbilityScales);
       }
       _resourceAbilityScales.Add(resource,_resourceEntry);
     }
-
-    #region Specific Defaults
-    _healthPointAbilityScales[Ability.Power     ] = 0.15f;
-    _healthPointAbilityScales[Ability.Body      ] = 0.80f;
-    _healthPointAbilityScales[Ability.Reflex    ] = 0.05f;
-    _healthPointAbilityScales[Ability.Focus     ] = 0.30f;
-    _healthPointAbilityScales[Ability.Will      ] = 0.50f;
-    _healthPointAbilityScales[Ability.Presence  ] = 0.20f;
-    #endregion
   }
 
   public CharacterClass Build() => new(

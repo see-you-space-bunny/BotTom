@@ -11,6 +11,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="xml/**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\FileManip\FileManip.csproj" />
   </ItemGroup>
   

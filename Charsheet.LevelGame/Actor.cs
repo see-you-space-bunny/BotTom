@@ -19,14 +19,15 @@ public class Actor : GameObject
     protected Dictionary<ClassName,ClassLevels> _classLevels;
     protected Dictionary<Ability,int> _abilities;
     protected Dictionary<SkillActions,SkillAction> _actions;
-    protected CharacterResource _hitPoints;
+    protected Dictionary<Resource,CharacterResource> _resources;
     #endregion
 
     #region Properties (+)
     /// <summary>
-    /// Hit Points formula: Level * SQRT(POW(Body*0.8+Power*0.15+Finesse*0.05,2) + POW(Will*0.5 + Focus*0.3 + Presence*0.2 - 1,2)) + 128
+    /// Hit Points formula: (int) BaseValue + Level * SQRT(POW(Body*MOD+Power*MOD+Finesse*MOD,2) + POW(Focus*MOD+Will*MOD+Wit*MOD+Presence*MOD+Integrity*MOD+Charm*MOD-1,2))
     /// </summary>
-    public CharacterResource HitPoints => _hitPoints;
+    public CharacterResource HealthPoints => _resources[Resource.HealthPoints];
+    public new int Level => _classLevels.Values.Sum((cl)=>cl.Level);
     #endregion
     
     public Actor() : base(0)
@@ -49,13 +50,16 @@ public class Actor : GameObject
             _abilities.Add(ability,0);
         }
 
-        _hitPoints = new CharacterResource(0);
+        _resources = [];
+        foreach(Resource resource in Enum.GetValues(typeof(Resource)).Cast<Resource>())
+        {
+            _resources.Add(resource,new CharacterResource());
+        }
 
         _classLevels = [];
 
         Console.WriteLine(DescriptionAttribute.GetEnumDescription(Ability.Power));
     }
-
 
     public Actor ReCalculateDerivedStatistics()
     {
@@ -65,40 +69,66 @@ public class Actor : GameObject
 
     private void ReCalculateHitPoints()
     {
-        int previousSoftLimit = _hitPoints.SoftLimit;
-        int previousHardLimit = _hitPoints.HardLimit;
-        _hitPoints.SoftLimit = 0;
-        _hitPoints.HardLimit = 0;
-        foreach(ClassLevels classLevels in _classLevels.Values)
+        int previousSoftLimit = HealthPoints.SoftLimit;
+        int previousHardLimit = HealthPoints.HardLimit;
+        foreach(ClassLevels classLevels in _classLevels.Values.Where((cl)=>cl.Level>0))
         {
-            var classLimits = CalcHitPointsLimits(classLevels);
-            _hitPoints.SoftLimit += classLimits.SoftLimit;
-            _hitPoints.HardLimit += classLimits.HardLimit;
+            (HealthPoints.SoftLimit, HealthPoints.HardLimit) = CalcHealthPointsLimits(classLevels);
         }
-        _hitPoints.Current *= Math.Max(_hitPoints.SoftLimit / previousSoftLimit, _hitPoints.HardLimit / previousHardLimit);
+        HealthPoints.Current *= Math.Max(HealthPoints.SoftLimit / previousSoftLimit, HealthPoints.HardLimit / previousHardLimit);
     }
 
-    private (int SoftLimit,int HardLimit) CalcHitPointsLimits(ClassLevels classLevels)
+    private (int SoftLimit,int HardLimit) CalcHealthPointsLimits(ClassLevels classLevels)
     {
-        int softLimit = (int)(classLevels.Class.ResourceModifiers[Resource.HealthPoints][ResourceModifier.SoftLimit] *
+        var healthPointScales = classLevels.Class.ResourceAbilityScales[Resource.HealthPoints];
+        var healthPointModifiers = classLevels.Class.ResourceModifiers[Resource.HealthPoints];
+        int softLimit = (int)(healthPointModifiers[ResourceModifier.SoftLimit] * (
+            healthPointModifiers[ResourceModifier.BaseValue] +
             classLevels.Level * Math.Sqrt(
                 Math.Pow(
                     (double)(
-                        _abilities[Ability.Power    ]*classLevels.Class.ResourceAbilityScales[Resource.HealthPoints][Ability.Power      ]   +
-                        _abilities[Ability.Body     ]*classLevels.Class.ResourceAbilityScales[Resource.HealthPoints][Ability.Body       ]   +
-                        _abilities[Ability.Reflex   ]*classLevels.Class.ResourceAbilityScales[Resource.HealthPoints][Ability.Reflex     ]   
+                        _abilities[Ability.Power    ]*healthPointScales[Ability.Power    ] +
+                        _abilities[Ability.Body     ]*healthPointScales[Ability.Body     ] +
+                        _abilities[Ability.Reflex   ]*healthPointScales[Ability.Reflex   ]
                 ),2d) + Math.Pow(
                     (double)(
-                        _abilities[Ability.Focus    ]*classLevels.Class.ResourceAbilityScales[Resource.HealthPoints][Ability.Focus      ]   +
-                        _abilities[Ability.Will     ]*classLevels.Class.ResourceAbilityScales[Resource.HealthPoints][Ability.Will       ]   +
-                        _abilities[Ability.Wit      ]*classLevels.Class.ResourceAbilityScales[Resource.HealthPoints][Ability.Wit        ]   +
-                        _abilities[Ability.Presence ]*classLevels.Class.ResourceAbilityScales[Resource.HealthPoints][Ability.Presence   ]   +
-                        _abilities[Ability.Integrity]*classLevels.Class.ResourceAbilityScales[Resource.HealthPoints][Ability.Integrity  ]   +
-                        _abilities[Ability.Charm    ]*classLevels.Class.ResourceAbilityScales[Resource.HealthPoints][Ability.Charm      ]   
+                        _abilities[Ability.Focus    ]*healthPointScales[Ability.Focus    ] +
+                        _abilities[Ability.Will     ]*healthPointScales[Ability.Will     ] +
+                        _abilities[Ability.Wit      ]*healthPointScales[Ability.Wit      ] +
+                        _abilities[Ability.Presence ]*healthPointScales[Ability.Presence ] +
+                        _abilities[Ability.Integrity]*healthPointScales[Ability.Integrity] +
+                        _abilities[Ability.Charm    ]*healthPointScales[Ability.Charm    ]
                 ),2d)
             )
-        );
+        ));
         int hardLimit = (int)(softLimit * classLevels.Class.ResourceModifiers[Resource.HealthPoints][ResourceModifier.HardLimit]);
         return (softLimit,hardLimit);
     }
+
+    #region Actor Extensions
+    public Actor LevelUp(int levels = 1)
+    {
+        _classLevels[_activeClass].Level += levels;
+        ReCalculateDerivedStatistics();
+        return this;
+    }
+
+    public Actor ChangeClass(ClassName className)
+    {
+        _activeClass = className;
+        return this;
+    }
+
+    public Actor AddToResource(Resource resource,int value)
+    {
+        _resources[resource].Current += value;
+        return this;
+    }
+
+    public Actor SetResource(Resource resource,int value)
+    {
+        _resources[resource].Current = value;
+        return this;
+    }
+    #endregion
 }

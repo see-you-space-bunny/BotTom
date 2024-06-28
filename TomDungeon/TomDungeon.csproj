@@ -28,12 +28,14 @@
 
   <ItemGroup>
     <None Include="TestData/**" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="xml/**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Bot-Tom\Bot-Tom.csproj" />
     <ProjectReference Include="..\Charsheet.Morkborg\Charsheet.Morkborg.csproj" />
     <ProjectReference Include="..\FileManip\FileManip.csproj" />
+    <ProjectReference Include="..\Charsheet.LevelGame\Charsheet.LevelGame.csproj" />
   </ItemGroup>
 
 </Project>
