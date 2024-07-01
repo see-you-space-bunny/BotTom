@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Charsheet.ForgedInTheDark",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Charsheet.LevelGame", "Charsheet.LevelGame\Charsheet.LevelGame.csproj", "{005C46AD-D18B-467E-8BF3-2E310CACAF17}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SurlyCardGame", "SurlyCardGame\SurlyCardGame.csproj", "{7C438ED9-D7C2-42AA-ADAE-A703484AE45F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +73,10 @@ Global
 		{005C46AD-D18B-467E-8BF3-2E310CACAF17}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{005C46AD-D18B-467E-8BF3-2E310CACAF17}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{005C46AD-D18B-467E-8BF3-2E310CACAF17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C438ED9-D7C2-42AA-ADAE-A703484AE45F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C438ED9-D7C2-42AA-ADAE-A703484AE45F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C438ED9-D7C2-42AA-ADAE-A703484AE45F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C438ED9-D7C2-42AA-ADAE-A703484AE45F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

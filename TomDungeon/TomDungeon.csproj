@@ -36,6 +36,7 @@
     <ProjectReference Include="..\Charsheet.Morkborg\Charsheet.Morkborg.csproj" />
     <ProjectReference Include="..\FileManip\FileManip.csproj" />
     <ProjectReference Include="..\Charsheet.LevelGame\Charsheet.LevelGame.csproj" />
+    <ProjectReference Include="..\SurlyCardGame\SurlyCardGame.csproj" />
   </ItemGroup>
 
 </Project>
