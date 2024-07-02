@@ -1,9 +1,8 @@
-namespace SurlyCardGame.Enums
+namespace Widget.CardGame.Enums
 {
     public enum Command
     {
         Accept,
         Challenge,
-        Chal,
     }
 }

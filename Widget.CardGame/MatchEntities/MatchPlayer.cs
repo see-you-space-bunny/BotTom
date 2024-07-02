@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Widget.CardGame.Enums;
+using Widget.CardGame.PersistentEntities;
 
-namespace SurlyCardGame;
+namespace Widget.CardGame.MatchEntities;
 
 public class MatchPlayer
 {

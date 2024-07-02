@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Widget.CardGame.Enums;
 
-namespace SurlyCardGame
+namespace Widget.CardGame.MatchEntities
 {
     public struct SummonCard(short power,short health,CharacterStat cardArchetype)
     {

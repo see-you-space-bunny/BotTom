@@ -35,5 +35,11 @@
     <ProjectReference Include="..\ProcGen.Scumify\ProcGen.Scumify.csproj" />
     <ProjectReference Include="..\DiceRoller\DiceRoller.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+     <Reference Include="ChatApi, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+       <HintPath>..\CardiApi\ChatApi.dll</HintPath>
+     </Reference>
+  </ItemGroup>
 
 </Project>

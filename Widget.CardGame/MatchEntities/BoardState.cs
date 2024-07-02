@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace SurlyCardGame;
+namespace Widget.CardGame.MatchEntities;
 
 public class BoardState(MatchPlayer player1,MatchPlayer player2)
 {

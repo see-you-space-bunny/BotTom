@@ -15,6 +15,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FileManip\FileManip.csproj" />
+    <ProjectReference Include="..\Bot-Tom\Bot-Tom.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+     <Reference Include="ChatApi, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+       <HintPath>..\CardiApi\ChatApi.dll</HintPath>
+     </Reference>
   </ItemGroup>
   
 </Project>
