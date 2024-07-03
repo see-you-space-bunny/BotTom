@@ -9,19 +9,24 @@ using Widget.CardGame.Commands;
 using Widget.CardGame.PersistentEntities;
 using Widget.CardGame.DataStructures;
 using Widget.CardGame.Interfaces;
+using Widget.CardGame.Exceptions;
+using BotTom.CardiApi;
+using Bot_Tom.CardiApi;
+using System.Text;
 
 namespace Widget.CardGame
 {
     public static partial class TournamentOrganiser
     {
+        private const string BotUserIdentity = "Bot Tom";
 
         internal static Dictionary<string,PlayerCharacter> RegisteredCharacters { get; }
+
         internal static Dictionary<string,MatchChallenge> IncomingChallenges { get; }
-        internal static List<BoardState> OngoingMatches { get; }
         internal static Dictionary<string,MatchChallenge> OutgoingChallenges => IncomingChallenges.ToOutgoing();
 
-        internal static List<ICommand> ActionQueue { get; }
-        public static List<BotTom.CardiApi.ChatMessage> MessageQueue { get; }
+        internal static List<BoardState> OngoingMatches { get; }
+        internal static List<ChatMessage> MessageQueue { get; }
 
 
         static TournamentOrganiser()
@@ -33,52 +38,57 @@ namespace Widget.CardGame
                 [player1.ToLower()] = new PlayerCharacter(player1),
                 [player2.ToLower()] = new PlayerCharacter(player2),
             };
-            ActionQueue             = [];
             MessageQueue            = [];
             IncomingChallenges      = [];
             OngoingMatches          = [];
 #else
             RegisteredCharacters    = [];
-            ActionQueue             = [];
             MessageQueue            = [];
             IncomingChallenges      = [];
             OngoingMatches          = [];
 #endif
         }
 
-        public static void HandleCommand(BotTom.CardiApi.ChatMessage message)
+        public static async Task HandleCommand(ChatMessage message)
         {
-            if (!CommandStringInterpreter.RegexMatchAnyCommand().IsMatch(message.Message))
+            foreach(string key in OutgoingChallenges.Where((kvp)=>kvp.Value.AtTerminalStage).Select((kvp)=>kvp.Key))
+                OutgoingChallenges.Remove(key);
+
+            ChatMessageBuilder messageBuilder = new ChatMessageBuilder()
+                .WithAuthor(BotUserIdentity)
+                .WithRecipient(message.Author)
+                .WithMention(RegisteredCharacters[message.Author.ToLower()].MentionAndIdentity);
+
+            Match match = CommandStringInterpreter.RegexMatchAnyCommand().Match(message.Message);
+            if (!match.Success)
                 return;
 
-            Command command = Enum.Parse<Command>(
-                CommandStringInterpreter.RegexMatchAnyCommand()
-                .Match(message.Message)
-                .Groups
-                .Values
-                .Single((g)=>g.Name==CommandStringInterpreter.CommandWord)
-                .Value,
-                true);
+            if (Enum.TryParse(
+                value: match.Groups.Values.Single((g)=>g.Name==CommandStringInterpreter.Command).Value,
+                ignoreCase: true,
+                result: out Command command))
             try
             {
+                
                 switch (command)
                 {
                     case Command.Challenge:
-                        IssueChallenge(message);
+                        if (!OutgoingChallenges.ContainsKey(message.Author.ToLower()))
+                            await IssueChallenge(message,messageBuilder);
+                        else
+                            throw new DisallowedCommandException(Command.Challenge,CommandPermission.AwaitingResponse);
                         break;
 
                     case Command.Accept:
-                        AcceptChallenge(message);
+                        await AcceptChallenge(message,messageBuilder);
                         break;
                     
                     default:
-                        MessageQueue.Add(new BotTom.CardiApi.ChatMessage(
-                            "Bot Tom",
-                            message.Recipient,
-                            message.MessageType,
-                            message.Channel,
-                            $"That is not a valid command!"
-                        ));
+                        messageBuilder.WithRecipient(message.Author)
+                                      .WithMessageType(message.MessageType)
+                                      .WithChannel(message.Channel)
+                                      .WithMessage("That is not a valid command!")
+                                      .WithMention(RegisteredCharacters[message.Author.ToLower()].MentionAndIdentity);
                         break;
                 }
             }
@@ -89,76 +99,95 @@ namespace Widget.CardGame
                 Console.WriteLine();
                 Console.WriteLine(e.Message);
             }
+            catch (DisallowedCommandException disallowedCommand)
+            {
+                messageBuilder.WithMessageType(message.MessageType)
+                              .WithChannel(message.Channel)
+                              .WithMessage(
+                    disallowedCommand.Reason switch
+                    {
+                        CommandPermission.AwaitingResponse => $"{RegisteredCharacters[message.Author.ToLower()].MentionAndIdentity} already!",
+                        _ => throw new ArgumentOutOfRangeException(nameof(disallowedCommand.Reason), $"Unexpected {typeof(CommandPermission)} value: {disallowedCommand.Reason}")
+                    }
+                );
+            }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
+            await QueueMessage(messageBuilder.Build());
         }
 
-        private static void AcceptChallenge(BotTom.CardiApi.ChatMessage message)
+        private static async Task AcceptChallenge(ChatMessage message,ChatMessageBuilder messageBuilder)
         {
-            if (!CommandStringInterpreter.RegexMatchAcceptChallenge().IsMatch(message.Message))
+            Match match = CommandStringInterpreter.RegexMatchAcceptChallenge().Match(message.Message);
+            if (!match.Success)
                 return;
 
-            IEnumerable<Group> matchGroups = CommandStringInterpreter.RegexMatchAcceptChallenge().Match(message.Message).Groups.Values;
+            IEnumerable<Group> matchGroups = match.Groups.Values;
 
             CharacterStat stat1 = Enum.Parse<CharacterStat>(matchGroups.Single((g)=>g.Name==CommandStringInterpreter.Stat1).Value,true);
 
             CharacterStat? stat2 = null;
             if (Enum.TryParse(matchGroups.Single((g)=>g.Name==CommandStringInterpreter.Stat2).Value, out CharacterStat s2))
                 stat2 = s2;
-            IncomingChallenges[message.Author.ToLower()].AcceptWithDeckArchetype(stat1,stat2);
-            IncomingChallenges[message.Author.ToLower()].AdvanceState(MatchChallenge.Event.Confirm);
+                
+            StringBuilder sb = new();
+            sb.Append(RegisteredCharacters[message.Author.ToLower()].MentionAndIdentity);
+            sb.Append(" accepted ");
+            sb.Append(IncomingChallenges[message.Author.ToLower()].Player1.PlayerCharacter.MentionAndIdentity);
+            sb.Append("'s challenge!");
 
-            MessageQueue.Add(new BotTom.CardiApi.ChatMessage(
-                "Bot Tom",
-                message.Recipient,
-                message.MessageType,
-                message.Channel,
-                $"{RegisteredCharacters[message.Author.ToLower()].MentionAndIdentity} accepted " +
-                    $"{IncomingChallenges[message.Author.ToLower()].Player1.PlayerCharacter.MentionAndIdentity}'s challenge!"
-            ));
+            messageBuilder.WithMessageType(message.MessageType)
+                          .WithChannel(message.Channel)
+                          .WithMessage(sb.ToString())
+                          .WithoutMention();
+            
+            await IncomingChallenges[message.Author.ToLower()].AdvanceState(MatchChallenge.Event.Confirm);
+            OngoingMatches.Add(IncomingChallenges[message.Author.ToLower()].AcceptWithDeckArchetype(stat1,stat2));
         }
 
-        private static void IssueChallenge(BotTom.CardiApi.ChatMessage message)
+        private static async Task IssueChallenge(ChatMessage message,ChatMessageBuilder messageBuilder)
         {
-            if (!CommandStringInterpreter.RegexMatchChallenge().IsMatch(message.Message))
-                return;
+            Match match = CommandStringInterpreter.RegexMatchChallenge().Match(message.Message);
+            if (!match.Success)
+            {
 
-            IEnumerable<Group> matchGroups = CommandStringInterpreter.RegexMatchChallenge().Match(message.Message).Groups.Values;
+                throw new InvalidCommandSyntaxException("Invalid use of the \"Challenge\" command!");
+            }
+
+            IEnumerable<Group> matchGroups = match.Groups.Values;
 
             CharacterStat stat1 = Enum.Parse<CharacterStat>(matchGroups.Single((g)=>g.Name==CommandStringInterpreter.Stat1).Value,true);
 
-            string playerIdentity = matchGroups.Single((g)=>g.Name==CommandStringInterpreter.PlayerIdentity).Value;
+            string playerIdentity = matchGroups.Single((g)=>g.Name==CommandStringInterpreter.Player).Value;
             
             CharacterStat? stat2 = null;
             if (Enum.TryParse(matchGroups.Single((g)=>g.Name==CommandStringInterpreter.Stat2).Value, out CharacterStat s2))
                 stat2 = s2;
             
-            IncomingChallenges.Add(playerIdentity,new MatchChallenge(
+            StringBuilder sb = new();
+            sb.Append(RegisteredCharacters[message.Author.ToLower()].MentionAndIdentity);
+            sb.Append(" has challenged ");
+            sb.Append(RegisteredCharacters[playerIdentity.ToLower()].MentionAndIdentity);
+            sb.AppendLine(" to a [b]Duel[/b]! ");
+            sb.Append("Use the command \"tom!xcg accept [i]stat2[/i] [i]stat2[/i]\"");
+            
+            messageBuilder.WithMessageType(message.MessageType)
+                          .WithChannel(message.Channel)
+                          .WithMessage(sb.ToString())
+                          .WithoutMention();
+
+            IncomingChallenges.Add(playerIdentity.ToLower(),new MatchChallenge(
                 RegisteredCharacters[message.Author.ToLower()].CreateMatchPlayer(stat1,stat2),
                 RegisteredCharacters[playerIdentity.ToLower()]
             ));
-            IncomingChallenges[playerIdentity].AdvanceState(MatchChallenge.Event.Initiate);
-            
-            MessageQueue.Add(new BotTom.CardiApi.ChatMessage(
-                "Bot Tom",
-                message.Recipient,
-                message.MessageType,
-                message.Channel,
-                $"{RegisteredCharacters[message.Author.ToLower()].MentionAndIdentity} has challenged " + 
-                    $"{RegisteredCharacters[playerIdentity.ToLower()].MentionAndIdentity} to a [b]Duel[/b]! " +
-                    "Use the command \"tom!xcg accept [i]stat2[/i] [i]stat2[/i]\""
-            ));
+            await IncomingChallenges[playerIdentity.ToLower()].AdvanceState(MatchChallenge.Event.Initiate);
         }
 
-        public static async Task HandleActionQueue()
+        private static async Task QueueMessage(ChatMessage message)
         {
-            foreach(ICommand action in ActionQueue)
-            {
-                action.ExecuteCommand();
-            }
-            ActionQueue.Clear();
+            MessageQueue.Add(message);
         }
     }
 }

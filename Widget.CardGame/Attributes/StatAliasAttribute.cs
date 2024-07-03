@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Widget.CardGame.Attributes;
 
 [AttributeUsage(AttributeTargets.All)]
-sealed class StatAliasAttribute : Attribute
+public class StatAliasAttribute : Attribute
 {
     // See the attribute guidelines at
     //  http://go.microsoft.com/fwlink/?LinkId=85236

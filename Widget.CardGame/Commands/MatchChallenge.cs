@@ -12,7 +12,7 @@ using ChatApi;
 namespace Widget.CardGame.Commands;
 
 
-internal class MatchChallenge : ICommandIO<string>, ICommand
+internal class MatchChallenge : ICommandIO<string>
 {
   internal enum State
   {
@@ -73,7 +73,7 @@ internal class MatchChallenge : ICommandIO<string>, ICommand
     ExpireTime      = TimeInitiated.Add(expiresIn);
   }
 
-  internal void AdvanceState(Event @event)
+  internal async Task AdvanceState(Event @event)
   {
     var previousState = PreviousState;
     PreviousState = CurrentState;
@@ -119,18 +119,10 @@ internal class MatchChallenge : ICommandIO<string>, ICommand
 
   internal bool AtTerminalStage => EndStates.Contains(CurrentState);
 
-  internal void AcceptWithDeckArchetype(CharacterStat stat1, CharacterStat? stat2) => Player2 = Target.CreateMatchPlayer(stat1,stat2);
-
-  void ICommand.ExecuteCommand()
+  internal BoardState AcceptWithDeckArchetype(CharacterStat stat1, CharacterStat? stat2)
   {
-    if (CurrentState == State.Confirmed)
-    {
-      if (Player2 is null)
-        throw new ArgumentNullException(nameof(Player2));
-
-      TournamentOrganiser.OngoingMatches.Add(new BoardState(Player1,Player2));
-      AdvanceState(Event.Exit);
-    }
+    Player2 = Target.CreateMatchPlayer(stat1,stat2);
+    return new BoardState(Player1,Player2);
   }
 
   string ICommandIO<string>.AlternateKey => Target.Identity.ToLower();
