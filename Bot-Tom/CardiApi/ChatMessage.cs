@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ChatApi;
 
 namespace BotTom.CardiApi;
 
@@ -12,10 +13,4 @@ public readonly struct ChatMessage(string author,string recipient,MessageType me
     public readonly MessageType MessageType => messageType;
     public readonly string Channel => channel;
     public readonly string Message => message;
-}
-
-public enum MessageType
-{
-    Basic,
-    Whisper,
 }

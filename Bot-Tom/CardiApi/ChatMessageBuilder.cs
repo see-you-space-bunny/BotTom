@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BotTom.CardiApi;
+using ChatApi;
 using org.mariuszgromada.math.mxparser;
 
 namespace Bot_Tom.CardiApi
@@ -55,19 +56,20 @@ namespace Bot_Tom.CardiApi
 
         public ChatMessage Build()
         {
-            switch(MessageType)
+            switch(MessageType!)
             {
-                case BotTom.CardiApi.MessageType.Basic:
+                case ChatApi.MessageType.Basic:
                     if (Channel is null)
                         throw new IncompleteBuilderException(nameof(Channel),Channel,BuildStep);
                     break;
                     
-                case BotTom.CardiApi.MessageType.Whisper:
+                case ChatApi.MessageType.Whisper:
                     if (Recipient is null)
                         throw new IncompleteBuilderException(nameof(Recipient),Recipient,BuildStep);
                     Channel = DeriveWhisperChannel();
                     break;
 
+                case null:
                 default:
                     throw new ArgumentOutOfRangeException(nameof(MessageType),
                         $"{BuildStep} step encountered unexpected {typeof(MessageType)} value: {MessageType}");
@@ -90,7 +92,7 @@ namespace Bot_Tom.CardiApi
             return new ChatMessage(
                 Author,
                 Recipient ?? string.Empty,
-                (MessageType)MessageType,
+                (MessageType)MessageType!,
                 Channel,
                 messageStringBuilder.ToString()
             );
