@@ -8,82 +8,87 @@ namespace Widget.CardGame.Commands;
 
 internal partial class CommandStringInterpreter
 {
-    public const string BotCommandIdentifier        = "tom!";
-    public const string ModuleCommandKey            = "xcg";
 
-    internal const string CommandWord               = "CommandWord";
-    internal const string Stat1                     = "Stat1";
-    internal const string Stat2                     = "Stat2";
-    internal const string CommandOrWordOption       = "CommandOrWordOption";
-    internal const string PlayerIdentity            = "PlayerIdentity";
-    internal const string Integer                   = "Integer";
-    internal const string Float                     = "Float";
+    internal const string StartOfCommand            = @"(^|(\[noparse=))";
+    internal const string OptionSeparator           = @"\s+";
+    internal const string EndOfCommand              = @"(\s+|\]|$)";
 
-    internal const string CommandWordMinLength      = "1";
-    internal const string CommandWordMaxLength      = "24";
+    internal const string ThisRequiredNextRequired  = @")"+OptionSeparator+@"){1}";
+    internal const string ThisRequiredNextOptional  = @")"+EndOfCommand+@"){1}";
+    internal const string ThisOptionalNextRequired  = @")"+OptionSeparator+@"){0,1}";
+    internal const string ThisOptionalNextOptional  = @")"+EndOfCommand+@"){0,1}";
 
-    internal const string WordOptionMinLength       = "3";
-    internal const string WordOptionMaxLength       = "24";
+    public const string BotIdentifier               = @"tom!";
+    public const string ModuleKey                   = @"xcg";
 
-    internal const string PlayerIdentityMinLength   = "3";
-    internal const string PlayerIdentityMaxLength   = "32";
+    internal const string OptionLengthMinCommand    = @"1";
+    internal const string OptionLengthMinWord       = @"3";
+    internal const string OptionLengthMinInteger    = @"1";
+    internal const string OptionLengthMinFloat1     = @"1";
+    internal const string OptionLengthMinFloat2     = @"1";
+    internal const string OptionLengthMinPlayer     = @"3";
 
-    internal const string IntegerMinLength          = "1";
-    internal const string IntegerMaxLength          = "7";
+    internal const string OptionLengthMaxCommand    = @"24";
+    internal const string OptionLengthMaxWord       = @"24";
+    internal const string OptionLengthMaxInteger    = @"7";
+    internal const string OptionLengthMaxFloat1     = @"7";
+    internal const string OptionLengthMaxFloat2     = @"7";
+    internal const string OptionLengthMaxPlayer     = @"32";
 
-    internal const string FloatMinLength1          = "1";
-    internal const string FloatMaxLength1          = "7";
-    internal const string FloatMinLength2          = "1";
-    internal const string FloatMaxLength2          = "7";
+    internal const string OptionLengthCommand       = @"{"+OptionLengthMinCommand   +@","+OptionLengthMaxCommand+@"}";
+    internal const string OptionLengthWord          = @"{"+OptionLengthMinWord      +@","+OptionLengthMaxWord   +@"}";
+    internal const string OptionLengthInteger       = @"{"+OptionLengthMinInteger   +@","+OptionLengthMaxInteger+@"}";
+    internal const string OptionLengthFloat1        = @"{"+OptionLengthMinFloat1    +@","+OptionLengthMaxFloat1 +@"}";
+    internal const string OptionLengthFloat2        = @"{"+OptionLengthMinFloat2    +@","+OptionLengthMaxFloat2 +@"}";
+    internal const string OptionLengthPlayer        = @"{"+OptionLengthMinPlayer    +@","+OptionLengthMaxPlayer +@"}";
 
-    [GeneratedRegex(@"(^|(noparse=))" + BotCommandIdentifier + ModuleCommandKey +
-        @"\s+((?'" + CommandWord + @"'[a-zA-Z]{" + CommandWordMinLength + @"," + CommandWordMaxLength + @"}(\s+|\[|$))){1}"
-    )]
+
+    internal const string Command                   = @"Command";
+    internal const string Stat1                     = @"Stat1";
+    internal const string Stat2                     = @"Stat2";
+    internal const string Amount                    = @"Amount";
+    internal const string Player                    = @"Player";
+
+    internal const string NamedPatternStart         = @"((?'";
+    internal const string NamedCommandPattern       = @"'[a-zA-Z]"  + OptionLengthCommand;
+    internal const string NamedWordPattern          = @"'[a-zA-Z]"  + OptionLengthWord;
+    internal const string NamedIntegerPattern       = @"'[0-9]"     + OptionLengthInteger;
+
+    internal const string CommandPattern            = NamedPatternStart + Command + NamedCommandPattern;
+    internal const string OptionStat1Pattern        = NamedPatternStart + Stat1   + NamedWordPattern;
+    internal const string OptionStat2Pattern        = NamedPatternStart + Stat2   + NamedWordPattern;
+    internal const string OptionAmountPattern       = NamedPatternStart + Amount  + NamedIntegerPattern;
+
+    internal const string UserPattern               = @"\[user\](((?'"+Player+@"'[a-zA-Z0-9\-\ ]"+OptionLengthPlayer+@")\[\/user\]";
+
+    [GeneratedRegex(
+        StartOfCommand      + BotIdentifier +
+        ModuleKey           + OptionSeparator +
+        CommandPattern      + ThisRequiredNextOptional)]
     internal static partial Regex RegexMatchAnyCommand();
 
-    // (^|(noparse=))tom!xcg\s+((?'CommandWord'[a-zA-Z]{1,24}\s+)){1}((?'Stat1'[a-zA-Z]{3,24}\s+)){1}((?'Stat2'[a-zA-Z]{3,24}\s+)){0,1}(\[user\](?'PlayerIdentity'[a-zA-Z0-9\-\ ]{3,32})\[\/user\](\s+|\[|$)){1}
-    [GeneratedRegex(@"(^|(noparse=))" + BotCommandIdentifier + ModuleCommandKey +
-        @"\s+((?'" + CommandWord + @"'[a-zA-Z]{" + CommandWordMinLength + @"," + CommandWordMaxLength + @"}\s+)){1}" +
-        @"((?'" + Stat1 + @"'[a-zA-Z]{" + WordOptionMinLength + @"," + WordOptionMaxLength + @"}\s+)){1}" +
-        @"((?'" + Stat2 + @"'[a-zA-Z]{" + WordOptionMinLength + @"," + WordOptionMaxLength + @"}\s+)){0,1}" +
-        @"(\[user\](?'" + PlayerIdentity + @"'[a-zA-Z0-9\-\ ]{" + PlayerIdentityMinLength + @"," + PlayerIdentityMaxLength + @"})\[\/user\](\s+|\[|$)){1}"
-    )]
+    [GeneratedRegex(
+        StartOfCommand      + BotIdentifier +
+        ModuleKey           + OptionSeparator +
+        CommandPattern      + ThisRequiredNextRequired +
+        OptionStat1Pattern  + ThisRequiredNextOptional +
+        OptionStat2Pattern  + ThisOptionalNextRequired +
+        UserPattern         + ThisRequiredNextOptional)]
     internal static partial Regex RegexMatchChallenge();
 
-    [GeneratedRegex(@"(^|(noparse=))" + BotCommandIdentifier + ModuleCommandKey +
-        @"\s+((?'" + CommandWord + @"'[a-zA-Z]{" + CommandWordMinLength + @"," + CommandWordMaxLength + @"}(\s+|\[|$))){1}" +
-        @"((?'" + Stat1 + @"'[a-zA-Z]{" + WordOptionMinLength + @"," + WordOptionMaxLength + @"}(\s+|\[|$))){1}" +
-        @"((?'" + Stat2 + @"'[a-zA-Z]{" + WordOptionMinLength + @"," + WordOptionMaxLength + @"}(\s|\[|$))){0,1}"
-    )]
+    [GeneratedRegex(
+        StartOfCommand      + BotIdentifier +
+        ModuleKey           + OptionSeparator +
+        CommandPattern      + ThisRequiredNextRequired +
+        OptionStat1Pattern  + ThisRequiredNextOptional +
+        OptionStat2Pattern  + ThisOptionalNextOptional)]
     internal static partial Regex RegexMatchAcceptChallenge();
 
-    [GeneratedRegex(@"(^|(noparse=))" + BotCommandIdentifier + ModuleCommandKey +
-        @"\s+((?'" + CommandWord + @"'[a-zA-Z]{" + CommandWordMinLength + @"," + CommandWordMaxLength + @"}(\s+|\[|$))){1}" +
-        @"((?'" + Stat1 + @"'[a-zA-Z]{" + WordOptionMinLength + @"," + WordOptionMaxLength + @"}(\s+|\[|$))){1}" +
-        @"((?'" + Integer + @"'[\+\-]{0,1}[0-9]{" + IntegerMinLength + @"," + IntegerMaxLength + @"})(\s|\[|$)){1}"
-    )]
+    [GeneratedRegex(
+        StartOfCommand      + BotIdentifier +
+        ModuleKey           + OptionSeparator +
+        CommandPattern      + ThisRequiredNextRequired +
+        OptionStat1Pattern  + ThisRequiredNextRequired +
+        OptionAmountPattern + ThisRequiredNextOptional)]
     internal static partial Regex RegexMatchSetStat();
-
-    /**
-    [GeneratedRegex(@$"(noparse=|\A)({TournamentOrganiser.BotCommandIdentifier})")]
-    private static partial Regex RegexBotCommandIdentifier();
-
-    [GeneratedRegex(@$"({TournamentOrganiser.ModuleCommandKey})")]
-    private static partial Regex RegexModuleCommandKey();
-    
-    [GeneratedRegex(@"(\s|\A)(?'CommandOrWordOption'[a-zA-Z]{3,32})(\s|\Z)")]
-    private static partial Regex RegexCommandOrWordOption();
-
-    [GeneratedRegex(@"(\s|\A)(?'PlayerIdentity'[a-zA-Z0-9\-\ ]{3,32})(\s|\Z)")]
-    private static partial Regex RegexPlayerIdentity();
-    
-    [GeneratedRegex(@"(\s|\A)(\[user\](?'PlayerIdentity'[a-zA-Z0-9\-\ ]{3,32})\[\/user\])(\s|\Z)")]
-    private static partial Regex RegexStrictPlayerIdentity();
-
-    [GeneratedRegex(@"(\s|^)((?'Integer'[\+\-]{0,1}[0-9]{1,7})(\s|$))")]
-    private static partial Regex RegexIntegerOption();
-
-    [GeneratedRegex(@"(\s|\A)(?'Float'[\+\-]{0,1}[0-9]{1,7}\.[0-9]{1,7})(\s|\Z)")]
-    private static partial Regex RegexFloatOption();
-    */
 }
