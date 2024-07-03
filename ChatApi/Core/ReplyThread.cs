@@ -26,8 +26,8 @@ namespace ChatApi
 
         public async Task SetStatus(string statusMessage, ChatStatus status, string sendingUser)
         {
-            string toSend = $"{Hycybh.STA} {{ \"status\": \"{status.ToString()}\", \"statusmsg\": \"{statusMessage}\", \"character\": \"{sendingUser}\" }}";
-            Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | {status.ToString()}: {statusMessage}");
+            string toSend = $"{Hycybh.STA} {{ \"status\": \"{status}\", \"statusmsg\": \"{statusMessage}\", \"character\": \"{sendingUser}\" }}";
+            Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | {status}: {statusMessage}");
             await Client.SendAsync(toSend);
         }
 
