@@ -17,9 +17,9 @@ namespace BotTom;
 partial class Program
 {
 	#region Main
-	static async Task InitializeDiscord()
+	static async Task InitializeDiscord(string discordToken)
 	{
-		_client = new DiscordSocketClient(new DiscordSocketConfig
+		D_Client = new DiscordSocketClient(new DiscordSocketConfig
 		{
 				// How much logging do you want to see?
 				LogLevel = LogSeverity.Info,
@@ -35,7 +35,7 @@ partial class Program
 				//WebSocketProvider = WS4NetProvider.Instance
 		});
         
-		_commands = new CommandService(new CommandServiceConfig
+		D_Commands = new CommandService(new CommandServiceConfig
 		{
 				// Again, log level:
 				LogLevel = LogSeverity.Info,
@@ -46,21 +46,21 @@ partial class Program
 		});
         
 		// Subscribe the logging handler to both the client and the CommandService.
-		_client.Log += Log;
-		_commands.Log += Log;
+		D_Client.Log += Log;
+		D_Commands.Log += Log;
 		
 		// Setup your DI container.
 		/** _services = ConfigureServices(); */
 
-		await _client.LoginAsync(
+		await D_Client.LoginAsync(
 			TokenType.Bot,
-			token: Environment.GetEnvironmentVariable("DISCORD_TOKEN")
+			token: discordToken
 		);
 		
-		_client.SlashCommandExecuted += SlashCommandHandler;
-		_client.Ready += RegisterCommandsOnReadyAsync;
+		D_Client.SlashCommandExecuted += SlashCommandHandler;
+		D_Client.Ready += RegisterCommandsOnReadyAsync;
 
-		await _client.StartAsync();
+		await D_Client.StartAsync();
 
 		// Block this task until the program is closed.
 		await Task.Delay(-1);
@@ -69,23 +69,23 @@ partial class Program
 
 	#pragma warning disable CS8618
 	#region F(-)
-	private static DiscordSocketClient _client;
+	private static DiscordSocketClient D_Client;
 
 	// Keep the CommandService and DI container around for use with commands.
 	// These two types require you install the Discord.Net.Commands package.
-	private static CommandService _commands;
+	private static CommandService D_Commands;
 	/** private static IServiceProvider _services; */
 	#endregion
 	#pragma warning restore CS8618
 
 	#region F(~)
-	private static List<IStateMachine> _stateMachines = [];
+	private static List<IStateMachine> D_StateMachines = [];
 	#endregion
 
 	#region P(~)
-	internal static DiscordSocketClient DiscordClient => _client;
-	internal static List<IStateMachine> StateMachines => _stateMachines;
-	internal static IEnumerable<SimpleConfirmationMachine> ConfirmationMachines => _stateMachines.OfType<SimpleConfirmationMachine>();
+	internal static DiscordSocketClient DiscordClient => D_Client;
+	internal static List<IStateMachine> StateMachines => D_StateMachines;
+	internal static IEnumerable<SimpleConfirmationMachine> ConfirmationMachines => D_StateMachines.OfType<SimpleConfirmationMachine>();
 	internal static Dictionary<string,IUserDefinedCommand> RegisteredCommands { get; } = [];
 	#endregion
   
@@ -150,10 +150,10 @@ partial class Program
 		await InitCommands();
 
 		// Login and connect.
-		await _client.LoginAsync(
+		await D_Client.LoginAsync(
 			TokenType.Bot,
 			Environment.GetEnvironmentVariable("DISCORD_TOKEN"));
-		await _client.StartAsync();
+		await D_Client.StartAsync();
 
 		// Wait infinitely so your bot actually stays connected.
 		await Task.Delay(Timeout.Infinite);
@@ -169,14 +169,14 @@ partial class Program
 			// Module classes MUST be marked 'public' or they will be ignored.
 			// You also need to pass your 'IServiceProvider' instance now,
 			// so make sure that's done before you get here.
-			await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+			await D_Commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
 			
 			// Or add Modules manually if you prefer to be a little more explicit:
-			//await _commands.AddModuleAsync<SomeModule>(_services);
+			//await D_Commands.AddModuleAsync<SomeModule>(_services);
 			// Note that the first one is 'Modules' (plural) and the second is 'Module' (singular).
 
 			// Subscribe a handler to see if a message invokes a command.
-			_client.MessageReceived += HandleCommandAsync;
+			D_Client.MessageReceived += HandleCommandAsync;
 	}
 	*/
 	#endregion
@@ -190,7 +190,7 @@ partial class Program
 		if (msg == null) return;
 
 		// We don't want the bot to respond to itself or other bots.
-		if (msg.Author.Id == _client.CurrentUser.Id || msg.Author.IsBot) return;
+		if (msg.Author.Id == D_Client.CurrentUser.Id || msg.Author.IsBot) return;
 		
 		// Create a number to track where the prefix ends and the command begins
 		int pos = 0;
@@ -198,19 +198,19 @@ partial class Program
 		// you want to prefix your commands with.
 		// Uncomment the second half if you also want
 		// commands to be invoked by mentioning the bot instead.
-		if (msg.HasCharPrefix('!', ref pos) || msg.HasMentionPrefix(_client.CurrentUser, ref pos) )
+		if (msg.HasCharPrefix('!', ref pos) || msg.HasMentionPrefix(D_Client.CurrentUser, ref pos) )
 		{
 			// Create a Command Context.
-			var context = new SocketCommandContext(_client, msg);
+			var context = new SocketCommandContext(D_Client, msg);
 			
 			// Execute the command. (result does not indicate a return value, 
 			// rather an object stating if the command executed successfully).
-			var result = await _commands.ExecuteAsync(context, pos, _services);
+			var result = await D_Commands.ExecuteAsync(context, pos, _services);
 
 			// Uncomment the following lines if you want the bot
 			// to send a message if it failed.
 			// This does not catch errors from commands with 'RunMode.Async',
-			// subscribe a handler for '_commands.CommandExecuted' to see those.
+			// subscribe a handler for 'D_Commands.CommandExecuted' to see those.
 			//if (!result.IsSuccess && result.Error != CommandError.UnknownCommand)
 			//    await msg.Channel.SendMessageAsync(result.ErrorReason);
 		}
@@ -245,7 +245,7 @@ partial class Program
 	#region CheckStateMachines
 	public static void CheckStateMachines()
 	{
-		_stateMachines.RemoveAll((m)=>m.AtTerminalStage||m.IsExpired);
+		D_StateMachines.RemoveAll((m)=>m.AtTerminalStage||m.IsExpired);
 	}
 	#endregion
 }

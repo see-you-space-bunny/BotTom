@@ -22,7 +22,28 @@ partial class Program
 		ControlPanel.LoadFileConfig();
 		Envy.Envy.Load(Path.Combine(Environment.CurrentDirectory, ".env"));
 		InitMxParser();
-		await InitializeDiscord();
+
+		if (bool.TryParse(Environment.GetEnvironmentVariable("USE_DISCORD"),out bool useDiscord) && useDiscord)
+		{
+			string? discordToken = Environment.GetEnvironmentVariable("DISCORD_TOKEN");
+			
+			if (discordToken is not null)
+				await InitializeDiscord(discordToken);
+		}
+
+		if (bool.TryParse(Environment.GetEnvironmentVariable("USE_FCHAT"),out bool useFchat) && useFchat)
+		{
+			string?[] fArgs = [
+				"/username="				+	Environment.GetEnvironmentVariable("FCHAT_USERNAME"),
+				"/password="				+	Environment.GetEnvironmentVariable("FCHAT_PASSWORD"),
+				"/charactername="		+	Environment.GetEnvironmentVariable("FCHAT_CHARACTERNAME"),
+				"/startingchannel="	+	Environment.GetEnvironmentVariable("FCHAT_STARTINGCHANNEL"),
+				"/commandchar="			+	Environment.GetEnvironmentVariable("FCHAT_COMMANDCHAR"),
+				"/opslist="					+	Environment.GetEnvironmentVariable("FCHAT_OPS"),
+				"/retryattempts="		+	Environment.GetEnvironmentVariable("FCHAT_RETRYATTEMPTS"),
+			];
+			await InitializeFChat((string[])fArgs!);
+		}
 	}
 	#endregion
 
@@ -33,7 +54,7 @@ partial class Program
 		// ----------------------------------------------------------------------------------
 		// mXparser required
 		// Non-Commercial Use Confirmation
-		bool isCallSuccessful = License.iConfirmNonCommercialUse(Environment.GetEnvironmentVariable("USER_NAME"));
+		bool isCallSuccessful = License.iConfirmNonCommercialUse(Environment.GetEnvironmentVariable("USER_NAME") ?? "Jane Doe");
 
 		// Verification if use type has been already confirmed
 		bool isConfirmed = License.checkIfUseTypeConfirmed();

@@ -4,7 +4,13 @@ name = "Sapho's Geneva To-Do List"
 id = "1159398380640948255"
 private = true
 
+#[discord]
 #[[guilds]]
 #name = "Zone"
 #id = "88207312140898304"
 #private = true
+
+#[fchat]
+#command_char = "tom!"
+#ops = {}
+#retry_attepts = 3

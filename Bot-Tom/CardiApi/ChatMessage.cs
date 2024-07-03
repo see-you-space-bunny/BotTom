@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ChatApi;
 
-namespace BotTom.CardiApi;
+namespace BotTom.FChat;
 
 public readonly struct ChatMessage(string author,string recipient,MessageType messageType,string channel,string message)
 {
