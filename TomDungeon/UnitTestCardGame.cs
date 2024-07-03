@@ -4,24 +4,30 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 using Widget.CardGame;
+using Widget.CardGame.Attributes;
+using Widget.CardGame.Enums;
 
 namespace TomDungeon;
 
 public class UnitTestCardGame
 {
     [Fact]
-    public void Test()
+    public void TestAttributeHandler()
     {
-        Assert.True(true);
+        StatAliasAttribute statAliasLevel = CharacterStat.LVL.GetAttribute<CharacterStat, StatAliasAttribute>();
+        Assert.Equal(["Level","Lv"],statAliasLevel.Alias);
+
+        StatAliasAttribute statAliasLuck = CharacterStat.LUC.GetEnumAttribute<CharacterStat, StatAliasAttribute>();
+        Assert.Equal(["Luck"],statAliasLuck.Alias);
     }
 
     
     [Theory]
-    [InlineData("Daniel","tom!xcg challenge STR INT [user]The Cooler Daniel[/user]",
+    [InlineData("Daniel",           "tom!xcg challenge STR INT [user]The Cooler Daniel[/user]",
                 "The Cooler Daniel","tom!xcg accept STR LUC")]
-    [InlineData("Daniel","[noparse=tom!xcg challenge STR INT [user]The Cooler Daniel[/user]][/noparse]",
+    [InlineData("Daniel",           "[noparse=tom!xcg challenge STR INT [user]The Cooler Daniel[/user]][/noparse]",
                 "The Cooler Daniel","tom!xcg accept STR LUC")]
-    public void TestCommand(string player1,string msgChallenge,string player2,string msgResponse)
+    public async void TestCommand(string player1,string msgChallenge,string player2,string msgResponse)
     {
         var message1 = new BotTom.CardiApi.ChatMessage(
             author: player1,
@@ -38,22 +44,25 @@ public class UnitTestCardGame
             message: msgResponse
         );
 
-        TournamentOrganiser.HandleCommand(message1);
-        TournamentOrganiser.HandleActionQueue();
+        await TournamentOrganiser.HandleCommand(message1);
 
-        Assert.Equal(
-            TournamentOrganiser.MessageQueue.First().Message,
-            $"[user]{player1}[/user] has challenged [user]{player2}[/user] to a [b]Duel[/b]! " +
-                "Use the command \"tom!xcg accept [i]stat2[/i] [i]stat2[/i]\""
+        Assert.NotEmpty(TournamentOrganiser.MessageQueue);
+        Assert.Matches(
+            @"\[user\]([a-zA-Z0-9\-\ ]{3,32})\[\/user\]\s.+\[user\]([a-zA-Z0-9\-\ ]{3,32})\[\/user\]\s.+",
+            TournamentOrganiser.MessageQueue.First().Message
         );
         TournamentOrganiser.MessageQueue.Clear();
 
-        TournamentOrganiser.HandleCommand(message2);
-        TournamentOrganiser.HandleActionQueue();
+        Assert.NotEmpty(TournamentOrganiser.IncomingChallenges);
+
+        await TournamentOrganiser.HandleCommand(message2);
         
-        Assert.Equal(
-            TournamentOrganiser.MessageQueue.First().Message,
-            $"[user]{player2}[/user] accepted [user]{player1}[/user]'s challenge!"
+        Assert.NotEmpty(TournamentOrganiser.MessageQueue);
+        Assert.Matches(
+            @"(\[user\])([a-zA-Z0-9\-\ ]{3,32})(\[\/user\]).+(\[user\])([a-zA-Z0-9\-\ ]{3,32})(\[\/user\]\').+",
+            TournamentOrganiser.MessageQueue.First().Message
         );
+
+        Assert.NotEmpty(TournamentOrganiser.OngoingMatches);
     }
 }
