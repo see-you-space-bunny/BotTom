@@ -6,34 +6,39 @@ namespace ChatApi.Objects
 {
     public class Channel
     {
-        /// <summary>
-        /// what is our status with the channel
-        /// </summary>
-        public ChannelStatus Status;
+        public bool AdEnabled { get; set; }
 
-        /// <summary>
-        /// the channel
-        /// </summary>
-        public string Name;
+        /// <summary>the channel</summary>
+        public string Name { get; set; }
 
-        public User Owner;
+        /// <summary>what is our status with the channel</summary>
+        public ChannelStatus Status { get; set; }
 
-        /// <summary>
-        /// sending user
-        /// </summary>
-        public string Code;
+        /// <summary>sending user</summary>
+        public string Code { get; set; }
 
-        public ChannelType Type;
+        /// <summary>(accessibility) type of channel</summary>
+        public ChannelType Type { get; set; }
 
-        public bool AdEnabled;
 
-        internal Dictionary<string,User> Mods;
+        /// <summary>channel moderators</summary>
+        internal Dictionary<string, User> Mods { get; set; }
 
-        internal Dictionary<string,User> Users;
 
-        public bool CreatedByApi;
+        /// <summary>channel users</summary>
+        internal Dictionary<string, User> Users { get; set; }
 
-        public string Description;
+
+        /// <summary>did this api create the channel</summary>
+        public bool CreatedByApi { get; set; }
+
+
+        /// <summary>channel description</summary>
+        public string Description { get; set; }
+
+
+        /// <summary>channel owner</summary>
+        public User Owner { get; set; }
 
         /// <summary>
         /// 
@@ -55,26 +60,30 @@ namespace ChatApi.Objects
             Description = string.Empty;
         }
 
-        public void AddUser(User user)
+        public Channel AddUser(User user)
         {
-            if (!Users.TryAdd(user.name, user))
-                Console.WriteLine($"Skipping duplicate entry: {user.name}");
+            if (!Users.TryAdd(user.Name, user))
+                Console.WriteLine($"Skipping duplicate entry: {user.Name}");
+            return this;
         }
 
-        public void RemoveUser(User user)
+        public Channel RemoveUser(User user)
         {
-            Users.Remove(user.name);
+            Users.Remove(user.Name);
+            return this;
         }
 
-        public void AddMod(User user)
+        public Channel AddMod(User user)
         {
-            if (!Users.TryAdd(user.name, user))
-                Console.WriteLine($"Skipping duplicate mod entry: {user.name}");
+            if (!Users.TryAdd(user.Name, user))
+                Console.WriteLine($"Skipping duplicate mod entry: {user.Name}");
+            return this;
         }
 
-        public void RemoveMod(User user)
+        public Channel RemoveMod(User user)
         {
-            Mods.Remove(user.name);
+            Mods.Remove(user.Name);
+            return this;
         }
         ////////////////////////////////////////////////
 

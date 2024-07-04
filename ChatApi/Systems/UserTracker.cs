@@ -16,7 +16,7 @@ namespace ChatApi.Systems
 
         public bool AddUser(User user)
         {
-            if (KnownUsers.TryAdd(user.name, user))
+            if (KnownUsers.TryAdd(user.Name, user))
             {
                 return true;
             }
@@ -31,7 +31,7 @@ namespace ChatApi.Systems
 
         public IEnumerable<KeyValuePair<string,User>> GetUsersByStatus(UserStatus status)
         {
-            return KnownUsers.Where(user => user.Value.userstatus == status);
+            return KnownUsers.Where(user => user.Value.Userstatus == status);
         }
 
         public User GetUserByName(string name)
@@ -43,8 +43,8 @@ namespace ChatApi.Systems
 
             User foundUser = new()
             {
-                name = name,
-                chatstatus = ChatStatus.Offline
+                Name = name,
+                Chatstatus = ChatStatus.Offline
             };
             AddUser(foundUser);
 
@@ -53,30 +53,30 @@ namespace ChatApi.Systems
 
         public void SetChatStatus(User user, ChatStatus status, bool logging = true)
         {
-            user.chatstatus = status;
-            if (GetUserByName(user.name) == null)
+            user.Chatstatus = status;
+            if (GetUserByName(user.Name) == null)
                 AddUser(user);
 
-            User thisUser = KnownUsers[user.name];
+            User thisUser = KnownUsers[user.Name];
             if (null == thisUser)
-                throw new System.Exception($"Error attempting to resolve user: {user.name}.");
+                throw new System.Exception($"Error attempting to resolve user: {user.Name}.");
 
-            thisUser.chatstatus = status;
-            if (logging) Console.WriteLine($"{thisUser.name}'s chat status changed to: {status}");
+            thisUser.Chatstatus = status;
+            if (logging) Console.WriteLine($"{thisUser.Name}'s chat status changed to: {status}");
         }
 
         public void SetUserStatus(User user, UserStatus status, bool logging = true)
         {
-            user.userstatus = status;
-            if (GetUserByName(user.name) == null)
+            user.Userstatus = status;
+            if (GetUserByName(user.Name) == null)
                 AddUser(user);
 
-            User thisUser = KnownUsers[user.name];
+            User thisUser = KnownUsers[user.Name];
             if (null == thisUser)
-                throw new System.Exception($"Error attempting to resolve user: {user.name}.");
+                throw new System.Exception($"Error attempting to resolve user: {user.Name}.");
 
-            thisUser.userstatus = status;
-            if (logging) Console.WriteLine($"{thisUser.name}'s user status changed to: {status}");
+            thisUser.Userstatus = status;
+            if (logging) Console.WriteLine($"{thisUser.Name}'s user status changed to: {status}");
         }
     }
 }

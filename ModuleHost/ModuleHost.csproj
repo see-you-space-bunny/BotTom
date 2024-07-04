@@ -1,24 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>BotTom</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="data/**" CopyToOutputDirectory="PreserveNewest" />
-    <None Include=".env" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="settings.toml" CopyToOutputDirectory="PreserveNewest" />
+    <!--None Include="data/**" CopyToOutputDirectory="PreserveNewest" /-->
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BinarySerializer" Version="8.6.4.1" />
     <PackageReference Include="Discord.Net" Version="3.13.0" />
     <PackageReference Include="MathParser.org-mXparser" Version="5.2.1" />
-    <PackageReference Include="Tommy" Version="3.1.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,12 +24,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Charsheet.Morkborg\Charsheet.Morkborg.csproj" />
     <ProjectReference Include="..\Charsheet.ForgedInTheDark\Charsheet.ForgedInTheDark.csproj" />
-    <ProjectReference Include="..\FileManip\FileManip.csproj" />
-    <ProjectReference Include="..\Envy\Envy.csproj" />
     <ProjectReference Include="..\ProcGen.Scumify\ProcGen.Scumify.csproj" />
     <ProjectReference Include="..\DiceRoller\DiceRoller.csproj" />
     <ProjectReference Include="..\ChatApi\ChatApi.csproj" />
-    <ProjectReference Include="..\ModuleHost\ModuleHost.csproj" />
   </ItemGroup>
 
 </Project>

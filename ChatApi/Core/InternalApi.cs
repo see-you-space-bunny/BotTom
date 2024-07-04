@@ -7,8 +7,9 @@ using ChatApi.Systems;
 using System.Collections.Generic;
 using ChatApi.Objects;
 using System.Threading.Tasks;
+using ChatApi.EventArguments;
 
-namespace ChatApi
+namespace ChatApi.Core
 {
     public partial class ApiConnection
     {
@@ -23,35 +24,9 @@ namespace ChatApi
             UserName = string.Empty;
             CharacterName = string.Empty;
 
-            channelTracker = new ChannelTracker();
-            userTracker = new UserTracker();
+            ChannelTracker = new ChannelTracker();
+            UserTracker = new UserTracker();
         }
-
-        #region With Properties
-        public ApiConnection WithUserName(string value)
-        {
-            UserName = value;
-            return this;
-        }
-
-        public ApiConnection WithCharacterName(string value)
-        {
-            CharacterName = value;
-            return this;
-        }
-
-        public ApiConnection WithTicketInformation(TicketInformation value)
-        {
-            TicketInformation = value;
-            return this;
-        }
-
-        public ApiConnection WithClient(WatsonWsClient value)
-        {
-            Client = value;
-            return this;
-        }
-        #endregion
 
         #region Client Events
         async void Client_MessageReceived(object sender, MessageReceivedEventArgs @event)
@@ -74,7 +49,7 @@ namespace ChatApi
         }
         #endregion
 
-        async Task IdentifySelf(string accountName, string ticket, string botName, string botClientID, string botClientVersion)
+        async static Task IdentifySelf(string accountName, string ticket, string botName, string botClientID, string botClientVersion)
         {
             string toSend = $"{Hycybh.IDN}  {{ \"method\": \"ticket\", \"account\": \"{accountName}\", \"ticket\": \"{ticket}\", \"character\": \"{botName}\", \"cname\": \"{botClientID}\", \"cversion\": \"{botClientVersion}\" }}";
             await Client.SendAsync(toSend);
@@ -154,7 +129,7 @@ namespace ChatApi
                             privateChannelList.Add(new Channel(channel["title"].ToString(), channel["name"].ToString(), ChannelType.Private));
                         }
 
-                        channelTracker.RefreshAvailableChannels(privateChannelList, ChannelType.Private);
+                        ChannelTracker.RefreshAvailableChannels(privateChannelList, ChannelType.Private);
                         PrivateChannelsReceivedHandler?.Invoke(this, new ChannelEventArgs() { });
                         Console.WriteLine($"Private Channels Recieved... {privateChannelList.Count} total Private Channels.");
                     }
@@ -168,7 +143,7 @@ namespace ChatApi
                             publicChannelList.Add(new Channel(string.Empty, channel["name"].ToString(), ChannelType.Private));
                         }
 
-                        channelTracker.RefreshAvailableChannels(publicChannelList, ChannelType.Public);
+                        ChannelTracker.RefreshAvailableChannels(publicChannelList, ChannelType.Public);
                         PublicChannelsReceivedHandler?.Invoke(this, new ChannelEventArgs() { });
                         Console.WriteLine($"Public Channels Recieved... {publicChannelList.Count} total Public Channels.");
                     }
@@ -187,20 +162,20 @@ namespace ChatApi
                     break;
                 case Hycybh.JCH:
                     {
-                        User user = userTracker.GetUserByName(json["character"]["identity"].ToString());
+                        User user = UserTracker.GetUserByName(json["character"]["identity"].ToString());
                         Channel tempChannel;
                         try
                         {
-                            tempChannel = channelTracker.GetChannelByNameOrCode(json["title"].ToString());
+                            tempChannel = ChannelTracker.GetChannelByNameOrCode(json["title"].ToString());
                         }
                         catch
                         {
-                            tempChannel = channelTracker.AddManualChannel(json["title"].ToString(), ChannelStatus.Available, json["channel"].ToString());
+                            tempChannel = ChannelTracker.AddManualChannel(json["title"].ToString(), ChannelStatus.Available, json["channel"].ToString());
                         }
 
-                        if (user.name.Equals(CharacterName))
+                        if (user.Name.Equals(CharacterName))
                         {
-                            channelTracker.WatchChannels.Add(tempChannel.Code,tempChannel);
+                            ChannelTracker.WatchChannels.Add(tempChannel.Code,tempChannel);
                         }
 
                         if (tempChannel == null)
@@ -209,25 +184,25 @@ namespace ChatApi
                         }
 
                         // creating channel
-                        bool creating = tempChannel.Status == ChannelStatus.Creating && user.name.Equals(CharacterName);
+                        bool creating = tempChannel.Status == ChannelStatus.Creating && user.Name.Equals(CharacterName);
                         if (creating)
                         {
-                            tempChannel = channelTracker.FinalizeChannelCreation(json["title"].ToString(), json["channel"].ToString(), user);
+                            tempChannel = ChannelTracker.FinalizeChannelCreation(json["title"].ToString(), json["channel"].ToString(), user);
                             Console.WriteLine($"Created Channel: {json["channel"]}");
                             CreatedChannelHandler?.Invoke(this, new ChannelEventArgs() { name = tempChannel.Name, status = ChannelStatus.Joined, code = tempChannel.Code, type = tempChannel.Type });
                         }
 
                         // join channel
-                        Channel channel = channelTracker.GetChannelByNameOrCode(json["channel"].ToString());
+                        Channel channel = ChannelTracker.GetChannelByNameOrCode(json["channel"].ToString());
                         if (user != null && channel != null)
                         {
                             if (!creating)
                             {
-                                JoinedChannelHandler?.Invoke(this, new ChannelEventArgs() { name = json["title"].ToString(), status = ChannelStatus.Joined, code = tempChannel.Code, type = tempChannel.Type, userJoining = user.name });
+                                JoinedChannelHandler?.Invoke(this, new ChannelEventArgs() { name = json["title"].ToString(), status = ChannelStatus.Joined, code = tempChannel.Code, type = tempChannel.Type, userJoining = user.Name });
                             }
 
                             channel.AddUser(user);
-                            Console.WriteLine($"{user.name} joined Channel: {channel.Name}. {channel.Users.Count} total users in channel.");
+                            Console.WriteLine($"{user.Name} joined Channel: {channel.Name}. {channel.Users.Count} total users in channel.");
                         }
                     }
                     break;
@@ -236,21 +211,21 @@ namespace ChatApi
                         if (json["character"].ToString().Equals(CharacterName, StringComparison.InvariantCultureIgnoreCase))
                         {
                             LeftChannelHandler?.Invoke(this, new ChannelEventArgs() { name = json["channel"].ToString(), status = ChannelStatus.Left });
-                            channelTracker.ChangeChannelState(json["channel"].ToString(), ChannelStatus.Available);
+                            ChannelTracker.ChangeChannelState(json["channel"].ToString(), ChannelStatus.Available);
                         }
 
-                        User user = userTracker.GetUserByName(json["character"].ToString());
-                        Channel channel = channelTracker.GetChannelByNameOrCode(json["channel"].ToString());
+                        User user = UserTracker.GetUserByName(json["character"].ToString());
+                        Channel channel = ChannelTracker.GetChannelByNameOrCode(json["channel"].ToString());
 
-                        if (user.name.Equals(CharacterName))
+                        if (user.Name.Equals(CharacterName))
                         {
-                            channelTracker.WatchChannels.Remove(channel.Code);
+                            ChannelTracker.WatchChannels.Remove(channel.Code);
                         }
 
                         if (user != null && channel != null)
                         {
                             channel.RemoveUser(user);
-                            Console.WriteLine($"{user.name} left Channel: {json["channel"]}. {channel.Users.Count} total users in channel.");
+                            Console.WriteLine($"{user.Name} left Channel: {json["channel"]}. {channel.Users.Count} total users in channel.");
                         }
 
                     }
@@ -296,30 +271,30 @@ namespace ChatApi
                         {
                             User tempUser = new User()
                             {
-                                name = userinfo[0].ToString(),
-                                gender = userinfo[1].ToString(),
-                                chatstatus = (ChatStatus)Enum.Parse(typeof(ChatStatus), userinfo[2].ToString().ToLowerInvariant(), true)
+                                Name = userinfo[0].ToString(),
+                                Gender = userinfo[1].ToString(),
+                                ChatStatus = (ChatStatus)Enum.Parse(typeof(ChatStatus), userinfo[2].ToString().ToLowerInvariant(), true)
                             };
-                            userTracker.SetChatStatus(tempUser, tempUser.chatstatus, false);
+                            UserTracker.SetChatStatus(tempUser, tempUser.ChatStatus, false);
                         }
 
-                        Console.WriteLine($"Added {json["characters"].Count()} users. Total users: {userTracker.GetNumberActiveUsers()}");
+                        Console.WriteLine($"Added {json["characters"].Count()} users. Total users: {UserTracker.GetNumberActiveUsers()}");
                     }
                     break;
                 case Hycybh.NLN:
                     {
                         User tempUser = new User()
                         {
-                            name = json["identity"].ToString(),
-                            userstatus = (UserStatus)Enum.Parse(typeof(UserStatus), json["status"].ToString().ToLowerInvariant(), true),
-                            gender = json["gender"].ToString()
+                            Name = json["identity"].ToString(),
+                            UserStatus = (UserStatus)Enum.Parse(typeof(UserStatus), json["status"].ToString().ToLowerInvariant(), true),
+                            Gender = json["gender"].ToString()
                         };
-                        userTracker.SetChatStatus(tempUser, ChatStatus.Online, false);
+                        UserTracker.SetChatStatus(tempUser, ChatStatus.Online, false);
                     }
                     break;
                 case Hycybh.COL:
                     {
-                        Channel tempChannel = channelTracker.GetChannelByNameOrCode(json["channel"].ToString());
+                        Channel tempChannel = ChannelTracker.GetChannelByNameOrCode(json["channel"].ToString());
 
                         int counter = 0;
                         foreach (string username in json["oplist"].Select(user => user.ToString()))
@@ -329,7 +304,7 @@ namespace ChatApi
                                 continue;
                             }
 
-                            User tempUser = userTracker.GetUserByName(username);
+                            User tempUser = UserTracker.GetUserByName(username);
 
                             if (counter == 0)
                             {
@@ -346,15 +321,15 @@ namespace ChatApi
                     {
                         User tempUser = new User()
                         {
-                            name = json["character"].ToString()
+                            Name = json["character"].ToString()
                         };
 
-                        userTracker.SetChatStatus(tempUser, ChatStatus.Offline, false);
-                        foreach (var channel in channelTracker.WatchChannels.Values)
+                        UserTracker.SetChatStatus(tempUser, ChatStatus.Offline, false);
+                        foreach (var channel in ChannelTracker.WatchChannels.Values)
                         {
                             bool needsRemoved = false;
 
-                            if (channel.Users.ContainsKey(tempUser.name))
+                            if (channel.Users.ContainsKey(tempUser.Name))
                             {
                                 needsRemoved = true;
                             }
@@ -369,10 +344,10 @@ namespace ChatApi
                 case Hycybh.ICH:
                     {
                         // joining channel
-                        Channel tempChannel = channelTracker.ChangeChannelState(json["channel"].ToString(), ChannelStatus.Joined);
+                        Channel tempChannel = ChannelTracker.ChangeChannelState(json["channel"].ToString(), ChannelStatus.Joined);
                         foreach (var user in json["users"])
                         {
-                            User tempUser = userTracker.GetUserByName(user["identity"].ToString());
+                            User tempUser = UserTracker.GetUserByName(user["identity"].ToString());
                             if (null == tempUser)
                             {
                                 Console.WriteLine($"Error attempting to add user {user["identity"]} to {json["channel"]} channel's userlist.");
@@ -387,7 +362,7 @@ namespace ChatApi
                     break;
                 case Hycybh.CDS:
                     {
-                        Channel tempChannel = channelTracker.GetChannelByNameOrCode(json["channel"].ToString());
+                        Channel tempChannel = ChannelTracker.GetChannelByNameOrCode(json["channel"].ToString());
                         tempChannel.Description = json["description"].ToString();
                     }
                     break;

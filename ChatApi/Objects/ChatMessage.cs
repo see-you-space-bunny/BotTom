@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ChatApi;
 
-namespace BotTom.FChat;
+namespace ChatApi.Objects;
 
-public readonly struct ChatMessage(string author,string recipient,MessageType messageType,string channel,string message)
+public readonly struct ChatMessage(string author, string recipient, MessageType messageType, string channel, string message)
 {
     public readonly string Author => author;
     public readonly string Recipient => recipient;

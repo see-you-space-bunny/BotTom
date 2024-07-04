@@ -23,6 +23,7 @@
     <ProjectReference Include="..\FileManip\FileManip.csproj" />
     <ProjectReference Include="..\Bot-Tom\Bot-Tom.csproj" />
     <ProjectReference Include="..\ChatApi\ChatApi.csproj" />
+    <ProjectReference Include="..\ModuleHost\ModuleHost.csproj" />
   </ItemGroup>
   
 </Project>

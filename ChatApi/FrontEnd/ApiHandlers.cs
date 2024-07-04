@@ -1,4 +1,6 @@
-﻿namespace ChatApi
+﻿using ChatApi.EventArguments;
+
+namespace ChatApi.Core
 {
     public partial class ApiConnection
     {

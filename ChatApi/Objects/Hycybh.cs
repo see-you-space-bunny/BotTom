@@ -1,98 +1,97 @@
-﻿namespace ChatApi
+﻿namespace ChatApi.Objects;
+
+public enum Hycybh
 {
-    public enum Hycybh
-    {
-        /// <summary>channel message sent/received</summary>
-        MSG,
+    /// <summary>channel message sent/received</summary>
+    MSG,
 
-        /// <summary>connected or requesting chat connection</summary>
-        IDN,
+    /// <summary>connected or requesting chat connection</summary>
+    IDN,
 
-        /// <summary>private message sent/received</summary>
-        PRI,
+    /// <summary>private message sent/received</summary>
+    PRI,
 
-        /// <summary>public channel list received </summary>
-        CHA,
+    /// <summary>public channel list received </summary>
+    CHA,
 
-        /// <summary>private channel list received</summary>
-        ORS,
+    /// <summary>private channel list received</summary>
+    ORS,
 
-        /// <summary>joined or requesting to join a channel</summary>
-        JCH,
+    /// <summary>joined or requesting to join a channel</summary>
+    JCH,
 
-        /// <summary>left or requesting to leave a channel</summary>
-        LCH,
+    /// <summary>left or requesting to leave a channel</summary>
+    LCH,
 
-        /// <summary>a ping</summary>
-        PIN,
+    /// <summary>a ping</summary>
+    PIN,
 
-        /// <summary>requests status set</summary>
-        STA,
+    /// <summary>requests status set</summary>
+    STA,
 
-        /// <summary>advertisement</summary>
-        LRP,
+    /// <summary>advertisement</summary>
+    LRP,
 
-        /// <summary>create(d) a private, invite-only channel</summary>
-        CCR,
+    /// <summary>create(d) a private, invite-only channel</summary>
+    CCR,
 
-        /// <summary>chat system variables</summary>
-        VAR,
+    /// <summary>chat system variables</summary>
+    VAR,
 
-        /// <summary>server hello command</summary>
-        HLO,
+    /// <summary>server hello command</summary>
+    HLO,
 
-        /// <summary>returns number of connected users</summary>
-        CON,
+    /// <summary>returns number of connected users</summary>
+    CON,
 
-        /// <summary>friends list</summary>
-        FRL,
+    /// <summary>friends list</summary>
+    FRL,
 
-        /// <summary>ignore list</summary>
-        IGN,
+    /// <summary>ignore list</summary>
+    IGN,
 
-        /// <summary>chat ops list</summary>
-        ADL,
+    /// <summary>chat ops list</summary>
+    ADL,
 
-        /// <summary>character list and online status</summary>
-        LIS,
+    /// <summary>character list and online status</summary>
+    LIS,
 
-        /// <summary>a user connected</summary>
-        NLN,
+    /// <summary>a user connected</summary>
+    NLN,
 
-        /// <summary>a user disconnected</summary>
-        FLN,
+    /// <summary>a user disconnected</summary>
+    FLN,
 
-        /// <summary>list of channel ops</summary>
-        COL,
+    /// <summary>list of channel ops</summary>
+    COL,
 
-        /// <summary>initial channel data</summary>
-        ICH,
-        
-        /// <summary>channel's description has updated</summary>
-        CDS,
+    /// <summary>initial channel data</summary>
+    ICH,
 
-        /// <summary>basic error response</summary>
-        ERR,
+    /// <summary>channel's description has updated</summary>
+    CDS,
 
-        /// <summary>invite user to channel</summary>
-        CIU,
+    /// <summary>basic error response</summary>
+    ERR,
 
-        /// <summary>kicks a user</summary>
-        CKU,
+    /// <summary>invite user to channel</summary>
+    CIU,
 
-        /// <summary>bans a user</summary>
-        CBU,
+    /// <summary>kicks a user</summary>
+    CKU,
 
-        /// <summary>promotes to channel op</summary>
-        COA,
+    /// <summary>bans a user</summary>
+    CBU,
 
-        /// <summary>demotes from channel op to user</summary>
-        COR,
+    /// <summary>promotes to channel op</summary>
+    COA,
 
-        /// <summary>time a user out</summary>
-        CTU,
+    /// <summary>demotes from channel op to user</summary>
+    COR,
 
-        /// <summary>unbans a user</summary>
-        CUB
-    }
+    /// <summary>time a user out</summary>
+    CTU,
+
+    /// <summary>unbans a user</summary>
+    CUB
 }

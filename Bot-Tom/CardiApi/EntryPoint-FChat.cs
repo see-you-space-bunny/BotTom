@@ -13,6 +13,9 @@ using BotTom.Commands.Guild;
 using BotTom.Machines;
 using ChatApi;
 using BotTom.FChat;
+using ModuleHost;
+using ChatApi.Core;
+using ModuleHost.CommandHandling;
 
 namespace BotTom;
 
@@ -32,27 +35,28 @@ partial class Program
 
 	static string F_StartingChannel = string.Empty;
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 	/// <summary>
 	/// Our chat interface
 	/// </summary>
-	static ApiConnection F_Chat;
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-
+	static ApiConnection? F_Chat;
+	
 	public static List<string> F_ActiveChannels = [];
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 	/// <summary>
 	/// Our bot interface
 	/// </summary>
-	static object F_Bot; //BOTACTION:TODO//
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+	static ChatBot? F_Bot;
 
 	/// <summary>
-	/// Our main command character
+	/// our main command character
 	/// </summary>
 	static string F_CommandChar = string.Empty;
 
+	/// <summary>
+	/// our command tokenizer
+	/// </summary>
+	static CommandParser F_CommandParser;
+	
 	/// <summary>
 	/// A list of bot ops
 	/// </summary>
@@ -79,8 +83,8 @@ partial class Program
 		}
 
 		string cliArgumentsStr = string.Join(" ", args);
-		List<string> cliArgs = cliArgumentsStr.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-		cliArgs.ForEach(x => x = x.Replace(" ", ""));
+		List<string> cliArgs = [.. cliArgumentsStr.Split(['/'], StringSplitOptions.RemoveEmptyEntries)];
+		cliArgs.ForEach(arg => arg = arg.Replace(" ", ""));
 		Dictionary<string, string> cliArgDict = [];
 		foreach (var singleArg in cliArgs)
 		{
@@ -101,6 +105,8 @@ partial class Program
 		{
 				Environment.Exit(-1);
 		}
+
+		F_CommandParser = new(F_CommandChar);
 
 		while (RetryAttempts > 0)
 		{
@@ -208,10 +214,9 @@ partial class Program
 			argVal = -1;
 			argName = argName.ToLowerInvariant();
 
-			if (!rawArgs.ContainsKey(argName))
+			if (!rawArgs.ContainsKey(argName) && !isOptional)
 			{
-					if (!isOptional)
-							F_FailedCliArgs.Add($"Failed Validation: {argName}");
+					F_FailedCliArgs.Add($"Failed Validation: {argName}");
 					return;
 			}
 
@@ -237,64 +242,59 @@ partial class Program
 	/// <returns>false if we lose our connection</returns>
 	static async Task<bool> RunChat(string userName, string passWord, string characterName, string startingChannel, string commandChar, List<string> opsList)
 	{
+		if (F_Chat != null)
+			F_Chat = null;
 
-			if (F_Chat != null)
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-				F_Chat = null;
-#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
+		if (F_Bot != null)
+		{
+			await F_Bot.Shutdown();
+			F_Bot = null;
+			Thread.Sleep(10000);
+		}
 
-			if (F_Bot != null)
-			{
-            //BOTACTION:TODO//F_Bot.Shutdown();
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-            F_Bot = null;
-#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
-            Thread.Sleep(10000);
-			}
+		try
+		{
+			F_Chat 	= new ApiConnection();
+			F_Bot 	= new ChatBot();
 
-			try
-			{
-					F_Chat = new ApiConnection();
-					//BOTACTION:TODO//F_Bot = new BotCore();
-
-					// Add our plugins here ////////////////////////////////////////////////
+			// Add our plugins here ////////////////////////////////////////////////
 #if DEBUG
-					//F_Bot.AddPlugin(new GatchaGame(F_Chat, commandChar));
-					//BOTACTION:TODO//F_Bot.AddPlugin(new LostRPG(F_Chat, commandChar));
+			//F_Bot.AddPlugin(new GatchaGame(F_Chat, commandChar));
+			//BOTACTION:TODO//F_Bot.AddPlugin(new LostRPG(F_Chat, commandChar));
 #else
-					//BOTACTION:TODO//F_Bot.AddPlugin(new LostRPG(F_Chat, commandChar));
+			F_Bot.AddPlugin(new TournamentOrganiser(F_Chat, commandChar));
 #endif
-					// End Plugin Adding ///////////////////////////////////////////////////
+			// End Plugin Adding ///////////////////////////////////////////////////
 
-					F_CharacterName = characterName;
+			F_CharacterName = characterName;
 
-					F_Chat.ConnectedToChat                = ConnectedToChat;
-					F_Chat.MessageHandler                 = HandleMessageReceived;
-					F_Chat.JoinedChannelHandler           = HandleJoinedChannel;
-					F_Chat.CreatedChannelHandler          = HandleCreatedChannel;
-					F_Chat.LeftChannelHandler             = HandleLeftChannel;
-					F_Chat.PrivateChannelsReceivedHandler = HandlePrivateChannelsReceived;
-					F_Chat.PublicChannelsReceivedHandler  = HandlePublicChannelsReceived;
+			F_Chat.ConnectedToChat                = ConnectedToChat;
+			F_Chat.MessageHandler                 = HandleMessageReceived;
+			F_Chat.JoinedChannelHandler           = HandleJoinedChannel;
+			F_Chat.CreatedChannelHandler          = HandleCreatedChannel;
+			F_Chat.LeftChannelHandler             = HandleLeftChannel;
+			F_Chat.PrivateChannelsReceivedHandler = HandlePrivateChannelsReceived;
+			F_Chat.PublicChannelsReceivedHandler  = HandlePublicChannelsReceived;
 
-					await F_Chat.ConnectToChat(userName, passWord, characterName);
-					F_StartingChannel = startingChannel;
+			await F_Chat.ConnectToChat(userName, passWord, characterName);
+			F_StartingChannel = startingChannel;
 
-					SystemController.Instance.SetApi(F_Chat);
+			SystemController.Instance.SetApi(F_Chat);
 
-					// initiate the loop
-					while (F_Chat.IsConnected())
-					{
-							Update();
-					}
-
-					return false;
-			}
-			catch (Exception e)
+			// initiate the loop
+			while (ApiConnection.IsConnected())
 			{
-					Console.WriteLine($"Error connecting to chat: {e}");
-					Thread.Sleep(10000);
-					return false;
+					Update();
 			}
+
+			return false;
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine($"Error connecting to chat: {e}");
+			Thread.Sleep(10000);
+			return false;
+		}
 	}
 
 	/// <summary>
@@ -302,7 +302,6 @@ partial class Program
 	/// </summary>
 	static void Update()
 	{
-			Thread.Sleep(10000);
-
+		Thread.Sleep(10000);
 	}
 }

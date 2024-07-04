@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Widget.CardGame", "Widget.C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatApi", "ChatApi\ChatApi.csproj", "{BE5C5C50-95C1-456A-9A75-C482367C4549}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleHost", "ModuleHost\ModuleHost.csproj", "{EEAABD96-268C-4B4C-87BF-46C4257A80CD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,10 @@ Global
 		{BE5C5C50-95C1-456A-9A75-C482367C4549}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE5C5C50-95C1-456A-9A75-C482367C4549}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE5C5C50-95C1-456A-9A75-C482367C4549}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EEAABD96-268C-4B4C-87BF-46C4257A80CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EEAABD96-268C-4B4C-87BF-46C4257A80CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EEAABD96-268C-4B4C-87BF-46C4257A80CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EEAABD96-268C-4B4C-87BF-46C4257A80CD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

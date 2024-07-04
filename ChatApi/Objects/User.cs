@@ -1,36 +1,64 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
-namespace ChatApi.Objects
+namespace ChatApi.Objects;
+
+public class User(Dictionary<KinkPreference, List<string>> kinks)
 {
-    public class User
+    /// <summary></summary>
+    public Dictionary<KinkPreference, List<string>> Kinks { get; } = kinks;
+
+    /// <summary>the character's status in chat</summary>
+    public ChatStatus ChatStatus { get; set; }
+    
+    /// <summary>the character's status in chat</summary>
+    public UserStatus UserStatus { get; set; }
+    
+    /// <summary>the character's gender</summary>
+    public string Gender { get; set; }
+    /**
+    /// <summary></summary>
+    public string GenderPreference { get; set; }
+
+    /// <summary></summary>
+    public string Role { get; set; }
+
+    /// <summary></summary>
+    public string RolePreference { get; set; }
+
+    /// <summary></summary>
+    public string Species { get; set; }
+    
+    /// <summary></summary>
+    public string SpeciesPreference { get; set; }
+    */
+    /// <summary></summary>
+    public string Memo { get; set; }
+    
+    /// <summary>character? name</summary>
+    public string Name { get; set; }
+    
+    /// <summary>character? name</summary>
+    public string Nickname { get; set; }
+
+    #region Custom Properties
+    public virtual Mention Mention => new(this,BBCodeColor.White);
+    #endregion
+
+    public User() : this([])
     {
-        public string name;
-        public string nickname;
-        public string memo;
-        public string gender;
+        Name        = string.Empty;
+        Nickname    = string.Empty;
+        Memo        = string.Empty;
+        Gender      = string.Empty;
 
-        public UserStatus userstatus;
-        public ChatStatus chatstatus;
+        UserStatus  = UserStatus.None;
+        ChatStatus  = ChatStatus.None;
+    }
 
-        Dictionary<KinkPreference, List<string>> kinks;
-
-        public User()
-        {
-            name = string.Empty;
-            nickname = string.Empty;
-            memo = string.Empty;
-            gender = string.Empty;
-
-            userstatus = UserStatus.None;
-            chatstatus = ChatStatus.None;
-
-            kinks = [];
-        }
-
-        public List<string> GetKinks(KinkPreference preference)
-        {
-            return [.. kinks[preference]];
-        }
+    public List<string> GetKinks(KinkPreference preference)
+    {
+        return [.. Kinks[preference]];
     }
 }

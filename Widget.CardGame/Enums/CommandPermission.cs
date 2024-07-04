@@ -4,7 +4,9 @@ namespace Widget.CardGame.Enums
     {
         SufficientPermission,
         InsufficientPermission,
-        LimitExceeded,
+        RateLimited,
+        ActionLocked,
         AwaitingResponse,
+        ResponseRequired,
     }
 }
