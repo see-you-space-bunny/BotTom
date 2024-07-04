@@ -2,6 +2,9 @@
 {
     public enum Hycybh
     {
+        /// <summary>user is typing</summary>
+        TPN,
+
         /// <summary>channel message sent/received</summary>
         MSG,
 
