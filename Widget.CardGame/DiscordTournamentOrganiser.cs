@@ -10,8 +10,6 @@ using Widget.CardGame.PersistentEntities;
 using Widget.CardGame.DataStructures;
 using Widget.CardGame.Interfaces;
 using Widget.CardGame.Exceptions;
-using BotTom.CardiApi;
-using BotTom.ChatApi;
 using System.Text;
 using ModuleHost;
 

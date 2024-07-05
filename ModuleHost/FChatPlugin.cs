@@ -30,7 +30,7 @@ public class FChatPlugin(ApiConnection api, Channel[] activeChannels, string com
     /// <param name="message">base message, if any</param>
     /// <param name="sendingUser">sending user</param>
     /// <param name="isOp">if the user is an op</param>
-    public async virtual Task HandleRecievedMessage(BotCommand command, Channel? channel, string? message, User sendingUser, bool isOp) { }
+    public async virtual Task HandleRecievedMessage(BotCommand command) { }
       
     public async virtual Task HandleJoinedChannel(Channel channel) { }
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

@@ -43,6 +43,9 @@ public class User(Dictionary<KinkPreference, List<string>> kinks)
     public string Nickname { get; set; }
 
     #region Custom Properties
+    
+    /// <summary>character pronouns</summary>
+    public string Pronouns { get; set; }
     public virtual Mention Mention => new(this,BBCodeColor.White);
     #endregion
 

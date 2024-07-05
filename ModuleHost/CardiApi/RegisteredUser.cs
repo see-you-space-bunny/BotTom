@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using ChatApi.Objects;
 using BinarySerialization;
 
-namespace BotTom.CardiApi;
+namespace ModuleHost.CardiApi;
 
 public static class UserExtensions
 {
@@ -21,11 +21,11 @@ public class RegisteredUser : User
     
     /// <summary>character? name</summary>
     [FieldOrder(0)]
-    public new string Name => base.Name;
+    public new string Name { get=>base.Name; set=>base.Name=value; }
     
     /// <summary>character? name</summary>
     [FieldOrder(1)]
-    public new string Nickname => base.Nickname;
+    public new string Nickname { get=>base.Nickname; set=>base.Nickname=value; }
     #endregion
 
     #region Expanded Properties
@@ -40,7 +40,7 @@ public class RegisteredUser : User
 
     /// <summary></summary>
     [FieldOrder(4)]
-    public string Pronouns { get; set; }
+    public new string Pronouns { get=>base.Pronouns; set=>base.Pronouns=value; }
 
     ////////////////////
 
@@ -88,21 +88,6 @@ public class RegisteredUser : User
         BotMemo     = string.Empty;
         NickColor   = BBCodeColor.White;
         Pronouns    = string.Empty;
-    }
-    #endregion
-
-    ////////////////////////////////////////
-
-    #region With Properties
-    public RegisteredUser WithName(string value)
-    {
-        base.Name = value;
-        return this;
-    }
-    public RegisteredUser WithNickname(string value)
-    {
-        base.Nickname = value;
-        return this;
     }
     #endregion
 

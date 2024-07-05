@@ -7,6 +7,8 @@ using ModuleHost.CommandHandling;
 using Discord;
 using Discord.WebSocket;
 using ChatApi.Core;
+using ModuleHost.CardiApi;
+using BinarySerialization;
 
 namespace ModuleHost
 {
@@ -15,6 +17,8 @@ namespace ModuleHost
     /// </summary>
     public class ChatBot
     {
+        public static Dictionary<string,RegisteredUser> RegisteredUsers { get; } = [];
+
         /// <summary>
         /// our list of active plugins
         /// </summary>
@@ -36,6 +40,33 @@ namespace ModuleHost
         public ChatBot()
         {
             Plugins = [];
+            if (RegisteredUsers.Count == 0)
+            {
+                DeserializeRegisteredUsers();
+            }
+        }
+
+        private async void DeserializeRegisteredUsers()
+        {
+            uint Value = 0;
+            bool more = true;
+            int shift = 0;
+            var stream      = new MemoryStream();
+            var serializer  = new BinarySerializer();
+            while (more)
+            {
+                int b = stream.ReadByte();
+
+                var regUser = await RegisteredUser.DeserializeAsync(stream,serializer);
+
+                RegisteredUsers.Add(regUser.Name,regUser);
+
+                var lower7Bits = (byte)b;
+                more = (lower7Bits & 128) != 0;
+                Value |= (uint)((lower7Bits & 127) << shift);
+                shift += 7;
+            }
+            stream.WriteTo(File.Create(Path.Combine(Environment.CurrentDirectory,"RegisterdPlayers"),512,FileOptions.Asynchronous));
         }
 
         /// <summary>
@@ -89,6 +120,14 @@ namespace ModuleHost
         /// </summary>
         public async Task Shutdown()
         {
+            var stream      = new MemoryStream();
+            var serializer  = new BinarySerializer();
+            foreach (RegisteredUser regUser in RegisteredUsers.Values)
+            {
+                await regUser.SerializeAsync(stream,serializer);
+            }
+            stream.WriteTo(File.Create(Path.Combine(Environment.CurrentDirectory,"RegisterdPlayers"),512,FileOptions.Asynchronous));
+
             foreach (var plugin in Plugins.Values)
             {
                 await plugin.Shutdown();
@@ -103,16 +142,9 @@ namespace ModuleHost
         /// <param name="sendingUser">user that send the message</param>
         /// <param name="command">command being sent, if any</param>
         /// <param name="isOp">if the sending user is an op</param>
-        public async void HandleMessage(string channelCode, string message, string sendingUser, BotCommand command, bool isOp)
+        public async void HandleMessage(BotCommand command)
         {
-            await FChatPlugins.Single(p => p.ModuleType == command.BotModule)
-                .HandleRecievedMessage(
-                    command,
-                    ApiConnection.GetChannelByNameOrCode(channelCode),
-                    message,
-                    ApiConnection.GetUserByName(sendingUser),
-                    isOp
-                );
+            await FChatPlugins.Single(p => p.ModuleType == command.BotModule).HandleRecievedMessage(command);
         }
 
         /// <summary>

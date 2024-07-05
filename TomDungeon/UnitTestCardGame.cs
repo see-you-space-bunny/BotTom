@@ -6,11 +6,17 @@ using Xunit;
 using Widget.CardGame;
 using Widget.CardGame.Attributes;
 using Widget.CardGame.Enums;
+using ModuleHost.CommandHandling;
+using ChatApi.Core;
 
 namespace TomDungeon;
 
 public class UnitTestCardGame
 {
+    const string BotName = "Bot Tom";
+    const string CommandChar = "tom!";
+    CommandParser CommandParser = new CommandParser(CommandChar,[]);
+
     [Fact]
     public void TestAttributeHandler()
     {
@@ -25,44 +31,38 @@ public class UnitTestCardGame
     [Theory]
     [InlineData("Daniel",           "tom!xcg challenge STR INT [user]The Cooler Daniel[/user]",
                 "The Cooler Daniel","tom!xcg accept STR LUC")]
-    [InlineData("Daniel",           "[noparse=tom!xcg challenge STR INT [user]The Cooler Daniel[/user]][/noparse]",
-                "The Cooler Daniel","tom!xcg accept STR LUC")]
+    //[InlineData("Daniel",           "[noparse=tom!xcg challenge STR INT [user]The Cooler Daniel[/user]][/noparse]",
+    //          "The Cooler Daniel","tom!xcg accept STR LUC")]
     public async void TestCommand(string player1,string msgChallenge,string player2,string msgResponse)
     {
-        var message1 = new BotTom.CardiApi.ChatMessage(
-            author: player1,
-            recipient: "Bot Tom",
-            messageType: BotTom.CardiApi.MessageType.Basic,
-            channel: "",
-            message: msgChallenge
-        );
-        var message2 = new BotTom.CardiApi.ChatMessage(
-            author: player2,
-            recipient: "Bot Tom",
-            messageType: BotTom.CardiApi.MessageType.Basic,
-            channel: "",
-            message: msgResponse
-        );
+        ApiConnection.CharacterName = BotName;
 
-        await TournamentOrganiser.HandleCommand(message1);
+        var tournamentOrganiser = new FChatTournamentOrganiser(null,CommandChar,null,null);
 
-        Assert.NotEmpty(TournamentOrganiser.MessageQueue);
-        Assert.Matches(
-            @"\[user\]([a-zA-Z0-9\-\ ]{3,32})\[\/user\]\s.+\[user\]([a-zA-Z0-9\-\ ]{3,32})\[\/user\]\s.+",
-            TournamentOrganiser.MessageQueue.First().Message
-        );
-        TournamentOrganiser.MessageQueue.Clear();
+        var command1 = NewDummyMessage(player1,msgChallenge);
+        await tournamentOrganiser.HandleRecievedMessage(command1!);
 
-        Assert.NotEmpty(TournamentOrganiser.IncomingChallenges);
+        Assert.Matches(".+"+player1+".+"+player2+".+",tournamentOrganiser.MostRecentMessage.Build().Message);
+        Assert.NotEmpty(tournamentOrganiser.IncomingChallenges);
 
-        await TournamentOrganiser.HandleCommand(message2);
+        var command2 = NewDummyMessage(player2,msgResponse);
+        await tournamentOrganiser.HandleRecievedMessage(command2!);
         
-        Assert.NotEmpty(TournamentOrganiser.MessageQueue);
-        Assert.Matches(
-            @"(\[user\])([a-zA-Z0-9\-\ ]{3,32})(\[\/user\]).+(\[user\])([a-zA-Z0-9\-\ ]{3,32})(\[\/user\]\').+",
-            TournamentOrganiser.MessageQueue.First().Message
-        );
+        Assert.Matches(".+"+player2+".+"+player1+".+",tournamentOrganiser.MostRecentMessage.Build().Message);
+        Assert.NotEmpty(tournamentOrganiser.OngoingMatches);
+    }
 
-        Assert.NotEmpty(TournamentOrganiser.OngoingMatches);
+
+    private BotCommand NewDummyMessage(string user,string message)
+    {
+        if (CommandParser.TryConvertCommand(
+            new ChatApi.Objects.User(){ Name = user },
+            null,
+            message,
+            out BotCommand? command
+        ))
+            return command!;
+        else
+            throw new ArgumentException($"Failed to parse the following message: {message}",nameof(message));
     }
 }

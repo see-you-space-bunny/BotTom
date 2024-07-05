@@ -19,14 +19,14 @@ namespace BotTom
         {
             bool isOp = F_Ops.Any(x => x.Equals(e.user, StringComparison.InvariantCultureIgnoreCase));
 
-            if (F_CommandParser.TryConvertCommand(e.message, out BotCommand ?command))
+            if (F_CommandParser.TryConvertCommand(
+                ApiConnection.GetUserByName(e.user),
+                ApiConnection.GetChannelByNameOrCode(e.channel),
+                e.message,
+                out BotCommand ?command
+            ))
             {
-                F_Bot!.HandleMessage(
-                    e.channel,
-                    e.message,
-                    e.user,
-                    command!,
-                    F_Ops.Any(x => x.Equals(e.user, StringComparison.InvariantCultureIgnoreCase)));
+                F_Bot!.HandleMessage(command!);
             }
         }
 

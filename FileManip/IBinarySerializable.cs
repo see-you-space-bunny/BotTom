@@ -2,7 +2,7 @@ namespace FileManip;
 
 public interface IBinarySerializable
 {
-  public static virtual T? Deserialize<T>(BinaryReader reader) => default!;
+  public void Deserialize(BinaryReader reader);
   public void Serialize(BinaryWriter writer);
 }
 

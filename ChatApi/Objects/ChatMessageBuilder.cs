@@ -53,9 +53,6 @@ public class ChatMessageBuilder
 
     public ChatMessage Build()
     {
-        if (MessageType is null)
-            throw new IncompleteBuilderException("Attempting to send a message with no valid MessageType.");
-
         if (string.IsNullOrWhiteSpace(Author))
             throw new IncompleteBuilderException("Attempting to send an unsigned (no Author) message.");
 
@@ -71,7 +68,7 @@ public class ChatMessageBuilder
             messageStringBuilder.Append(Mention).Append(' ');
 
         // extra whisper check, in case channel target has no valid value
-        if ((Channel != null) && MessageType != Objects.MessageType.Whisper)
+        if ((Channel == null) && MessageType != Objects.MessageType.Whisper)
         {
             MessageType = Objects.MessageType.Whisper;
             // extra whisper check, in case recipient is invalid on a whisper
@@ -87,7 +84,7 @@ public class ChatMessageBuilder
             Author,
             Recipient,
             (MessageType)MessageType,
-            Channel.Code,
+            Channel != null ? Channel.Code : string.Empty,
             messageStringBuilder.Append(Message).ToString()
         );
     }

@@ -8,6 +8,7 @@ using Widget.CardGame.Interfaces;
 using Widget.CardGame.MatchEntities;
 using Widget.CardGame.PersistentEntities;
 using ChatApi;
+using ModuleHost.CardiApi;
 
 namespace Widget.CardGame.Commands;
 
@@ -44,6 +45,7 @@ internal class MatchChallenge : ICommandIO<string>
   internal string? Passphrase;
   internal MatchPlayer Player1;
   internal MatchPlayer? Player2;
+  internal RegisteredUser Challenger;
   internal PlayerCharacter Target;
   internal DateTime TimeInitiated;
   internal DateTime ExpireTime;
@@ -59,12 +61,13 @@ internal class MatchChallenge : ICommandIO<string>
   internal string PreviousStateInfo => GetStateInfo(PreviousState);
   */
 
-  internal MatchChallenge(MatchPlayer player1,PlayerCharacter player2,string? passphrase=null)
-    : this(player1,player2,passphrase,new TimeSpan(hours: 0,minutes: 5,seconds: 0))
+  internal MatchChallenge(RegisteredUser challenger,MatchPlayer player1,PlayerCharacter player2,string? passphrase=null)
+    : this(challenger,player1,player2,passphrase,new TimeSpan(hours: 0,minutes: 5,seconds: 0))
   { }
 
-  internal MatchChallenge(MatchPlayer player1,PlayerCharacter target,string? passphrase,TimeSpan expiresIn)
+  internal MatchChallenge(RegisteredUser challenger,MatchPlayer player1,PlayerCharacter target,string? passphrase,TimeSpan expiresIn)
   {
+    Challenger      = challenger;
     Player1         = player1;
     Target          = target;
     Passphrase      = passphrase;

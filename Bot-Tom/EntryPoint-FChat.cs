@@ -55,7 +55,7 @@ partial class Program
 	/// <summary>
 	/// our command tokenizer
 	/// </summary>
-	static CommandParser F_CommandParser;
+	static CommandParser F_CommandParser = new(string.Empty,[]);
 	
 	/// <summary>
 	/// A list of bot ops
@@ -83,7 +83,7 @@ partial class Program
 		}
 
 		string cliArgumentsStr = string.Join(" ", args);
-		List<string> cliArgs = [.. cliArgumentsStr.Split(['/'], StringSplitOptions.RemoveEmptyEntries)];
+		List<string> cliArgs = [.. cliArgumentsStr.Split('/', StringSplitOptions.RemoveEmptyEntries)];
 		cliArgs.ForEach(arg => arg = arg.Replace(" ", ""));
 		Dictionary<string, string> cliArgDict = [];
 		foreach (var singleArg in cliArgs)
@@ -106,7 +106,7 @@ partial class Program
 				Environment.Exit(-1);
 		}
 
-		F_CommandParser = new(F_CommandChar);
+		F_CommandParser.WithBotPrefix(F_CommandChar).WithOperators(F_Ops);
 
 		while (RetryAttempts > 0)
 		{

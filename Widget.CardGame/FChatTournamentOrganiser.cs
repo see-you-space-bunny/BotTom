@@ -16,62 +16,77 @@ using BotTom.FChat;
 using ModuleHost.CommandHandling;
 using ChatApi.Objects;
 using ChatApi.Core;
+using Discord;
+using ModuleHost.CardiApi;
+using System.Diagnostics;
 
 namespace Widget.CardGame;
 
 public partial class FChatTournamentOrganiser : FChatPlugin
 {
-    internal Dictionary<string,PlayerCharacter> RegisteredCharacters { get; }
+    internal Dictionary<string,(RegisteredUser FChatUser,PlayerCharacter ModuleCharacter)> RegisteredCharacters { get; }
 
     internal Dictionary<string,MatchChallenge> IncomingChallenges { get; }
     internal Dictionary<string,MatchChallenge> OutgoingChallenges => IncomingChallenges.ToOutgoing();
 
     internal List<BoardState> OngoingMatches { get; }
-    internal List<ChatMessage> MessageQueue { get; }
 
+#if DEBUG
+    internal ChatMessageBuilder MostRecentMessage = null; 
+#endif
+
+    public FChatTournamentOrganiser(Channel[]? activeChannels, string commandChar,string? floatingCommandChar = null,TimeSpan? updateInterval = null) : this(null,activeChannels ?? [],commandChar,floatingCommandChar,updateInterval)
+    { }
 
     public FChatTournamentOrganiser(ApiConnection api, Channel[]? activeChannels, string commandChar,string? floatingCommandChar = null,TimeSpan? updateInterval = null) : base(api,activeChannels ?? [],commandChar,floatingCommandChar,updateInterval)
     {
 #if DEBUG
         string player1 = "Daniel";
         string player2 = "The Cooler Daniel";
-        RegisteredCharacters    = new Dictionary<string,PlayerCharacter>{
-            [player1.ToLower()] = new PlayerCharacter(player1),
-            [player2.ToLower()] = new PlayerCharacter(player2),
+        RegisteredCharacters    = new Dictionary<string,(RegisteredUser,PlayerCharacter)>{
+            [player1.ToLower()] = (new RegisteredUser(){ Name = player1 }, new PlayerCharacter(player1)),
+            [player2.ToLower()] = (new RegisteredUser(){ Name = player2 }, new PlayerCharacter(player2)),
         };
-        MessageQueue            = [];
-        IncomingChallenges      = [];
-        OngoingMatches          = [];
 #else
         RegisteredCharacters    = [];
-        MessageQueue            = [];
+#endif
         IncomingChallenges      = [];
         OngoingMatches          = [];
-#endif
     }
 
-    public async override Task HandleRecievedMessage(BotCommand command, Channel? channel, string? message, User sendingUser, bool isOp)
+    public async override Task HandleRecievedMessage(BotCommand command)
     {
         ChatMessageBuilder messageBuilder = new ChatMessageBuilder()
             .WithAuthor(ApiConnection.CharacterName)
-            .WithRecipient(sendingUser.Name)
-            .WithMention(RegisteredCharacters[sendingUser.Name.ToLower()].MentionAndIdentity)
-            .WithMessage(await ValidateCommandUse(command) ?? string.Empty);
+            .WithRecipient(command.User!.Name)
+            .WithMention(command.User!.Mention.Name.WithPronouns)
+            .WithChannel(command.Channel);
+        
+        string message = ValidateCommandUse(command);
+        if (!string.IsNullOrWhiteSpace(message))
+            FChatApi.SendMessage(messageBuilder.WithMessage(message));
         
         ////// DO STUFF HERE
         
-
+        await HandleValidatedCommand(messageBuilder,command);
 
         ////////////////////
 
+#if DEBUG
+        MostRecentMessage = messageBuilder;
+#else
         FChatApi.SendMessage(messageBuilder);
+#endif
     }
 
 
-    private async Task<string?> ValidateCommandUse(BotCommand command)
+    private string ValidateCommandUse(BotCommand command)
     {
         try
         {
+            // User may not be null
+            if (command.User == null)
+                throw new ArgumentNullException(nameof(command),$"The (BotCommand) User property may not be null when handling a {command.Command} command.");
 
             return string.Empty;
         }
@@ -87,44 +102,28 @@ public partial class FChatTournamentOrganiser : FChatPlugin
         }
     }
 
-    public async Task HandleCommand(ChatMessage message)
+    public async Task HandleValidatedCommand(ChatMessageBuilder messageBuilder,BotCommand command)
     {
-
-        ChatMessageBuilder messageBuilder = new ChatMessageBuilder()
-            .WithAuthor(ApiConnection.CharacterName)
-            .WithRecipient(message.Author)
-            .WithMention(RegisteredCharacters[message.Author.ToLower()].MentionAndIdentity);
-
-        Match match = CommandStringInterpreter.RegexMatchAnyCommand().Match(message.Message);
-        if (!match.Success)
-            return;
-
-        if (Enum.TryParse(
-            value: match.Groups.Values.Single((g)=>g.Name==CommandStringInterpreter.Command).Value,
-            ignoreCase: true,
-            result: out Command command))
+        if (Enum.TryParse(value: command.Parameters[0],ignoreCase: true,result: out Command ModuleCommand))
         try
         {
-            
-            switch (command)
+            switch (ModuleCommand)
             {
                 case Command.Challenge:
-                    if (!OutgoingChallenges.ContainsKey(message.Author.ToLower()))
-                        await IssueChallenge(message,messageBuilder);
+                    if (!OutgoingChallenges.ContainsKey(command.User!.Name.ToLower()))
+                        await IssueChallenge(command,messageBuilder);
                     else
                         throw new DisallowedCommandException(Command.Challenge,CommandPermission.AwaitingResponse);
                     break;
 
                 case Command.Accept:
-                    await AcceptChallenge(message,messageBuilder);
+                    await AcceptChallenge(command,messageBuilder);
                     break;
                 
                 default:
-                    messageBuilder.WithRecipient(message.Author)
-                                  .WithMessageType(message.MessageType)
-                                  //.WithChannel(message.Channel.Code)
+                    messageBuilder.WithRecipient(command.User!.Name)
                                   .WithMessage("That is not a valid command!")
-                                  .WithMention(RegisteredCharacters[message.Author.ToLower()].MentionAndIdentity);
+                                  .WithMention(RegisteredCharacters[command.User.Name.ToLower()].FChatUser.Mention.Name.WithPronouns);
                     break;
             }
         }
@@ -135,16 +134,18 @@ public partial class FChatTournamentOrganiser : FChatPlugin
             Console.WriteLine();
             Console.WriteLine(e.Message);
         }
+        catch (InvalidCommandSyntaxException e)
+        {
+            messageBuilder.WithMessage(e.Message);
+        }
         catch (DisallowedCommandException disallowedCommand)
         {
-            messageBuilder.WithMessageType(message.MessageType)
-                          //.WithChannel(message.Channel)
-                          .WithMessage(
+            messageBuilder.WithMessage(
                 disallowedCommand.Reason switch
                 {
-                    CommandPermission.InsufficientPermission    => $"{RegisteredCharacters[message.Author.ToLower()].MentionAndIdentity}, you don't have permission to do that!",
-                    CommandPermission.AwaitingResponse          => $"{RegisteredCharacters[message.Author.ToLower()].MentionAndIdentity}, you still have a challenge!",
-                    CommandPermission.ResponseRequired          => $"{RegisteredCharacters[message.Author.ToLower()].MentionAndIdentity}, you need to respond to {IncomingChallenges[message.Author.ToLower()].Player1.PlayerCharacter.MentionAndIdentity}'s challenge first!",
+                    CommandPermission.InsufficientPermission    => $"{RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention.Name.WithPronouns}, you don't have permission to do that!",
+                    CommandPermission.AwaitingResponse          => $"{RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention.Name.WithPronouns}, you still have a challenge!",
+                    CommandPermission.ResponseRequired          => $"{RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention.Name.WithPronouns}, you need to respond to {IncomingChallenges[command.User!.Name.ToLower()].Challenger.Mention.Name.Basic}'s challenge first!",
                     _ => throw new ArgumentOutOfRangeException(nameof(disallowedCommand.Reason), $"Unexpected {typeof(CommandPermission)} value: {disallowedCommand.Reason}")
                 }
             );
@@ -153,41 +154,11 @@ public partial class FChatTournamentOrganiser : FChatPlugin
         {
             Console.WriteLine(e.Message);
         }
-        await QueueMessage(messageBuilder.Build());
     }
 
-    private async Task AcceptChallenge(ChatMessage message,ChatMessageBuilder messageBuilder)
+    private async Task IssueChallenge(BotCommand command,ChatMessageBuilder messageBuilder)
     {
-        Match match = CommandStringInterpreter.RegexMatchAcceptChallenge().Match(message.Message);
-        if (!match.Success)
-            return;
-
-        IEnumerable<Group> matchGroups = match.Groups.Values;
-
-        CharacterStat stat1 = Enum.Parse<CharacterStat>(matchGroups.Single((g)=>g.Name==CommandStringInterpreter.Stat1).Value,true);
-
-        CharacterStat? stat2 = null;
-        if (Enum.TryParse(matchGroups.Single((g)=>g.Name==CommandStringInterpreter.Stat2).Value, out CharacterStat s2))
-            stat2 = s2;
-            
-        StringBuilder sb = new();
-        sb.Append(RegisteredCharacters[message.Author.ToLower()].MentionAndIdentity);
-        sb.Append(" accepted ");
-        sb.Append(IncomingChallenges[message.Author.ToLower()].Player1.PlayerCharacter.MentionAndIdentity);
-        sb.Append("'s challenge!");
-
-        messageBuilder.WithMessageType(message.MessageType)
-                      //.WithChannel(message.Channel)
-                      .WithMessage(sb.ToString())
-                      .WithoutMention();
-        
-        await IncomingChallenges[message.Author.ToLower()].AdvanceState(MatchChallenge.Event.Confirm);
-        OngoingMatches.Add(IncomingChallenges[message.Author.ToLower()].AcceptWithDeckArchetype(stat1,stat2));
-    }
-
-    private async Task IssueChallenge(ChatMessage message,ChatMessageBuilder messageBuilder)
-    {
-        Match match = CommandStringInterpreter.RegexMatchChallenge().Match(message.Message);
+        Match match = CommandStringInterpreter.RegexMatchChallenge().Match(command.Command);
         if (!match.Success)
         {
 
@@ -205,22 +176,48 @@ public partial class FChatTournamentOrganiser : FChatPlugin
             stat2 = s2;
         
         StringBuilder sb = new();
-        sb.Append(RegisteredCharacters[message.Author.ToLower()].MentionAndIdentity);
+        sb.Append(RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention.Name.WithPronouns);
         sb.Append(" has challenged ");
-        sb.Append(RegisteredCharacters[playerIdentity.ToLower()].MentionAndIdentity);
+        sb.Append(RegisteredCharacters[playerIdentity.ToLower()].FChatUser.Mention.Name.WithPronouns);
         sb.AppendLine(" to a [b]Duel[/b]! ");
         sb.Append("Use the command \"tom!xcg accept [i]stat2[/i] [i]stat2[/i]\"");
         
-        messageBuilder.WithMessageType(message.MessageType)
-                      //.WithChannel(message.Channel)
-                      .WithMessage(sb.ToString())
+        messageBuilder.WithMessage(sb.ToString())
                       .WithoutMention();
 
         IncomingChallenges.Add(playerIdentity.ToLower(),new MatchChallenge(
-            RegisteredCharacters[message.Author.ToLower()].CreateMatchPlayer(stat1,stat2),
-            RegisteredCharacters[playerIdentity.ToLower()]
+            (RegisteredUser)command.User,
+            RegisteredCharacters[command.User.Name.ToLower()].ModuleCharacter.CreateMatchPlayer(stat1,stat2),
+            RegisteredCharacters[playerIdentity.ToLower()].ModuleCharacter
         ));
         await IncomingChallenges[playerIdentity.ToLower()].AdvanceState(MatchChallenge.Event.Initiate);
+    }
+
+    private async Task AcceptChallenge(BotCommand command,ChatMessageBuilder messageBuilder)
+    {
+        Match match = CommandStringInterpreter.RegexMatchAcceptChallenge().Match(command.Command);
+        if (!match.Success)
+            return;
+
+        IEnumerable<Group> matchGroups = match.Groups.Values;
+
+        CharacterStat stat1 = Enum.Parse<CharacterStat>(matchGroups.Single((g)=>g.Name==CommandStringInterpreter.Stat1).Value,true);
+
+        CharacterStat? stat2 = null;
+        if (Enum.TryParse(matchGroups.Single((g)=>g.Name==CommandStringInterpreter.Stat2).Value, out CharacterStat s2))
+            stat2 = s2;
+            
+        StringBuilder sb = new();
+        sb.Append(RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention.Name.WithPronouns);
+        sb.Append(" accepted ");
+        sb.Append(IncomingChallenges[command.User!.Name.ToLower()].Challenger.Mention.Name.WithPronouns);
+        sb.Append("'s challenge!");
+
+        messageBuilder.WithMessage(sb.ToString())
+                      .WithoutMention();
+        
+        await IncomingChallenges[command.User!.Name.ToLower()].AdvanceState(MatchChallenge.Event.Confirm);
+        OngoingMatches.Add(IncomingChallenges[command.User!.Name.ToLower()].AcceptWithDeckArchetype(stat1,stat2));
     }
 
 
@@ -237,10 +234,5 @@ public partial class FChatTournamentOrganiser : FChatPlugin
     {
         ActiveChannels.TryAdd(channel.Code,channel);
     }
-
-    private async Task QueueMessage(ChatMessage message)
-    {
-        MessageQueue.Add(message);
-    }
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning restore CS1998
 }

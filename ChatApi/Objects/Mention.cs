@@ -30,4 +30,5 @@ public struct Mention(string name,string nickname,string pronouns,BBCodeColor ni
     );
 
     public Mention(User user,BBCodeColor nicknameColor) : this(user.Name,user.Nickname,user.Pronouns,nicknameColor) { }
+
 }

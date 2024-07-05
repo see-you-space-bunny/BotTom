@@ -3,26 +3,43 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ChatApi.Core;
+using ChatApi.Objects;
+using ModuleHost.CardiApi;
 
 namespace ModuleHost.CommandHandling;
 
 public class CommandParser
 {
-    private int ModuleStartIndex { get; }
-    private string FullBotPrefix { get; }
-    public string BotPrefix { get; }
+    private int ModuleStartIndex { get => BotPrefix.Length; }
+    public string BotPrefix { get; private set; }
+    public Dictionary<string,RegisteredUser> Operators { get; private set; }
 
-    public CommandParser(string botPrefix)
+    public CommandParser() : this(string.Empty,null!)
+    { }
+
+    public CommandParser(string botPrefix,List<string> ops = null!)
     {
-        BotPrefix = botPrefix;
-        FullBotPrefix = botPrefix + (botPrefix.EndsWith('!') ? string.Empty : '!');
-        ModuleStartIndex = FullBotPrefix.Length;
+        WithBotPrefix(botPrefix);
+        WithOperators(ops ?? ([]));
     }
 
-    public bool TryConvertCommand(string unparsed, out BotCommand? botCommand)
+    public CommandParser WithBotPrefix(string value)
+    {
+        BotPrefix = value + (value.EndsWith('!') ? string.Empty : '!');
+        return this;
+    }
+
+    public CommandParser WithOperators(List<string> value)
+    {
+        Operators = value.ToDictionary(li => li,li => (RegisteredUser)ApiConnection.GetUserByName(li));
+        return this;
+    }
+
+    public bool TryConvertCommand(User? user,Channel? channel,string unparsed,out BotCommand? botCommand)
     {
         // Not a command
-        if (!unparsed.StartsWith(FullBotPrefix))
+        if (!unparsed.StartsWith(BotPrefix))
         {
             botCommand = null;
             return false;
@@ -37,14 +54,28 @@ public class CommandParser
             return false;
         }
         
-        if (!Enum.TryParse(parsedTokens[0], out BotModule botModule))
+        if (!Enum.TryParse(parsedTokens[0],true,out BotModule botModule))
         {
             // Not a recognized module
             botCommand = null;
             return false;
         }
 
-        botCommand = new BotCommand(botModule, parsedTokens[1], parsedTokens.Skip(1).ToArray());
+        // Command cannot be issued by a non-user
+        if (user == null)
+        {
+            // Some operations may still trigger, but they will be exceptions
+            botCommand = null;
+            return false;
+        }
+
+        bool isOp = true;
+        if (!Operators.ContainsKey(user.Name.ToLower()))
+        {
+            isOp = false;
+        }
+
+        botCommand = new BotCommand(user, channel, botModule, parsedTokens[1], parsedTokens.Skip(1).ToArray(),isOp);
         return true;
     }
 

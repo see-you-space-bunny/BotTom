@@ -31,7 +31,7 @@ namespace ChatApi.Systems
 
         public IEnumerable<KeyValuePair<string,User>> GetUsersByStatus(UserStatus status)
         {
-            return KnownUsers.Where(user => user.Value.Userstatus == status);
+            return KnownUsers.Where(user => user.Value.UserStatus == status);
         }
 
         public User GetUserByName(string name)
@@ -44,7 +44,7 @@ namespace ChatApi.Systems
             User foundUser = new()
             {
                 Name = name,
-                Chatstatus = ChatStatus.Offline
+                ChatStatus = ChatStatus.Offline
             };
             AddUser(foundUser);
 
@@ -53,7 +53,7 @@ namespace ChatApi.Systems
 
         public void SetChatStatus(User user, ChatStatus status, bool logging = true)
         {
-            user.Chatstatus = status;
+            user.ChatStatus = status;
             if (GetUserByName(user.Name) == null)
                 AddUser(user);
 
@@ -61,13 +61,13 @@ namespace ChatApi.Systems
             if (null == thisUser)
                 throw new System.Exception($"Error attempting to resolve user: {user.Name}.");
 
-            thisUser.Chatstatus = status;
+            thisUser.ChatStatus = status;
             if (logging) Console.WriteLine($"{thisUser.Name}'s chat status changed to: {status}");
         }
 
         public void SetUserStatus(User user, UserStatus status, bool logging = true)
         {
-            user.Userstatus = status;
+            user.UserStatus = status;
             if (GetUserByName(user.Name) == null)
                 AddUser(user);
 
@@ -75,7 +75,7 @@ namespace ChatApi.Systems
             if (null == thisUser)
                 throw new System.Exception($"Error attempting to resolve user: {user.Name}.");
 
-            thisUser.Userstatus = status;
+            thisUser.UserStatus = status;
             if (logging) Console.WriteLine($"{thisUser.Name}'s user status changed to: {status}");
         }
     }
