@@ -10,8 +10,16 @@ namespace FChatApi.Objects;
 public class User
 {
 #region Constants (-)
+	/// <summary>user mention format</summary>
 	private const string MentionFormat = "[user]{0}[/user]";
+
+	/// <summary>user icon format</summary>
+	private const string IconFormat = "[icon]{0}[/icon]";
 #endregion
+
+
+////////////////////////////////////////////////
+
 
 #region Basic Info (P+)
 	/// <summary>the character's kinks and preferences thereof</summary>
@@ -32,6 +40,9 @@ public class User
 	/// <summary>that subscriber subtitle ?SPECULATION</summary>
 	public string Nickname { get; set; }
 #endregion
+
+
+////////////////////////////////////////////////
 
 
 #region Profile Info (P+)
@@ -64,12 +75,19 @@ public class User
 #endregion
 
 
+////////////////////////////////////////////////
+
+
 #region Custom Info (P+)
+	/// <summary>mentions the user in clickable form</summary>
 	public string Mention => string.Format(MentionFormat,Name);
+
+	/// <summary>inserts an icon of the user</summary>
+	public string Icon => string.Format(IconFormat,Name);
 #endregion
 
 
-////////////////////
+////////////////////////////////////////////////
 
 
 #region Constructors (+)
@@ -116,7 +134,7 @@ public class User
 #endregion
 
 
-////////////////////
+////////////////////////////////////////////////
 
 
 #region Get Methods (+)
@@ -154,6 +172,9 @@ public class User
 		return string.Empty;
 	}
 #endregion
+
+
+////////////////////////////////////////////////
 
 
 #region Set Methods (-)
