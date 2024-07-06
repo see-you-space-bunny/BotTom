@@ -1,100 +1,104 @@
 ﻿namespace FChatApi.Enums;
 
+/// <summary>response codes used by FChat</summary>
 public enum Hycybh
 {
+	/// <summary>empty/invalid default</summary>
+	NON	= 0x00,
+
 	/// <summary>user is typing</summary>
-	TPN,
+	TPN	= 0x01,
 
 	/// <summary>channel message sent/received</summary>
-	MSG,
+	MSG	= 0x02,
 
 	/// <summary>connected or requesting chat connection</summary>
-	IDN,
+	IDN	= 0x03,
 
 	/// <summary>private message sent/received</summary>
-	PRI,
+	PRI	= 0x04,
 
 	/// <summary>public channel list received </summary>
-	CHA,
+	CHA	= 0x05,
 
 	/// <summary>private channel list received</summary>
-	ORS,
+	ORS	= 0x06,
 
 	/// <summary>joined or requesting to join a channel</summary>
-	JCH,
+	JCH	= 0x07,
 
 	/// <summary>left or requesting to leave a channel</summary>
-	LCH,
+	LCH	= 0x08,
 
 	/// <summary>a ping</summary>
-	PIN,
+	PIN	= 0x09,
 
 	/// <summary>requests status set</summary>
-	STA,
+	STA	= 0x0A,
 
 	/// <summary>advertisement</summary>
-	LRP,
+	LRP	= 0x0B,
 
 	/// <summary>create(d) a private, invite-only channel</summary>
-	CCR,
+	CCR	= 0x0C,
 
 	/// <summary>chat system variables</summary>
-	VAR,
+	VAR	= 0x0D,
 
 	/// <summary>server hello command</summary>
-	HLO,
+	HLO	= 0x0E,
 
 	/// <summary>returns number of connected users</summary>
-	CON,
+	CON	= 0x0F,
 
 	/// <summary>friends list</summary>
-	FRL,
+	FRL	= 0x10,
 
 	/// <summary>ignore list</summary>
-	IGN,
+	IGN	= 0x11,
 
 	/// <summary>chat ops list</summary>
-	ADL,
+	ADL	= 0x12,
 
 	/// <summary>character list and online status</summary>
-	LIS,
+	LIS	= 0x13,
 
 	/// <summary>a user connected</summary>
-	NLN,
+	NLN	= 0x14,
 
 	/// <summary>a user disconnected</summary>
-	FLN,
+	FLN	= 0x15,
 
 	/// <summary>list of channel ops</summary>
-	COL,
+	COL	= 0x16,
 
 	/// <summary>initial channel data</summary>
-	ICH,
+	ICH	= 0x17,
 
 	/// <summary>channel's description has updated</summary>
-	CDS,
+	CDS	= 0x18,
 
 	/// <summary>basic error response</summary>
-	ERR,
+	ERR	= 0x19,
 
 	/// <summary>invite user to channel</summary>
-	CIU,
+	CIU	= 0x1A,
 
 	/// <summary>kicks a user</summary>
-	CKU,
+	CKU	= 0x1B,
 
 	/// <summary>bans a user</summary>
-	CBU,
+	CBU	= 0x1C,
 
 	/// <summary>promotes to channel op</summary>
-	COA,
+	COA	= 0x1D,
 
 	/// <summary>demotes from channel op to user</summary>
-	COR,
+	COR	= 0x1E,
 
 	/// <summary>time a user out</summary>
-	CTU,
+	CTU	= 0x1F,
 
 	/// <summary>unbans a user</summary>
-	CUB
+	CUB	= 0x20,
 }
