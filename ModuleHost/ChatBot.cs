@@ -8,7 +8,9 @@ using Discord;
 using Discord.WebSocket;
 using ChatApi.Core;
 using ModuleHost.CardiApi;
-using BinarySerialization;
+using FileManip;
+using ModuleHost.Attributes;
+using System.Reactive.Concurrency;
 
 namespace ModuleHost
 {
@@ -34,62 +36,66 @@ namespace ModuleHost
         /// </summary>
         private IEnumerable<DiscordSlashPlugin> DiscordSlashPlugins => Plugins.Values.OfType<DiscordSlashPlugin>();
 
+        private TimeSpan _userRefreshIneterval = new TimeSpan(0,0,15);
+        private DateTime _nextUserRefresh;
+
+        private AsyncLock _registeredUsersLock = new();
+
         /// <summary>
         /// constructor, inits plugins
         /// </summary>
         public ChatBot()
         {
             Plugins = [];
-            if (RegisteredUsers.Count == 0)
-            {
-                DeserializeRegisteredUsers();
-            }
+            _nextUserRefresh = DateTime.Now;
+
+            DeserializeRegisteredUsers();
         }
 
-        private async void DeserializeRegisteredUsers()
+        private static void DeserializeRegisteredUsers(string? path = null)
         {
-            uint Value = 0;
-            bool more = true;
-            int shift = 0;
-            var stream      = new MemoryStream();
-            var serializer  = new BinarySerializer();
-            while (more)
+            path ??= Path.Combine(Environment.CurrentDirectory,"sessiondata","RegisterdPlayers");
+            if (!File.Exists(path))
+                return;
+
+            using (var stream = File.OpenRead(path))
             {
-                int b = stream.ReadByte();
+                var reader  = new BinaryReader(stream);
+                uint count  = reader.ReadUInt32();
+                if (count == 0)
+                    return;
 
-                var regUser = await RegisteredUser.DeserializeAsync(stream,serializer);
-
-                RegisteredUsers.Add(regUser.Name,regUser);
-
-                var lower7Bits = (byte)b;
-                more = (lower7Bits & 128) != 0;
-                Value |= (uint)((lower7Bits & 127) << shift);
-                shift += 7;
+                for (uint i=0;i<count;i++)
+                {
+                    var tempRegUser = RegisteredUser.Deserialize(reader);
+                    if (RegisteredUsers.TryAdd(tempRegUser.Name.ToLower(),tempRegUser))
+                        continue;
+                }
             }
-            stream.WriteTo(File.Create(Path.Combine(Environment.CurrentDirectory,"RegisterdPlayers"),512,FileOptions.Asynchronous));
         }
 
         /// <summary>
         /// Adds a plugin to the list of active plugins
         /// </summary>
         /// <param name="plugin"></param>
-        public void AddPlugin<TPlugin>(PluginBase plugin) where TPlugin : PluginBase
+        public ChatBot AddPlugin<TPlugin>(PluginBase plugin) where TPlugin : PluginBase
         {
             var key = (typeof(TPlugin) switch
                 {
-                    Type t when t == typeof(FChatPlugin)        => Platform.FChat,
-                    Type t when t == typeof(DiscordSlashPlugin) => Platform.Discord,
+                    Type t when t.IsSubclassOf(typeof(FChatPlugin))         => Platform.FChat,
+                    Type t when t.IsSubclassOf(typeof(DiscordSlashPlugin))  => Platform.Discord,
                     _ => throw new ArgumentException(typeof(TPlugin).ToString()),
                 },
                 plugin.GetType()
             );
             if (Plugins.ContainsKey(key))
             {
-                Console.WriteLine("Unable to add same plugin twice at this time. Sorry!");
-                return;
+                Console.WriteLine("You cannot add same plugin twice!");
+                return this;
             }
 
             Plugins.Add(key,plugin);
+            return this;
         }
 
         /// <summary>
@@ -105,14 +111,25 @@ namespace ModuleHost
         }
 
         /// <summary>
-        /// Clean up our plugins if we're closing things down
+        /// update the bot's and its modules
         /// </summary>
         public async Task Update()
         {
+            if (_nextUserRefresh > DateTime.Now)
+                foreach (var regUser in RegisteredUsers.Keys)
+                    if (RegisteredUsers.TryGetValue(regUser, out RegisteredUser? registeredUser) && ApiConnection.TryGetUserByName(regUser,out User user))
+                        registeredUser.Update(user);
+
+            var tasks = new Task[Plugins.Count];
+            int i = 0;
             foreach (var plugin in Plugins.Values.Where(p => p.NextUpdate >= DateTime.Now))
             {
-                await plugin.Update();
+                tasks[i] = Task.Run(() => plugin.Update());
+                ++i;
             }
+            await Task.WhenAll(tasks.Where(t => t != null).ToArray());
+            if (_shutdown)
+                await Shutdown();
         }
 
         /// <summary>
@@ -120,32 +137,36 @@ namespace ModuleHost
         /// </summary>
         public async Task Shutdown()
         {
-            var stream      = new MemoryStream();
-            var serializer  = new BinarySerializer();
-            foreach (RegisteredUser regUser in RegisteredUsers.Values)
+            lock (_registeredUsersLock)
             {
-                await regUser.SerializeAsync(stream,serializer);
+                using var stream = File.Create(Path.Combine(Environment.CurrentDirectory, "sessiondata", "RegisterdPlayers"));
+                var writer = new BinaryWriter(stream);
+                writer.Write((uint)RegisteredUsers.Count);
+                foreach (RegisteredUser regUser in RegisteredUsers.Values)
+                {
+                    regUser.Serialize(writer);
+                }
             }
-            stream.WriteTo(File.Create(Path.Combine(Environment.CurrentDirectory,"RegisterdPlayers"),512,FileOptions.Asynchronous));
 
+            var tasks = new Task[Plugins.Count];
+            int i = 0;
             foreach (var plugin in Plugins.Values)
             {
-                await plugin.Shutdown();
+                tasks[i] = Task.Run(() => plugin.Shutdown());
+                ++i;
             }
+            await Task.WhenAll(tasks.Where(t => t != null).ToArray());
         }
 
         /// <summary>
         /// Handles when we receive a message from the chat server
         /// </summary>
-        /// <param name="channel">originating channel</param>
-        /// <param name="message">cleaned up message</param>
-        /// <param name="sendingUser">user that send the message</param>
         /// <param name="command">command being sent, if any</param>
-        /// <param name="isOp">if the sending user is an op</param>
-        public async void HandleMessage(BotCommand command)
+        public void HandleMessage(BotCommand command)
         {
-            await FChatPlugins.Single(p => p.ModuleType == command.BotModule).HandleRecievedMessage(command);
+            FChatPlugins.Single(p => p.ModuleType == command.BotModule).HandleRecievedMessage(command);
         }
+
 
         /// <summary>
         /// Handles when we receive a slash command
@@ -153,9 +174,9 @@ namespace ModuleHost
         /// <param name="command">the slash command context</param>
         public async void HandleMessage(SocketSlashCommand command)
         {
-            foreach (DiscordSlashPlugin plugin in DiscordSlashPlugins)
+            if (Enum.TryParse(command.Data.Name,true,out BotModule botModule))
             {
-                await plugin.HandleRecievedMessage(command);
+                await DiscordSlashPlugins.Single(p => p.ModuleType == botModule).HandleRecievedMessage(command);
             }
         }
 
@@ -166,10 +187,22 @@ namespace ModuleHost
         public async void HandleJoinedChannel(string channelCode)
         {
             Channel channel = ApiConnection.GetChannelByNameOrCode(channelCode);
-            foreach (FChatPlugin plugin in FChatPlugins)
+            
+            var tasks = new Task[FChatPlugins.Count()];
+            int i = 0;
+            foreach (var plugin in FChatPlugins)
             {
-                await plugin.HandleJoinedChannel(channel);
+                tasks[i] = Task.Run(() => plugin.HandleJoinedChannel(channel));
+                ++i;
             }
+            await Task.WhenAll(tasks.Where(t => t != null).ToArray());
+        }
+
+        private static bool _shutdown = false;
+        public bool ShutdownFlag => _shutdown;
+        public static void SetShutdownFlag()
+        {
+            _shutdown = true;
         }
     }
 }

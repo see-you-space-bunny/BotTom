@@ -1,14 +1,13 @@
 using System.ComponentModel;
 
-namespace Widget.CardGame
+namespace Widget.CardGame.Enums;
+
+public enum CharacterStatGroup
 {
-    public enum CharacterStatGroup
-    {
-        [Description("")]
-        Untyped,
-        [Description("")]
-        Physical,
-        [Description("")]
-        Mental,
-    }
+    [Description("")]
+    Untyped,
+    [Description("")]
+    Physical,
+    [Description("")]
+    Mental,
 }

@@ -57,6 +57,17 @@ public partial class ApiConnection
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public static bool TryGetUserByName(string name, out User user)
+    {
+        user = UserTracker.GetUserByName(name);
+        return  !(user.ChatStatus == ChatStatus.Offline);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
     /// <param name="channelType"></param>
     /// <returns></returns>
     public static IEnumerable<Channel> RequestChannelList(ChannelType channelType)
@@ -80,7 +91,8 @@ public partial class ApiConnection
     /// <param name="channelname"></param>
     public static async void LeaveChannel(string channelname)
     {
-        if (!IsConnected()) throw new Exception("You must be connected to chat to do this.");
+        if (!IsConnected())
+            throw new Exception("You must be connected to chat to do this.");
 
         string toSend = Hycybh.LCH.ToString() + string.Format(" {{\"channel\": \"{0}\"}}", channelname);
         Console.WriteLine($"Attempting to leave channel: {channelname}");
@@ -93,7 +105,8 @@ public partial class ApiConnection
     /// <param name="channelName"></param>
     public static async void CreateChannel(string channelName)
     {
-        if (!IsConnected()) throw new Exception("You must be connected to chat to do this.");
+        if (!IsConnected())
+            throw new Exception("You must be connected to chat to do this.");
 
         string toSend = Hycybh.CCR.ToString() + string.Format(" {{\"channel\": \"{0}\"}}", channelName);
         Console.WriteLine($"Attempting to create channel: {channelName}");
@@ -108,7 +121,8 @@ public partial class ApiConnection
     /// <param name="channelname"></param>
     public static async void Mod_InviteUserToChannel(string username, string channelname)
     {
-        if (!IsConnected()) throw new Exception("You must be connected to chat to do this.");
+        if (!IsConnected())
+            throw new Exception("You must be connected to chat to do this.");
 
         string toSend = Hycybh.CIU.ToString() + string.Format(" {{\"channel\": \"{0}\", \"character\": \"{1}\"}}", channelname, username);
         Console.WriteLine(toSend);
@@ -122,7 +136,8 @@ public partial class ApiConnection
     /// <param name="description"></param>
     public static async void Mod_SetChannelDescription(string channel, string description)
     {
-        if (!IsConnected()) throw new Exception("You must be connected to chat to do this.");
+        if (!IsConnected())
+            throw new Exception("You must be connected to chat to do this.");
 
         string toSend = Hycybh.CDS.ToString() + string.Format(" {{\"channel\": \"{0}\", \"description\": \"{1}\"}}", channel, description);
         Console.WriteLine(toSend);
@@ -137,7 +152,9 @@ public partial class ApiConnection
     /// <param name="duration"></param>
     public static async void Mod_SetChannelUserStatus(string channel, string user, UserRoomStatus status, int duration = -1)
     {
-        if (!IsConnected()) throw new Exception("You must be connected to chat to do this.");
+        if (!IsConnected())
+            throw new Exception("You must be connected to chat to do this.");
+
         string toSend = string.Empty;
         switch (status)
         {
@@ -225,7 +242,7 @@ public partial class ApiConnection
     /// <param name="message"></param>
     /// <param name="recipient"></param>
     /// <param name="messageType"></param>
-    public void SendMessage(ChatMessageBuilder messageBuilder)
+    public void EnqueueMessage(ChatMessageBuilder messageBuilder)
     {
         lock (SocketLocker)
         {
@@ -240,9 +257,9 @@ public partial class ApiConnection
     /// <param name="message"></param>
     /// <param name="recipient"></param>
     /// <param name="messageType"></param>
-    public void SendMessage(string channel, string message, string recipient, MessageType messageType = MessageType.Basic)
+    public void EnqueueMessage(string channel, string message, string recipient, MessageType messageType = MessageType.Basic)
     {
-        SendMessage(new ChatMessageBuilder()
+        EnqueueMessage(new ChatMessageBuilder()
             .WithRecipient(recipient)
             .WithChannel(ChannelTracker.GetChannelByNameOrCode(channel))
             .WithMessage(message)

@@ -14,19 +14,7 @@ namespace ChatApi.Core
     public partial class ApiConnection
     {
         public ApiConnection()
-        {
-            ClientId = "Fii_Bot";
-            ClientVersion = "2.1.0.0";
-            ConnectionTimeout = new TimeSpan(0, 0, 10);
-
-            TicketInformation = null;
-            Client = null;
-            UserName = string.Empty;
-            CharacterName = string.Empty;
-
-            ChannelTracker = new ChannelTracker();
-            UserTracker = new UserTracker();
-        }
+        { }
 
         #region Client Events
         async void Client_MessageReceived(object sender, MessageReceivedEventArgs @event)

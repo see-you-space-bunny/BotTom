@@ -76,7 +76,7 @@ internal class MatchChallenge : ICommandIO<string>
     ExpireTime      = TimeInitiated.Add(expiresIn);
   }
 
-  internal async Task AdvanceState(Event @event)
+  internal void AdvanceState(Event @event)
   {
     var previousState = PreviousState;
     PreviousState = CurrentState;

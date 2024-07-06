@@ -1,19 +1,19 @@
 using System.ComponentModel;
 
-namespace Widget.CardGame.Enums
+namespace ModuleHost
 {
-    public enum Command
+    public enum BotModule
     {
         [Description("")]
-        Register,
+        None = 0x00,
 
         [Description("")]
-        Accept,
-
+        Clock,
+        
         [Description("")]
-        Challenge,
-
+        XCG,
+        
         [Description("")]
-        Reject,
+        System,
     }
 }

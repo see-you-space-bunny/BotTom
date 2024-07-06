@@ -84,6 +84,15 @@ public class SystemController
 
         message = $"{message}";
 
-        Api.SendMessage(channel, message, recipient, messagetype);
+        Api.EnqueueMessage(channel, message, recipient, messagetype);
+    }
+
+    /// <summary>
+    /// replies via the f-list api
+    /// </summary>
+    /// <param name="messageBuilder">the builder we're passing to send-message</param>
+    public void Respond(ChatMessageBuilder messageBuilder)
+    {
+        Api.EnqueueMessage(messageBuilder);
     }
 }

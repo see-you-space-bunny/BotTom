@@ -16,15 +16,15 @@ namespace ChatApi.Core;
 
 public partial class ApiConnection
 {
-    public static WatsonWsClient Client { get; set; }
-    public static TicketInformation TicketInformation { get; set; }
-    public static string UserName { get; set; }
-    public static string CharacterName { get; set; }
-    public static string ClientId { get; set; }
-    public static string ClientVersion { get; set; }
-    public static TimeSpan ConnectionTimeout { get; set; }
-    public static UserTracker UserTracker { get; set; }
-    internal static ChannelTracker ChannelTracker { get; set; }
+    public static WatsonWsClient Client { get; set; } = null;
+    public static TicketInformation TicketInformation { get; set; } = null;
+    public static string UserName { get; set; } = string.Empty;
+    public static string CharacterName { get; set; } = string.Empty;
+    public static string ClientId { get; set; } = "Fii_Bot";
+    public static string ClientVersion { get; set; } = "2.1.0.0";
+    public static TimeSpan ConnectionTimeout { get; set; } = new TimeSpan(0, 0, 10);
+    public static UserTracker UserTracker { get; set; } = new UserTracker();
+    public static ChannelTracker ChannelTracker { get; set; } = new ChannelTracker();
 
     /// <summary>
     /// 

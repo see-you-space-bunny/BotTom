@@ -10,7 +10,7 @@ namespace ModuleHost;
 /// our discord plugin for others to derive off of
 /// </summary>
 /// <param name="updateInterval">how often this module runs Update().<br/>defaults to: Never</param>
-public class DiscordSlashPlugin(TimeSpan? updateInterval = null) : PluginBase(null,updateInterval)
+public class DiscordSlashPlugin(TimeSpan? updateInterval = null) : PluginBase(updateInterval)
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     /// <summary>

@@ -16,6 +16,7 @@ public static class DictionaryHandling
         dic[toKey] = value;
     }
 
+#pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
     internal static Dictionary<TKey, TValue> ToOutgoing<TKey, TValue>(this IDictionary<TKey, TValue> dic) where TValue : ICommandIO<TKey>
     {
         if (typeof(TKey) is null)
@@ -27,5 +28,6 @@ public static class DictionaryHandling
             outgoingDict.Add(dic[key].AlternateKey,dic[key]);
 
         return outgoingDict;
+#pragma warning restore CS8714
     }
 }

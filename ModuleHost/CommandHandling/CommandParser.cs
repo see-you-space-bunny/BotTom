@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ChatApi.Core;
 using ChatApi.Objects;
 using ModuleHost.CardiApi;
+using ModuleHost.Enums;
 
 namespace ModuleHost.CommandHandling;
 
@@ -13,16 +14,16 @@ public class CommandParser
 {
     private int ModuleStartIndex { get => BotPrefix.Length; }
     public string BotPrefix { get; private set; }
-    public Dictionary<string,RegisteredUser> Operators { get; private set; }
 
     public CommandParser() : this(string.Empty,null!)
     { }
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     public CommandParser(string botPrefix,List<string> ops = null!)
     {
         WithBotPrefix(botPrefix);
-        WithOperators(ops ?? ([]));
     }
+#pragma warning restore CS8618
 
     public CommandParser WithBotPrefix(string value)
     {
@@ -30,13 +31,7 @@ public class CommandParser
         return this;
     }
 
-    public CommandParser WithOperators(List<string> value)
-    {
-        Operators = value.ToDictionary(li => li,li => (RegisteredUser)ApiConnection.GetUserByName(li));
-        return this;
-    }
-
-    public bool TryConvertCommand(User? user,Channel? channel,string unparsed,out BotCommand? botCommand)
+    public bool TryConvertCommand(string username,RegisteredUser? user,Channel? channel,string unparsed,out BotCommand? botCommand)
     {
         // Not a command
         if (!unparsed.StartsWith(BotPrefix))
@@ -49,7 +44,9 @@ public class CommandParser
         string[] parsedTokens = Parse(unparsed[ModuleStartIndex..]).ToArray();
         if (parsedTokens.Length < 2)
         {
-            // it might be getting the bot's attention but doesn't have enough for a real command
+#if DEBUG
+            Console.WriteLine("it might be getting the bot's attention but doesn't have enough for a real command");
+#endif
             botCommand = null;
             return false;
         }
@@ -57,25 +54,38 @@ public class CommandParser
         if (!Enum.TryParse(parsedTokens[0],true,out BotModule botModule))
         {
             // Not a recognized module
-            botCommand = null;
-            return false;
+#if DEBUG
+            Console.WriteLine("Not a recognized module, defaulting to 'System'");
+#endif
+            botModule = BotModule.System;
         }
 
         // Command cannot be issued by a non-user
-        if (user == null)
+        if (string.IsNullOrWhiteSpace(username) && user == null)
         {
             // Some operations may still trigger, but they will be exceptions
+#if DEBUG
+            Console.WriteLine("Command cannot be issued by a non-user");
+            Console.WriteLine("Some operations may still trigger, but they will be exceptions");
+#endif
             botCommand = null;
             return false;
         }
 
-        bool isOp = true;
-        if (!Operators.ContainsKey(user.Name.ToLower()))
+        Privilege privilege = Privilege.None;
+        if (user == null)
         {
-            isOp = false;
+#if DEBUG
+            Console.WriteLine("Defaulting null user to 'UnregisteredUser'");
+#endif
+            privilege = Privilege.UnregisteredUser;
         }
-
-        botCommand = new BotCommand(user, channel, botModule, parsedTokens[1], parsedTokens.Skip(1).ToArray(),isOp);
+        else
+        {
+            privilege = user!.PrivilegeLevel;
+        }
+        
+        botCommand = new BotCommand(username,user, channel, botModule, parsedTokens[1], parsedTokens.Skip(1).ToArray(),privilege);
         return true;
     }
 

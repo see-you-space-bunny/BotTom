@@ -1,16 +1,17 @@
 using ChatApi.Objects;
 using ModuleHost.CardiApi;
+using ModuleHost.Enums;
 
 namespace ModuleHost.CommandHandling;
 
-public class BotCommand(User user,Channel? channel,BotModule botModule, string command, string[] parameters,bool isOp)
+public class BotCommand(string username,RegisteredUser? user,Channel? channel,BotModule botModule, string command, string[] parameters, Privilege privilege)
 {
-    public User? User { get; } = user;
-    public bool IsRegisteredUser => User is RegisteredUser;
-    public bool IsOp { get; } = isOp;
+    public string UserName { get; } = username;
+    public RegisteredUser? User { get; } = user;
     public Channel? Channel { get; } = channel;
     public BotModule BotModule { get; } = botModule;
     public string Command { get; } = command;
     public string[] Parameters { get; } = parameters;
+    public Privilege PrivilegeLevel { get; } = privilege; 
 }
 

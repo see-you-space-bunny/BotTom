@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace ChatApi.Objects;
 
@@ -64,28 +65,28 @@ public class ChatMessageBuilder
 
         StringBuilder messageStringBuilder = new();
 
-        if (string.IsNullOrWhiteSpace(Mention))
-            messageStringBuilder.Append(Mention).Append(' ');
+        if (!string.IsNullOrWhiteSpace(Mention))
+            messageStringBuilder
+                .Append(Mention)
+                .Append(' ');
 
-        // extra whisper check, in case channel target has no valid value
-        if ((Channel == null) && MessageType != Objects.MessageType.Whisper)
+        if (Channel == null)
         {
             MessageType = Objects.MessageType.Whisper;
-            // extra whisper check, in case recipient is invalid on a whisper
-            if (string.IsNullOrWhiteSpace(Recipient))
-                throw new IncompleteBuilderException($"Error: Attempting to send a whisper with no valid target.");
         }
         else if (!Channel.AdEnabled && MessageType == Objects.MessageType.Advertisement)
         {
             throw new IncompleteBuilderException($"Error: Attempting to post an ad in a channel that doesn't support it. ({Channel.Name})");
         }
-            
+        
+        string encodedMessage = System.Web.HttpUtility.JavaScriptStringEncode(Message);
+
         return new ChatMessage(
             Author,
             Recipient,
             (MessageType)MessageType,
             Channel != null ? Channel.Code : string.Empty,
-            messageStringBuilder.Append(Message).ToString()
+            messageStringBuilder.Append(encodedMessage).ToString()
         );
     }
     #endregion
@@ -103,20 +104,20 @@ public class ChatMessageBuilder
         return this;
     }
     #endregion
+}
 
-    [Serializable]
-    private class IncompleteBuilderException : Exception
+[Serializable]
+internal class IncompleteBuilderException : Exception
+{
+    public IncompleteBuilderException()
     {
-        public IncompleteBuilderException()
-        {
-        }
+    }
 
-        public IncompleteBuilderException(string message) : base(message)
-        {
-        }
+    public IncompleteBuilderException(string message) : base(message)
+    {
+    }
 
-        public IncompleteBuilderException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
+    public IncompleteBuilderException(string message, Exception innerException) : base(message, innerException)
+    {
     }
 }

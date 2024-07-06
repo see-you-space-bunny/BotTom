@@ -16,6 +16,9 @@ using BotTom.FChat;
 using ModuleHost;
 using ChatApi.Core;
 using ModuleHost.CommandHandling;
+using Widget.CardGame;
+using ModuleHost.Enums;
+using ModuleHost.CardiApi;
 
 namespace BotTom;
 
@@ -30,7 +33,8 @@ partial class Program
 	static readonly string F_StartingChannelArg   = "StartingChannel";
 	static readonly string F_RetryAttemptsArg     = "RetryAttempts";
 	static readonly string F_CommandCharArg       = "CommandChar";
-	static readonly string F_OpsListArg           = "OpsList";
+	static readonly string F_OwnerListArg					= "OwnerList";
+	static readonly string F_GlobalOpsListArg   	= "GlobalOpsList";
 	// -----------------------------------------------
 
 	static string F_StartingChannel = string.Empty;
@@ -58,9 +62,14 @@ partial class Program
 	static CommandParser F_CommandParser = new(string.Empty,[]);
 	
 	/// <summary>
-	/// A list of bot ops
+	/// A list of global bot ops
 	/// </summary>
-	static List<string> F_Ops = [];
+	static List<string> F_GlobalOps = [];
+	
+	/// <summary>
+	/// A list of bot owners
+	/// </summary>
+	static List<string> F_Owner = [];
 
 	/// <summary>
 	/// A collection of any failed cli args in validation check
@@ -71,6 +80,11 @@ partial class Program
 	/// The bot's character name
 	/// </summary>
 	public static string F_CharacterName = string.Empty;
+
+	/// <summary>
+	/// What to reset retry attempts to on reboot
+	/// </summary>
+	public static int RetryAttemptsReset = -1;
 
 	#region Main
 	static async Task InitializeFChat(string[] args)
@@ -97,22 +111,25 @@ partial class Program
 		ValidateArgument(out string F_CharacterName,   	F_CharacterNameArg, 	cliArgDict);
 		ValidateArgument(out string F_StartingChannel, 	F_StartingChannelArg,	cliArgDict, true);
 		ValidateArgument(out F_CommandChar,            	F_CommandCharArg,			cliArgDict);
-		ValidateArgument(out F_Ops,                    	F_OpsListArg,					cliArgDict);
+		ValidateArgument(out F_Owner,              			F_OwnerListArg,				cliArgDict);
+		ValidateArgument(out F_GlobalOps,           		F_GlobalOpsListArg,		cliArgDict, true);
 
-		ValidateArgument(out int RetryAttempts,       	F_RetryAttemptsArg, 	cliArgDict);
+		ValidateArgument(out RetryAttemptsReset,       	F_RetryAttemptsArg, 	cliArgDict);
+
+		int RetryAttempts = RetryAttemptsReset;
 
 		if (!ConfirmCliArgumentValidation())
 		{
 				Environment.Exit(-1);
 		}
 
-		F_CommandParser.WithBotPrefix(F_CommandChar).WithOperators(F_Ops);
+		F_CommandParser.WithBotPrefix(F_CommandChar);
 
 		while (RetryAttempts > 0)
 		{
 				try
 				{
-						await RunChat(F_UserName, F_Password, F_CharacterName, F_StartingChannel, F_CommandChar, F_Ops);
+						await RunChat(F_UserName, F_Password, F_CharacterName, F_StartingChannel, F_CommandChar);
 				}
 				catch(Exception e)
 				{
@@ -240,7 +257,7 @@ partial class Program
 	/// Connection loop for easier retries
 	/// </summary>
 	/// <returns>false if we lose our connection</returns>
-	static async Task<bool> RunChat(string userName, string passWord, string characterName, string startingChannel, string commandChar, List<string> opsList)
+	static async Task<bool> RunChat(string userName, string passWord, string characterName, string startingChannel, string commandChar)
 	{
 		if (F_Chat != null)
 			F_Chat = null;
@@ -261,8 +278,13 @@ partial class Program
 #if DEBUG
 			//F_Bot.AddPlugin(new GatchaGame(F_Chat, commandChar));
 			//BOTACTION:TODO//F_Bot.AddPlugin(new LostRPG(F_Chat, commandChar));
+			F_Bot.AddPlugin<FChatGlobalCommands>(new FChatGlobalCommands(F_Chat)
+				.SetOperators(F_Owner,		Privilege.OwnerOperator)
+				.SetOperators(F_GlobalOps,Privilege.GlobalOperator)
+			);
+			F_Bot.AddPlugin<FChatTournamentOrganiser>(new FChatTournamentOrganiser(F_Chat));
 #else
-			F_Bot.AddPlugin(new TournamentOrganiser(F_Chat, commandChar));
+			// F_Bot.AddPlugin(new FChatTournamentOrganiser(F_Chat));
 #endif
 			// End Plugin Adding ///////////////////////////////////////////////////
 
@@ -300,8 +322,30 @@ partial class Program
 	/// <summary>
 	/// update loop, do w/e in here
 	/// </summary>
-	static void Update()
+	static async void Update()
 	{
-		Thread.Sleep(10000);
+		await F_Bot!.Update();
+
+		Task shutTask = null!;
+		if (F_Bot != null && F_Bot!.ShutdownFlag)
+		{
+			shutTask = F_Bot.Shutdown();
+		}
+
+		////////////////////
+		
+	
+
+		////////////////////
+
+		if (shutTask != null)
+		{
+			await shutTask;
+			Environment.Exit(0);
+		}
+		else
+		{
+			Thread.Sleep(10000);
+		}
 	}
 }

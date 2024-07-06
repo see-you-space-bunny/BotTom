@@ -36,7 +36,7 @@ namespace ChatApi.Systems
 
         public User GetUserByName(string name)
         {
-            if (KnownUsers.TryGetValue(name, out User value))
+            if (KnownUsers.TryGetValue(name.ToLower(), out User value))
             {
                 return value;
             }

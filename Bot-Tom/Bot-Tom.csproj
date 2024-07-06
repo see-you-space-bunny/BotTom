@@ -36,6 +36,8 @@
     <ProjectReference Include="..\DiceRoller\DiceRoller.csproj" />
     <ProjectReference Include="..\ChatApi\ChatApi.csproj" />
     <ProjectReference Include="..\ModuleHost\ModuleHost.csproj" />
+    <ProjectReference Include="..\Widget.CardGame\Widget.CardGame.csproj" />
+    <ProjectReference Include="..\Widget.FGlobals\Widget.FGlobals.csproj" />
   </ItemGroup>
 
 </Project>

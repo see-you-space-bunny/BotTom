@@ -3,6 +3,8 @@ using ChatApi.Objects;
 using ChatApi.Core;
 using System.Linq;
 using ModuleHost.CommandHandling;
+using ModuleHost;
+using ChatApi.Systems;
 
 namespace BotTom
 {
@@ -17,11 +19,10 @@ namespace BotTom
         static async void HandleMessageReceived(object sender, MessageEventArgs e)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
-            bool isOp = F_Ops.Any(x => x.Equals(e.user, StringComparison.InvariantCultureIgnoreCase));
-
             if (F_CommandParser.TryConvertCommand(
-                ApiConnection.GetUserByName(e.user),
-                ApiConnection.GetChannelByNameOrCode(e.channel),
+                e.user,
+                ChatBot.RegisteredUsers.TryGetValue(e.user.ToLower(),out var regUser) ? regUser : null,
+                e.channel   != null ? ApiConnection.GetChannelByNameOrCode(e.channel)           : null,
                 e.message,
                 out BotCommand ?command
             ))

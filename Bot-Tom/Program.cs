@@ -11,6 +11,8 @@ using BotTom.Commands;
 using BotTom.Commands.Global;
 using BotTom.Commands.Guild;
 using BotTom.Machines;
+using ModuleHost.Attributes;
+using Widget.CardGame.Enums;
 
 namespace BotTom;
 
@@ -39,14 +41,14 @@ partial class Program
 				"/charactername="		+	Environment.GetEnvironmentVariable("FCHAT_CHARACTERNAME"),
 				"/startingchannel="	+	Environment.GetEnvironmentVariable("FCHAT_STARTINGCHANNEL"),
 				"/commandchar="			+	Environment.GetEnvironmentVariable("FCHAT_COMMANDCHAR"),
-				"/opslist="					+	Environment.GetEnvironmentVariable("FCHAT_OPS"),
+				"/globalopslist="		+	Environment.GetEnvironmentVariable("FCHAT_GLOBAL_OPS"),
+				"/ownerlist="				+	Environment.GetEnvironmentVariable("FCHAT_OWNER"),
 				"/retryattempts="		+	Environment.GetEnvironmentVariable("FCHAT_RETRYATTEMPTS"),
 			];
 			await InitializeFChat((string[])fArgs!);
 		}
 	}
 	#endregion
-
 
 	#region InitMxParser
 	private static void InitMxParser()

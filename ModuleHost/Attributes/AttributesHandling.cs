@@ -4,9 +4,9 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Widget.CardGame.Enums;
+using ModuleHost.Enums;
 
-namespace Widget.CardGame.Attributes;
+namespace ModuleHost.Attributes;
 
 public static class AttributeEnumExtensions
 {
@@ -26,11 +26,8 @@ public static class AttributeEnumExtensions
         _staticEnumAttributeLookup = [];
 
         // Put known enum types here to speed things up later
-        ProcessEnumForAttribute<DescriptionAttribute>(typeof(CharacterStat));
-        ProcessEnumForAttribute<StatAliasAttribute  >(typeof(CharacterStat));
-        ProcessEnumForAttribute<StatGroupAttribute  >(typeof(CharacterStat));
-        ProcessEnumForAttribute<DescriptionAttribute>(typeof(CharacterStatGroup));
-        ProcessEnumForAttribute<DescriptionAttribute>(typeof(Command));
+        ProcessEnumForAttribute<DescriptionAttribute>(typeof(Privilege));
+        ProcessEnumForAttribute<DescriptionAttribute>(typeof(BotModule));
     }
 
     /// <summary>
@@ -40,7 +37,7 @@ public static class AttributeEnumExtensions
     /// </summary>
     /// <typeparam name="TAttribute">The AttributeType half of the Dictionary Key.</typeparam>
     /// <param name="enumType">The EnumType half of the Dictionary Key.</param>
-    static void ProcessEnumForAttribute<TAttribute>(Type enumType) where TAttribute : Attribute
+    public static void ProcessEnumForAttribute<TAttribute>(Type enumType) where TAttribute : Attribute
     {
         ProcessEnumForAttribute(Tuple.Create(enumType, typeof(TAttribute)));
     }

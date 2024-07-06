@@ -1,12 +1,12 @@
-﻿namespace ChatApi
-{
-    public enum Hycybh
-    {
-        /// <summary>user is typing</summary>
-        TPN,
+﻿namespace ChatApi;
 
-        /// <summary>channel message sent/received</summary>
-        MSG,
+public enum Hycybh
+{
+    /// <summary>user is typing</summary>
+    TPN,
+
+    /// <summary>channel message sent/received</summary>
+    MSG,
 
     /// <summary>connected or requesting chat connection</summary>
     IDN,
@@ -95,7 +95,6 @@
     /// <summary>time a user out</summary>
     CTU,
 
-        /// <summary>unbans a user</summary>
-        CUB
-    }
+    /// <summary>unbans a user</summary>
+    CUB
 }

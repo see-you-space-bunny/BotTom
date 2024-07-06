@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace ChatApi.Systems
 {
-    internal class ChannelTracker
+    public class ChannelTracker
     {
 
         /// <summary>

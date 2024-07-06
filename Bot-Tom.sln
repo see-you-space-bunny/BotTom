@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatApi", "ChatApi\ChatApi.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleHost", "ModuleHost\ModuleHost.csproj", "{EEAABD96-268C-4B4C-87BF-46C4257A80CD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Widget.FGlobals", "Widget.FGlobals\Widget.FGlobals.csproj", "{862EF619-7CF7-45B4-B796-A45833600977}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -89,6 +91,10 @@ Global
 		{EEAABD96-268C-4B4C-87BF-46C4257A80CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EEAABD96-268C-4B4C-87BF-46C4257A80CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EEAABD96-268C-4B4C-87BF-46C4257A80CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{862EF619-7CF7-45B4-B796-A45833600977}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{862EF619-7CF7-45B4-B796-A45833600977}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{862EF619-7CF7-45B4-B796-A45833600977}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{862EF619-7CF7-45B4-B796-A45833600977}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
