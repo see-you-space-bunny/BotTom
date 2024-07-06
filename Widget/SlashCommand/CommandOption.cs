@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
 
 namespace Widget.SlashCommand;
-
+/**
 internal class CommandOption<T>(string keyWord, string description, object? defaultValue, bool isRequired = false)
 {
     internal bool IsRequired = isRequired;
@@ -46,4 +44,4 @@ internal class CommandOption<T>(string keyWord, string description, object? defa
     internal void AddOption(SlashCommandBuilder command) => command.AddOption(KeyWord,OptionType,Description,isRequired: IsRequired);
 
     internal void AddOption(SlashCommandOptionBuilder command) => command.AddOption(KeyWord,OptionType,Description,isRequired: IsRequired);
-}
+*/

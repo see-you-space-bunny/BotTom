@@ -57,7 +57,7 @@ partial class Program
 		);
 		
 		D_Client.SlashCommandExecuted += SlashCommandHandler;
-		D_Client.Ready += RegisterCommandsOnReadyAsync;
+		D_Client.Ready += RegisterCommandsOnReady;
 
 		await D_Client.StartAsync();
 
@@ -139,10 +139,10 @@ partial class Program
         // the alternative is to 'return Task.Delay(0);' instead.
         return Task.CompletedTask;
 	}
-	#endregion
+    #endregion
 
-	#region MainAsync
-	/**
+    #region MainAsync
+    /**
 	private static async Task MainAsync()
 	{
 		// Centralize the logic for commands into a separate method.
@@ -158,10 +158,10 @@ partial class Program
 		await Task.Delay(Timeout.Infinite);
 	}
 	*/
-	#endregion
+    #endregion
 
-	#region InitCommands
-	/**
+    #region InitCommands
+    /**
 	private static async Task InitCommands()
 	{
 			// Either search the program and add all Module classes that can be found.
@@ -178,10 +178,10 @@ partial class Program
 			D_Client.MessageReceived += HandleCommandAsync;
 	}
 	*/
-	#endregion
+    #endregion
 
-	#region HandleCommandAsync
-	/**
+    #region HandleCommandAsync
+    /**
 	private static async Task HandleCommandAsync(SocketMessage arg)
 	{
 		// Bail out if it's a System Message.
@@ -215,12 +215,13 @@ partial class Program
 		}
 	}
 	*/
-	#endregion
+    #endregion
 
-	#region RegisterCommandsOnReadyAsync
-	private static async Task RegisterCommandsOnReadyAsync()
-	{
-		/**
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+    #region RegisterCommandsOnReadyAsync
+    private static async Task RegisterCommandsOnReady()
+    {
+        /**
 		RegisteredCommands.Add(ListRolesModule.Name,				new ListRolesModule(ControlPanel.PrivateGuilds.First().Key));
 		RegisteredCommands.Add(StarTrekModule.Name,					new StarTrekModule());
 		RegisteredCommands.Add(PathfinderModule.Name,				new PathfinderModule());
@@ -233,14 +234,15 @@ partial class Program
 		foreach(IUserDefinedCommand userDefinedCommand in RegisteredCommands.Values)
 			await userDefinedCommand.RegisterCommand();
 		*/
-	}
-	#endregion
+    }
+    #endregion
 
-	#region SlashCommandHandler
-	private static async Task SlashCommandHandler(SocketSlashCommand command)
-	{
-			// await RegisteredCommands[command.Data.Name].HandleSlashCommand(command);
+    #region SlashCommandHandler
+    private static async Task SlashCommandHandler(SocketSlashCommand command)
+    {
+		// await RegisteredCommands[command.Data.Name].HandleSlashCommand(command);
 	}
+#pragma warning restore CS1998 
 	#endregion
 
 	#region CheckStateMachines

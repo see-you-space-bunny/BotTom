@@ -2,18 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BotTom.Machines;
-using Charsheet.ForgedInTheDark;
-using Discord;
-using Discord.Net;
-using Discord.WebSocket;
-using Newtonsoft.Json;
+using Engine.DiceRoll.GameSystems;
 
-namespace BotTom.Commands.Global;
+namespace Widget.TabletopAids.GameSystems;
 
 /// /// <summary>
 /// Creates and registers a /clock global command
 /// </summary>
+/**
 internal class ConfirmationModule : IUserDefinedCommand
 {
 	#region C(~)
@@ -131,3 +127,4 @@ internal class ConfirmationModule : IUserDefinedCommand
     bool IUserDefinedCommand.IsGlobal => true;
     ulong IUserDefinedCommand.Guild => 0;
 }
+*/

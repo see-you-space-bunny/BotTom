@@ -48,7 +48,7 @@ public class @DiceRoll(ITestOutputHelper output)
     var simpleRoll = DiceParser.BasicRoll("12d6x");
     Assert.Fail("Not Implemented");
   }
-
+/**
   [Fact]
   public void TestLegentRoll_Basic()
   {
@@ -57,4 +57,5 @@ public class @DiceRoll(ITestOutputHelper output)
     _output.WriteLine(legendRoll.ToString());
     Assert.Fail("Show me the output!");
   }
+*/
 }

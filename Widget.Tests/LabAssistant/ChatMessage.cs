@@ -1,10 +1,13 @@
+using Engine.ModuleHost.CardiApi;
+using Engine.ModuleHost.CommandHandling;
+
 namespace Widget.Tests.LabAssistant;
 
-internal class ChatMessageAssistant
+internal static class ChatMessageAssistant
 {
-    internal BotCommand NewDummyMessage(string user,string message)
+    internal static BotCommand NewDummyMessage(string user,string message)
     {
-        if (CommandParser.TryConvertCommand(
+        if (BotInfoAssistant.CommandParser.TryConvertCommand(
             user,
             new RegisteredUser(){ Name = user },
             null,

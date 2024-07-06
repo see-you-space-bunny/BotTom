@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 using Widget.CardGame;
 using Widget.CardGame.Attributes;
 using Widget.CardGame.Enums;
+using FChatApi.Core;
 
 namespace Widget.Tests.Theories;
 
-public class @CardGame
+public class @CardGame(ITestOutputHelper output)
 {
+  private readonly ITestOutputHelper _output = output;
+  
     [Theory]
     [InlineData("Daniel",           "tom!xcg challenge STR INT [user]The Cooler Daniel[/user]",
                 "The Cooler Daniel","tom!xcg accept STR LUC")]
@@ -18,7 +22,7 @@ public class @CardGame
     //          "The Cooler Daniel","tom!xcg accept STR LUC")]
     public void TestCommand(string player1,string msgChallenge,string player2,string msgResponse)
     {
-        ApiConnection.CharacterName = BotInfo.BotName;
+        ApiConnection.CharacterName = BotInfoAssistant.BotName;
 
         var tournamentOrganiser = new FChatTournamentOrganiser(null);
 

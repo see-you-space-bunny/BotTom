@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Discord.WebSocket;
 
 namespace Widget.SlashCommand.Interfaces;
 
+/*
 internal interface IUserDefinedCommand
 {
     internal bool IsGlobal { get; }
@@ -17,3 +17,4 @@ internal interface IUserDefinedCommand
     internal async Task HandleCommand(Dictionary<string,object> commandInfo) { }
     #pragma warning restore CS1998
 }
+*/

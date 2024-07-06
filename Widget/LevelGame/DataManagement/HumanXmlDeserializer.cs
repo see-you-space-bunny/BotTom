@@ -7,7 +7,7 @@ using System.Xml;
 using Widget.LevelGame.Enums;
 using Widget.LevelGame.SheetComponents;
 
-namespace WidgetCharsheet.LevelGame;
+namespace Widget.LevelGame;
 
 public static class HumanXmlDeserializer
 {

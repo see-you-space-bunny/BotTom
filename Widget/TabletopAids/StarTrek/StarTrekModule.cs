@@ -2,17 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BotTom.DiceRoller.GameSystems;
-using Discord;
-using Discord.Net;
-using Discord.WebSocket;
-using Newtonsoft.Json;
+using Engine.DiceRoll.GameSystems;
 
-namespace BotTom.Commands.Global;
+namespace Widget.TabletopAids.GameSystems;
 
 /// <summary>
 /// Creates and registers a /sta global command
 /// </summary>
+/**
 internal class StarTrekModule : IUserDefinedCommand
 {
 	#region C(~)
@@ -108,3 +105,4 @@ internal class StarTrekModule : IUserDefinedCommand
 	bool IUserDefinedCommand.IsGlobal => false;
 	ulong IUserDefinedCommand.Guild => 0;
 }
+*/

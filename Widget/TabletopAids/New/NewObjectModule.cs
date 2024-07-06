@@ -3,19 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BotTom.DiceRoller.GameSystems;
-using Charsheet.ForgedInTheDark;
-using Discord;
-using Discord.Net;
-using Discord.WebSocket;
-using FileManip;
-using Newtonsoft.Json;
+using Engine.DiceRoll.GameSystems;
 
-namespace BotTom.Commands.Global;
+namespace Widget.TabletopAids.GameSystems;
 
 /// <summary>
 /// Creates and registers a /fitd global command
 /// </summary>
+/**
 internal class NewObjectModule : IUserDefinedCommand
 {
 	#region C(~)
@@ -159,3 +154,4 @@ internal class NewObjectModule : IUserDefinedCommand
 	bool IUserDefinedCommand.IsGlobal => true;
 	ulong IUserDefinedCommand.Guild => 0;
 }
+*/

@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Engine\Serialization\Serialization.csproj" />
+    <ProjectReference Include="..\..\Engine\DiceRoll\DiceRoll.csproj" />
   </ItemGroup>
   
 </Project>
