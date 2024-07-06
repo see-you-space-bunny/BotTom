@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--None Include="data/**" CopyToOutputDirectory="PreserveNewest" /-->
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Discord.Net" Version="3.13.0" />
+    <PackageReference Include="MathParser.org-mXparser" Version="5.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Engine.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DiceRoll\DiceRoll.csproj" />
+    <ProjectReference Include="..\Serialization\Serialization.csproj" />
+    <ProjectReference Include="..\..\FChatApi\FChatApi.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>BotTom</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="data/**" CopyToOutputDirectory="PreserveNewest" />
+    <None Include=".env" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="settings.toml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BinarySerializer" Version="8.6.4.1" />
+    <PackageReference Include="Discord.Net" Version="3.13.0" />
+    <PackageReference Include="MathParser.org-mXparser" Version="5.2.1" />
+    <PackageReference Include="Tommy" Version="3.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>BotTom.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Core components of making the bot work. -->
+    <ProjectReference Include="..\Engine\Serialization\Serialization.csproj" />
+    <ProjectReference Include="..\Engine\Envy\Envy.csproj" />
+    <ProjectReference Include="..\Engine\ModuleHost\ModuleHost.csproj" />
+    <ProjectReference Include="..\Engine\DiceRoll\DiceRoll.csproj" />
+
+    <!-- Aru's FChat Api ported to .NET 8.0 -->
+    <ProjectReference Include="..\FChatApi\FChatApi.csproj" />
+
+    <!-- Widgets which can be plugged into the bot. -->
+    <ProjectReference Include="..\Widget\FGlobals\FGlobals.csproj" />
+    <ProjectReference Include="..\Widget\CardGame\CardGame.csproj" />
+    <ProjectReference Include="..\Widget\LevelGame\LevelGame.csproj" />
+    <!--ProjectReference Include="..\Widget\SlashCommand\SlashCommand.csproj" /-->
+    <!--ProjectReference Include="..\Widget\TabletopAids\TabletopAids.csproj" /-->
+  </ItemGroup>
+
+</Project>

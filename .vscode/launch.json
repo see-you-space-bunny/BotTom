@@ -5,10 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "C#: Bot-Tom Debug",
+            "name": "C#: BotTom Debug",
             "type": "dotnet",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/Bot-Tom/Bot-Tom.csproj",
+            "projectPath": "${workspaceFolder}/BotTom/BotTom.csproj"
         }
-      ]
+
+    ]
 }
