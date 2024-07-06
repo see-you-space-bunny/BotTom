@@ -2,14 +2,14 @@
 
 public enum ChatStatus
 {
-    Looking,
-    Online,
-    Busy,
-    DND,
-    Idle,
-    Away,
-    None,
-    Offline,
-    Connected,
-    Crown,
+	Looking,
+	Online,
+	Busy,
+	DND,
+	Idle,
+	Away,
+	None,
+	Offline,
+	Connected,
+	Crown,
 }

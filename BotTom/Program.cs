@@ -35,14 +35,14 @@ partial class Program
 		if (bool.TryParse(Environment.GetEnvironmentVariable("USE_FCHAT"),out bool useFchat) && useFchat)
 		{
 			string?[] fArgs = [
-				"/username="				+	Environment.GetEnvironmentVariable("FCHAT_USERNAME"),
-				"/password="				+	Environment.GetEnvironmentVariable("FCHAT_PASSWORD"),
-				"/charactername="		+	Environment.GetEnvironmentVariable("FCHAT_CHARACTERNAME"),
+				"/username="		+	Environment.GetEnvironmentVariable("FCHAT_USERNAME"),
+				"/password="		+	Environment.GetEnvironmentVariable("FCHAT_PASSWORD"),
+				"/charactername="	+	Environment.GetEnvironmentVariable("FCHAT_CHARACTERNAME"),
 				"/startingchannel="	+	Environment.GetEnvironmentVariable("FCHAT_STARTINGCHANNEL"),
-				"/commandchar="			+	Environment.GetEnvironmentVariable("FCHAT_COMMANDCHAR"),
-				"/globalopslist="		+	Environment.GetEnvironmentVariable("FCHAT_GLOBAL_OPS"),
-				"/ownerlist="				+	Environment.GetEnvironmentVariable("FCHAT_OWNER"),
-				"/retryattempts="		+	Environment.GetEnvironmentVariable("FCHAT_RETRYATTEMPTS"),
+				"/commandchar="		+	Environment.GetEnvironmentVariable("FCHAT_COMMANDCHAR"),
+				"/globalopslist="	+	Environment.GetEnvironmentVariable("FCHAT_GLOBAL_OPS"),
+				"/ownerlist="		+	Environment.GetEnvironmentVariable("FCHAT_OWNER"),
+				"/retryattempts="	+	Environment.GetEnvironmentVariable("FCHAT_RETRYATTEMPTS"),
 			];
 			await InitializeFChat((string[])fArgs!);
 		}

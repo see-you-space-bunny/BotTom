@@ -11,11 +11,11 @@ namespace FChatApi.Objects;
 /// <param name="type">the type of message this is</param>
 public class MessageContents(string ch, string msg, string user, ChatMessageType type)
 {
-    public string channel = ch;
+	public string channel = ch;
 
-    public string message = msg;
+	public string message = msg;
 
-    public string sendinguser = user;
+	public string sendinguser = user;
 
-    public ChatMessageType messageType = type;
+	public ChatMessageType messageType = type;
 }

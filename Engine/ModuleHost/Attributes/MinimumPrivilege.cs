@@ -12,10 +12,10 @@ readonly Privilege _privilege;
 // This is a positional argument
 public MinimumPrivilegeAttribute(Privilege privilege)
 {
-    this._privilege = privilege;
-    
-    // TODO: Implement code here
-    /* throw new System.NotImplementedException(); */
+	this._privilege = privilege;
+	
+	// TODO: Implement code here
+	/* throw new System.NotImplementedException(); */
 }
 
 public Privilege Privilege => _privilege;

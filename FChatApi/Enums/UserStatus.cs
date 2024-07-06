@@ -2,10 +2,10 @@
 
 public enum UserStatus
 {
-    Online,
-    Ignored,
-    Blocked,
-    Friended,
-    Married,
-    None,
+	Online,
+	Ignored,
+	Blocked,
+	Friended,
+	Married,
+	None,
 }

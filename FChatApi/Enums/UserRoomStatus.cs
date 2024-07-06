@@ -2,9 +2,9 @@
 
 public enum UserRoomStatus
 {
-    User,
-    Moderator,
-    Banned,
-    Kicked,
-    Timeout,
+	User,
+	Moderator,
+	Banned,
+	Kicked,
+	Timeout,
 }

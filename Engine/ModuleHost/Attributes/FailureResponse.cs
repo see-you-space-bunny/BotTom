@@ -15,10 +15,10 @@ readonly string _value;
 /// </summary>
 public FailureResponseAttribute()
 {
-    this._value    = $"{MyPrefix}: N/A";
-    
-    // TODO: Implement code here
-    /* throw new System.NotImplementedException(); */
+	this._value    = $"{MyPrefix}: N/A";
+	
+	// TODO: Implement code here
+	/* throw new System.NotImplementedException(); */
 }
 
 // This is a positional argument
@@ -28,10 +28,10 @@ public FailureResponseAttribute()
 /// <param name="failure">used to indicate that something went wrong</param>
 public FailureResponseAttribute(string failure)
 {
-    this._value    = failure;
-    
-    // TODO: Implement code here
-    /* throw new System.NotImplementedException(); */
+	this._value    = failure;
+	
+	// TODO: Implement code here
+	/* throw new System.NotImplementedException(); */
 }
 
 public string Message   => _value;

@@ -5,19 +5,19 @@ using System.Threading.Tasks;
 
 namespace Widget.CardGame.Exceptions
 {
-    [Serializable]
-    internal class InvalidCommandSyntaxException : Exception
-    {
-        public InvalidCommandSyntaxException()
-        {
-        }
+	[Serializable]
+	internal class InvalidCommandSyntaxException : Exception
+	{
+		public InvalidCommandSyntaxException()
+		{
+		}
 
-        public InvalidCommandSyntaxException(string? message) : base(message)
-        {
-        }
+		public InvalidCommandSyntaxException(string? message) : base(message)
+		{
+		}
 
-        public InvalidCommandSyntaxException(string? message, Exception? innerException) : base(message, innerException)
-        {
-        }
-    }
+		public InvalidCommandSyntaxException(string? message, Exception? innerException) : base(message, innerException)
+		{
+		}
+	}
 }

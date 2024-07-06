@@ -2,7 +2,7 @@
 
 public enum ChannelType
 {
-    Public,
-    Private,
-    All,
+	Public,
+	Private,
+	All,
 }

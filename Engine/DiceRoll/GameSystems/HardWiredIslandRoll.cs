@@ -11,18 +11,18 @@ namespace Engine.DiceRoll.GameSystems;
 /// <param name="label"></param>
 class HardWiredIslandRoll(long diceModifier, long? difficultyRating, long? boost, string? label)
 {
-  long DiceModifier { get; } = diceModifier;
-  long? DifficultyRating { get; } = difficultyRating;
-  long? Boost { get; } = boost;
-  string? Label { get; } = label;
+	long DiceModifier { get; } = diceModifier;
+	long? DifficultyRating { get; } = difficultyRating;
+	long? Boost { get; } = boost;
+	string? Label { get; } = label;
 
 
-  public override string ToString()
-  {
-    StringBuilder sb = new();
-    if(Label is not null)
-      sb.AppendLine($"> {Label.Replace("\\n","\n> ")}");
+	public override string ToString()
+	{
+		StringBuilder sb = new();
+		if(Label is not null)
+			sb.AppendLine($"> {Label.Replace("\\n","\n> ")}");
 
-    return sb.ToString();
-  }
+		return sb.ToString();
+	}
 }

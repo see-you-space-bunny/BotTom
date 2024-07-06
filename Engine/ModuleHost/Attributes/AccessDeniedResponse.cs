@@ -15,10 +15,10 @@ readonly string _value;
 /// </summary>
 public AccessDeniedResponseAttribute()
 {
-    this._value     = $"{MyPrefix}: N/A";
-    
-    // TODO: Implement code here
-    /* throw new System.NotImplementedException(); */
+	this._value     = $"{MyPrefix}: N/A";
+	
+	// TODO: Implement code here
+	/* throw new System.NotImplementedException(); */
 }
 
 // This is a positional argument
@@ -28,10 +28,10 @@ public AccessDeniedResponseAttribute()
 /// <param name="accessDenied">used to indicate that the user is not privileged for this command</param>
 public AccessDeniedResponseAttribute(string accessDenied)
 {
-    this._value     = accessDenied;
-    
-    // TODO: Implement code here
-    /* throw new System.NotImplementedException(); */
+	this._value     = accessDenied;
+	
+	// TODO: Implement code here
+	/* throw new System.NotImplementedException(); */
 }
 
 public string Message    => _value;

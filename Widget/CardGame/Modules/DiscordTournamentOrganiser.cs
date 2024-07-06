@@ -17,5 +17,5 @@ namespace Widget.CardGame;
 
 public class DiscordTournamentOrganiser : DiscordSlashPlugin
 {
-    
+	
 }

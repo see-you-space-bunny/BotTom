@@ -2,8 +2,8 @@
 
 public enum KinkPreference
 {
-    Favorite,
-    Yes,
-    Maybe,
-    No,
+	Favorite,
+	Yes,
+	Maybe,
+	No,
 }

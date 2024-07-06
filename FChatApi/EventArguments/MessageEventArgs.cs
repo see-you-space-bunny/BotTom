@@ -10,28 +10,28 @@ namespace FChatApi.EventArguments;
 /// no i don't know why I'm doing it this way
 public class MessageEventArgs : EventArgs
 {
-    /// <summary>
-    /// the clean
-    /// </summary>
-    public string message;
+	/// <summary>
+	/// the clean
+	/// </summary>
+	public string message;
 
-    /// <summary>
-    /// DEPRECATED if it's a whisper
-    /// </summary>
-    public bool iswhisper;
+	/// <summary>
+	/// DEPRECATED if it's a whisper
+	/// </summary>
+	public bool iswhisper;
 
-    /// <summary>
-    /// the channel
-    /// </summary>
-    public string channel;
+	/// <summary>
+	/// the channel
+	/// </summary>
+	public string channel;
 
-    /// <summary>
-    /// sending user
-    /// </summary>
-    public string user;
+	/// <summary>
+	/// sending user
+	/// </summary>
+	public string user;
 
-    /// <summary>
-    /// advanced message type
-    /// </summary>
-    public ChatMessageType messagetype;
+	/// <summary>
+	/// advanced message type
+	/// </summary>
+	public ChatMessageType messagetype;
 }

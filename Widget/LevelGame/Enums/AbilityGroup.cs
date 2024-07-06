@@ -2,8 +2,8 @@ namespace Widget.LevelGame.Enums;
 
 public enum AbilityGroup
 {
-    Overall,
-    Physical,
-    Mental,
-    Social,
+	Overall,
+	Physical,
+	Mental,
+	Social,
 }

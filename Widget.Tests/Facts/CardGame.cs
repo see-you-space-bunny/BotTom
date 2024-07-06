@@ -13,15 +13,15 @@ namespace Widget.Tests.Facts;
 
 public class @CardGame(ITestOutputHelper output)
 {
-  private readonly ITestOutputHelper _output = output;
+	private readonly ITestOutputHelper _output = output;
 
-    [Fact]
-    public void TestAttributeHandler()
-    {
-        StatAliasAttribute statAliasLevel = CharacterStat.LVL.GetAttribute<CharacterStat, StatAliasAttribute>();
-        Assert.Equal(["Level","Lv"],statAliasLevel.Alias);
+		[Fact]
+		public void TestAttributeHandler()
+		{
+				StatAliasAttribute statAliasLevel = CharacterStat.LVL.GetAttribute<CharacterStat, StatAliasAttribute>();
+				Assert.Equal(["Level","Lv"],statAliasLevel.Alias);
 
-        StatAliasAttribute statAliasLuck = CharacterStat.LUC.GetEnumAttribute<CharacterStat, StatAliasAttribute>();
-        Assert.Equal(["Luck"],statAliasLuck.Alias);
-    }
+				StatAliasAttribute statAliasLuck = CharacterStat.LUC.GetEnumAttribute<CharacterStat, StatAliasAttribute>();
+				Assert.Equal(["Luck"],statAliasLuck.Alias);
+		}
 }

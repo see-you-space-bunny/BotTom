@@ -17,10 +17,10 @@ readonly CharacterStatGroup _statGroup;
 // This is a positional argument
 public StatGroupAttribute(CharacterStatGroup statGroup)
 {
-    this._statGroup = statGroup;
-    
-    // TODO: Implement code here
-    /* throw new System.NotImplementedException(); */
+	this._statGroup = statGroup;
+	
+	// TODO: Implement code here
+	/* throw new System.NotImplementedException(); */
 }
 
 public CharacterStatGroup StatGroup => _statGroup;

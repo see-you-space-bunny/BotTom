@@ -2,18 +2,18 @@ using System.ComponentModel;
 
 namespace Widget.CardGame.Enums
 {
-    public enum Command
-    {
-        [Description("")]
-        Register,
+	public enum Command
+	{
+		[Description("")]
+		Register,
 
-        [Description("")]
-        Accept,
+		[Description("")]
+		Accept,
 
-        [Description("")]
-        Challenge,
+		[Description("")]
+		Challenge,
 
-        [Description("")]
-        Reject,
-    }
+		[Description("")]
+		Reject,
+	}
 }

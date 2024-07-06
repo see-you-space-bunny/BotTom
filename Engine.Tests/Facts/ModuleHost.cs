@@ -10,11 +10,11 @@ namespace Engine.Tests.Facts;
 
 public class @ModuleHost(ITestOutputHelper output)
 {
-  private readonly ITestOutputHelper _output = output;
+	private readonly ITestOutputHelper _output = output;
 
-  [Fact]
-  public void BasicPass()
-  {
-    Assert.True(true);
-  }
+	[Fact]
+	public void BasicPass()
+	{
+		Assert.True(true);
+	}
 }

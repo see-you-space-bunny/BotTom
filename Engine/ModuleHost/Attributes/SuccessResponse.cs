@@ -16,10 +16,10 @@ readonly string _value;
 /// <param name="success">added to most successful calls</param>
 public SuccessResponseAttribute()
 {
-    this._value    = $"{MyPrefix}: N/A";
-    
-    // TODO: Implement code here
-    /* throw new System.NotImplementedException(); */
+	this._value    = $"{MyPrefix}: N/A";
+	
+	// TODO: Implement code here
+	/* throw new System.NotImplementedException(); */
 }
 
 // This is a positional argument
@@ -29,10 +29,10 @@ public SuccessResponseAttribute()
 /// <param name="success">added to most successful calls</param>
 public SuccessResponseAttribute(string success)
 {
-    this._value    = success;
-    
-    // TODO: Implement code here
-    /* throw new System.NotImplementedException(); */
+	this._value    = success;
+	
+	// TODO: Implement code here
+	/* throw new System.NotImplementedException(); */
 }
 
 public string Message   => _value;

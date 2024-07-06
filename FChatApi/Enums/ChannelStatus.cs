@@ -2,16 +2,16 @@
 
 public enum ChannelStatus
 {
-    Kicked,
-    Joined,
-    Left,
-    Banned,
-    Invited,
-    Pending,
-    Available,
-    Unknown,
-    All,
-    AllValid,
-    Creating,
-    Created,
+	Kicked,
+	Joined,
+	Left,
+	Banned,
+	Invited,
+	Pending,
+	Available,
+	Unknown,
+	All,
+	AllValid,
+	Creating,
+	Created,
 }
