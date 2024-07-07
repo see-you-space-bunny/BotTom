@@ -106,7 +106,7 @@ public partial class ApiConnection
 			UserTracker.TryAddUser(new User(){ Name = CharacterName, ChatStatus = ChatStatus.Online});
 			Client = new WatsonWsClient(new Uri("wss://chat.f-list.net/chat2"));
 			Client.ServerConnected += Client_ChatConnected;
-			Client.ServerDisconnected += Client_ChatDisConnected;
+			Client.ServerDisconnected += Client_ChatDisconnected;
 			Client.MessageReceived += Client_MessageReceived;
 			Client.Start();
 		}
