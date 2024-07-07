@@ -23,7 +23,7 @@ public partial class ApiConnection
 	public static async Task JoinChannel(string channelname)
 	{
 		ConnectionCheck();
-		string toSend = $"{Hycybh.JCH} {{\"channel\": \"{channelname}\"}}";
+		string toSend = $"{MessageCode.JCH} {{\"channel\": \"{channelname}\"}}";
 		Console.WriteLine($"Attempting to join: {channelname}");
 		await Client.SendAsync(toSend);
 	}
@@ -35,7 +35,7 @@ public partial class ApiConnection
 	private async Task RequestInternalChannelList(ChannelType channelType)
 	{
 		ConnectionCheck();
-		string toSend = channelType == ChannelType.Private ? Hycybh.ORS.ToString() : Hycybh.CHA.ToString();
+		string toSend = channelType == ChannelType.Private ? MessageCode.ORS.ToString() : MessageCode.CHA.ToString();
 		Console.WriteLine($"Attempting to retrieve all {channelType} channels from server.");
 		await Client.SendAsync(toSend);
 	}
@@ -98,7 +98,7 @@ public partial class ApiConnection
 	public static async void LeaveChannel(string channelname)
 	{
 		ConnectionCheck();
-		string toSend = $"{Hycybh.LCH} {{\"channel\": \"{channelname}\"}}";
+		string toSend = $"{MessageCode.LCH} {{\"channel\": \"{channelname}\"}}";
 		Console.WriteLine($"Attempting to leave channel: {channelname}");
 		await Client.SendAsync(toSend);
 	}
@@ -110,7 +110,7 @@ public partial class ApiConnection
 	public static async void CreateChannel(string channelName)
 	{
 		ConnectionCheck();
-		string toSend = $"{Hycybh.CCR} {{\"channel\": \"{channelName}\"}}";
+		string toSend = $"{MessageCode.CCR} {{\"channel\": \"{channelName}\"}}";
 		Console.WriteLine($"Attempting to create channel: {channelName}");
 		ChannelTracker.StartChannelCreation(channelName);
 		await Client.SendAsync(toSend);
@@ -124,7 +124,7 @@ public partial class ApiConnection
 	public static async void Mod_InviteUserToChannel(string username, string channelname)
 	{
 		ConnectionCheck();
-		string toSend = $"{Hycybh.CIU} {{\"channel\": \"{channelname}\", \"character\": \"{username}\"}}";
+		string toSend = $"{MessageCode.CIU} {{\"channel\": \"{channelname}\", \"character\": \"{username}\"}}";
 		Console.WriteLine(toSend);
 		await Client.SendAsync(toSend);
 	}
@@ -137,7 +137,7 @@ public partial class ApiConnection
 	public static async void Mod_SetChannelDescription(string channel, string description)
 	{
 		ConnectionCheck();
-		string toSend = $"{Hycybh.CDS} {{\"channel\": \"{channel}\", \"description\": \"{description}\"}}";
+		string toSend = $"{MessageCode.CDS} {{\"channel\": \"{channel}\", \"description\": \"{description}\"}}";
 		Console.WriteLine(toSend);
 		await Client.SendAsync(toSend);
 	}
@@ -156,25 +156,25 @@ public partial class ApiConnection
 		{
 			case UserRoomStatus.Banned:
 				{
-					toSend = $"{Hycybh.CDS} {{\"character\": \"{user}\", \"channel\": \"{channel}\"}}";
+					toSend = $"{MessageCode.CDS} {{\"character\": \"{user}\", \"channel\": \"{channel}\"}}";
 					Console.WriteLine($"Attempting to ban {user} from {channel}.");
 				}
 				break;
 			case UserRoomStatus.Moderator:
 				{
-					toSend = $"{Hycybh.COA} {{\"character\": \"{user}\", \"channel\": \"{channel}\"}}";
+					toSend = $"{MessageCode.COA} {{\"character\": \"{user}\", \"channel\": \"{channel}\"}}";
 					Console.WriteLine($"Attempting to promote {user} to Channel Op in {channel}.");
 				}
 				break;
 			case UserRoomStatus.User:
 				{
-					toSend = $"{Hycybh.COR} {{\"character\": \"{user}\", \"channel\": \"{channel}\"}}";
+					toSend = $"{MessageCode.COR} {{\"character\": \"{user}\", \"channel\": \"{channel}\"}}";
 					Console.WriteLine($"Attempting to demote {user} from Channel Op to basic User in {channel}.");
 				}
 				break;
 			case UserRoomStatus.Kicked:
 				{
-					toSend = $"{Hycybh.CKU} {{\"character\": \"{user}\", \"channel\": \"{channel}\"}}";
+					toSend = $"{MessageCode.CKU} {{\"character\": \"{user}\", \"channel\": \"{channel}\"}}";
 					Console.WriteLine($"Attempting to kick {user} out of {channel}.");
 				}
 				break;
@@ -182,7 +182,7 @@ public partial class ApiConnection
 				{
 					if (duration < 1) duration = 1;
 					if (duration > 90) duration = 90;
-					toSend = $"{Hycybh.CTU} {{\"character\": \"{user}\", \"channel\": \"{channel}\", \"length\": \"{duration}\"}}";
+					toSend = $"{MessageCode.CTU} {{\"character\": \"{user}\", \"channel\": \"{channel}\", \"length\": \"{duration}\"}}";
 					Console.WriteLine($"Attempting to timeout {user} from {channel} for {duration} seconds.");
 				}
 				break;
@@ -220,7 +220,7 @@ public partial class ApiConnection
 	public static async Task SetStatus(ChatStatus statusType, string statusMessage, string user)
 	{
 		ConnectionCheck();
-		string toSend = $"{Hycybh.STA} {{\"status\": \"{statusType.ToString().ToLowerInvariant()}\", \"statusmsg\": \"{statusMessage ?? string.Empty}\", \"character\": \"{user}\"}}";
+		string toSend = $"{MessageCode.STA} {{\"status\": \"{statusType.ToString().ToLowerInvariant()}\", \"statusmsg\": \"{statusMessage ?? string.Empty}\", \"character\": \"{user}\"}}";
 		Console.WriteLine(toSend);
 		await Client.SendAsync(toSend);
 	}

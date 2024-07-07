@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using FChatApi.Core;
 using FChatApi.Objects;
-using Engine.ModuleHost.CardiApi;
 using Engine.ModuleHost.Enums;
 using FChatApi.Enums;
 
@@ -32,7 +31,7 @@ public class CommandParser
 		return this;
 	}
 
-	public bool TryConvertCommand(string username,RegisteredUser? user,Channel? channel,string unparsed,out BotCommand? botCommand)
+	public bool TryConvertCommand(string username,User user,Channel? channel,string unparsed,out BotCommand? botCommand)
 	{
 		// Not a command
 		if (!unparsed.StartsWith(BotPrefix))
@@ -74,10 +73,10 @@ public class CommandParser
 		}
 
 		Privilege privilege = Privilege.None;
-		if (user == null)
+		if (user.PrivilegeLevel == Privilege.None)
 		{
 #if DEBUG
-			Console.WriteLine("Defaulting null user to 'UnregisteredUser'");
+			Task.Run(()=>Console.WriteLine("Defaulting 'Privilege.None user to 'Privilege.UnregisteredUser"));
 #endif
 			privilege = Privilege.UnregisteredUser;
 		}

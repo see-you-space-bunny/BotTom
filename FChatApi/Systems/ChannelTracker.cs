@@ -3,6 +3,9 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using FChatApi.Objects;
 using FChatApi.Enums;
+using System.Threading.Tasks;
+using System;
+using System.Security.Cryptography;
 
 namespace FChatApi.Systems;
 
@@ -17,12 +20,12 @@ public class ChannelTracker
 	/// <summary>
 	/// 
 	/// </summary>
-	IEnumerable<KeyValuePair<string,Channel>> AvailablePublicChannels => AvailableChannels.Where((ch)=>ch.Value.Type == ChannelType.Public);
+	IDictionary<string,Channel> AvailablePublicChannels => AvailableChannels.Where((ch)=>ch.Value.Type == ChannelType.Public).ToDictionary();
 
 	/// <summary>
 	/// 
 	/// </summary>
-	IEnumerable<KeyValuePair<string,Channel>> AvailablePrivateChannels => AvailableChannels.Where((ch)=>ch.Value.Type == ChannelType.Private);
+	IDictionary<string,Channel> AvailablePrivateChannels => AvailableChannels.Where((ch)=>ch.Value.Type == ChannelType.Private).ToDictionary();
 
 	/// <summary>
 	/// 
@@ -36,8 +39,8 @@ public class ChannelTracker
 	/// </summary>
 	public ChannelTracker()
 	{
-		AvailableChannels = [];
-		WatchChannels = [];
+		AvailableChannels	= [];
+		WatchChannels		= [];
 	}
 
 	public Channel AddManualChannel(string channelname, ChannelStatus status, string channelcode)
@@ -56,158 +59,157 @@ public class ChannelTracker
 	}
 
 	/// <summary>
-	/// 
+	/// begins the creation of a channel<br/>it must be later finalized with <c>FinalizeChannelCreation</c>
 	/// </summary>
-	/// <param name="channelname"></param>
+	/// <param name="name"></param>
 	/// <param name="status"></param>
-	public void StartChannelCreation(string channelname, ChannelStatus status = ChannelStatus.Creating)
+	public void StartChannelCreation(string name, ChannelStatus status = ChannelStatus.Creating)
 	{
 		if (ChannelBeingCreated is null)
 		{
-			Channel toAdd = new Channel(channelname, string.Empty, ChannelType.Private)
+			Channel toAdd = new(name, string.Empty, ChannelType.Private)
 			{
 				Status = status
 			};
 			ChannelBeingCreated = toAdd;
 		}
-	}
-
-	/// <summary>
-	/// 
-	/// </summary>
-	/// <param name="channelname"></param>
-	/// <param name="channelcode"></param>
-	/// <param name="owner"></param>
-	/// <returns></returns>
-	public Channel FinalizeChannelCreation(string channelname, string channelcode, User owner)
-	{
-		if (ChannelBeingCreated.Status == ChannelStatus.Creating && ChannelBeingCreated.Name.Equals(channelname))
+		else
 		{
-			ChannelBeingCreated.Code = channelcode;
-			ChannelBeingCreated.Status = ChannelStatus.Created;
-			ChannelBeingCreated.CreatedByApi = true;
-			AvailableChannels.Add(channelcode,ChannelBeingCreated);
-			ChannelBeingCreated = null;
-			return AvailableChannels[channelcode];
+			throw new InvalidOperationException($"Cannot start creating channel \"{name}\" while another channel (\"{ChannelBeingCreated.Name}\") is still pending finalization.");
 		}
-
-		return null;
 	}
 
 	/// <summary>
-	/// 
+	/// finalize creating a channel<br/>must be called after <c>StartChannelCreation</c>
 	/// </summary>
-	/// <param name="channelname"></param>
-	/// <returns></returns>
-	public Channel GetChannelByNameOrCode(string channelnameorcode)
+	/// <param name="name">name of the channel we wish to create</param>
+	/// <param name="code">channel code we recieved after requesting channel creation</param>
+	/// <param name="owner">the owner of the channel (us)</param>
+	/// <returns>the channel we just created</returns>
+	public Channel FinalizeChannelCreation(string name, string code, User owner)
 	{
-		if (AvailableChannels.TryGetValue(channelnameorcode, out Channel channel))
+		if (ChannelBeingCreated is null)
+			throw new NullReferenceException($"Tried to create  \"{name}\" (code: {code}, owner: {owner.Name}), ChannelBeingCreated was null. Most likely caused by not calling StartChannelCreation first.");
+
+		if (ChannelBeingCreated.Status == ChannelStatus.Creating && ChannelBeingCreated.Name.Equals(name))
+		{
+			ChannelBeingCreated.Code			= code;
+			ChannelBeingCreated.Status			= ChannelStatus.Created;
+			ChannelBeingCreated.CreatedByApi	= true;
+			ChannelBeingCreated.Owner			= owner;
+
+			AvailableChannels.Add(code,ChannelBeingCreated);
+
+			ChannelBeingCreated					= null;
+			return AvailableChannels[code];
+		}
+		throw new InvalidOperationException($"Could not create \"{name}\" (code: {code}, owner: {owner.Name}). No channel matching that name was pending creation.");
+	}
+
+	/// <summary>
+	/// retrieves a channel, first attempting to find it by its channel-code and then by name
+	/// </summary>
+	/// <param name="value">the name or channel-code of the channel we seek to find</param>
+	/// <returns>the channel that matches our <c>value</c></returns>
+	public Channel GetChannelByNameOrCode(string value)
+	{
+		if (AvailableChannels.TryGetValue(value, out Channel channel))
 			return channel;
 
-		channel = AvailableChannels.Values.FirstOrDefault(ch => ch.Name.Equals(channelnameorcode, System.StringComparison.InvariantCultureIgnoreCase));
+		channel = AvailableChannels.Values.FirstOrDefault(ch => ch.Name.Equals(value, StringComparison.InvariantCultureIgnoreCase));
 		
-		return channel ?? throw new System.Exception($"No channel found: {channelnameorcode}");
+		return channel ?? throw new ArgumentException($"No matching channel found for \"{value}\".",nameof(value));
 	}
+
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="channelnameorcode"></param>
+	/// <param name="value"></param>
+	/// <returns>the updated channel</returns>
+	public Channel ChangeChannelStatus(string channelnameorcode, ChannelStatus value) =>
+        ChangeChannelStatus(GetChannelByNameOrCode(channelnameorcode), value);
 
 	/// <summary>
 	/// 
 	/// </summary>
 	/// <param name="channel"></param>
-	/// <param name="newState"></param>
+	/// <param name="value"></param>
 	/// <returns></returns>
-	public Channel ChangeChannelState(string channelnameorcode, ChannelStatus newState)
+	public static Channel ChangeChannelStatus(Channel channel, ChannelStatus value)
 	{
-		Channel channel = GetChannelByNameOrCode(channelnameorcode);
-
-		if (AvailableChannels.Values.Any(ch => ch.Name.Equals(channel.Name) && (channel.Type == ChannelType.Public || ch.Code == channel.Code)))
-		{
-			var tChannel = AvailableChannels.Values.First(ch => ch.Name.Equals(channel.Name) && (channel.Type == ChannelType.Public || ch.Code == channel.Code));
-			tChannel.Status = newState;
-			return tChannel;
-		}
-
-		return null;
+		channel.Status = value;
+		return channel;
 	}
 
 	/// <summary>
-	/// 
+	/// retrieves a combined list of all currently channels<br/>may optionally be filtered to a specific <c>ChannelStatus</c>
 	/// </summary>
-	/// <param name="status"></param>
-	/// <returns></returns>
-	public IEnumerable<KeyValuePair<string,Channel>> GetCombinedChannelList(ChannelStatus status = ChannelStatus.AllValid)
+	/// <param name="status">by what <c>ChannelStatus</c> we filter the return value</param>
+	/// <returns>a range of channels filtered to our argument</returns>
+	public Dictionary<string,Channel> GetCombinedChannelList(ChannelStatus status = ChannelStatus.AllValid)
 	{
 		if (status == ChannelStatus.AllValid)
 		{
-			return AvailableChannels.Where(ch =>  ch.Value.Status == ChannelStatus.Available || 
-												  ch.Value.Status == ChannelStatus.Invited   || 
-												  ch.Value.Status == ChannelStatus.Joined    || 
-												  ch.Value.Status == ChannelStatus.Kicked    || 
-												  ch.Value.Status == ChannelStatus.Left      || 
-												  ch.Value.Status == ChannelStatus.Pending   ||
-												  ch.Value.Status == ChannelStatus.Created);
+			return AvailableChannels.Where(ch => ch.Value.Status > ChannelStatus.AllValid).ToDictionary();
 		}
 		else if (status == ChannelStatus.All)
 		{ 
 			return AvailableChannels;
 		}
-		else
+		else if (status > ChannelStatus.Invalid)
 		{
-			return AvailableChannels.Where(ch => ch.Value.Status == status);
+			return AvailableChannels.Where(ch => ch.Value.Status == status).ToDictionary();
 		}
+		throw new ArgumentException("Attempted to filter channel list by invalid status.",nameof(status));
 	}
 
 	/// <summary>
 	/// 
 	/// </summary>
-	/// <param name="type"></param>
-	/// <returns></returns>
-	public IEnumerable<KeyValuePair<string,Channel>> GetChannelList(ChannelType type)
-	{
-		if (type == ChannelType.All)
-			return GetCombinedChannelList(ChannelStatus.All);
+	/// <param name="value"></param>
+	/// <returns>gets a list of channels by type</returns>
+	public IDictionary<string,Channel> GetChannelList(ChannelType value) =>
+		value switch {
+			ChannelType.All		=> GetCombinedChannelList(ChannelStatus.All),
+			ChannelType.Private	=> AvailablePrivateChannels,
+			_ 					=> AvailablePublicChannels,
+		};
 
-		return type == ChannelType.Private ? AvailablePrivateChannels : AvailablePublicChannels;
-	}
+	public IDictionary<string,Channel> GetChannelList(ChannelStatus value = ChannelStatus.AllValid) =>
+		value switch {
+			ChannelStatus.All		=> AvailableChannels,
+			ChannelStatus.AllValid	=> AvailableChannels.Where(ch => ch.Value.Status >= ChannelStatus.AllValid).ToDictionary(),
+			_ 						=> AvailableChannels.Where(ch => ch.Value.Status.Equals(value)).ToDictionary(),
+		};
 
-	public IEnumerable<KeyValuePair<string,Channel>> GetChannelList(ChannelStatus status = ChannelStatus.AllValid)
-	{
-		if (status == ChannelStatus.All)
-			return AvailableChannels;
-		else if (status == ChannelStatus.AllValid)
-		{
-			return AvailableChannels.Where(ch => 
-				ch.Value.Status.Equals(ChannelStatus.Available) ||
-				ch.Value.Status.Equals(ChannelStatus.Created)   ||
-				ch.Value.Status.Equals(ChannelStatus.Joined)    ||
-				ch.Value.Status.Equals(ChannelStatus.Left)      ||
-				ch.Value.Status.Equals(ChannelStatus.Kicked)    ||
-				ch.Value.Status.Equals(ChannelStatus.Invited));
-		}
-		else
-			return AvailablePrivateChannels.Concat(AvailablePublicChannels).ToList().Where(ch => ch.Value.Status.Equals(status));
-	}
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="incomingChannels">the list of channels we need to update</param>
+    /// <param name="value">the type of channel that's being put into the list</param>
+    public void RefreshAvailableChannels(List<Channel> incomingChannels, ChannelType value)
+    {
+        List<Task> tasks = [];
+        switch (value)
+        {
+			case ChannelType.Private:
+				foreach (string code in AvailablePrivateChannels.Select(ch => ch.Value.Code))
+					tasks.Add(Task.Run(() => AvailableChannels.Remove(code)));
 
-	/// <summary>
-	/// 
-	/// </summary>
-	/// <param name="newList"></param>
-	/// <param name="type"></param>
-	public void RefreshAvailableChannels(List<Channel> newList, ChannelType type)
-	{
+				AvailableChannels = AvailableChannels.Concat(incomingChannels.ToDictionary(li => li.Code, li => li)).ToDictionary();
+				break;
 
-		if (type == ChannelType.Private)
-		{
-			foreach(string code in AvailablePrivateChannels.Select(ch=>ch.Value.Code))
-				AvailableChannels.Remove(code);
+			case ChannelType.Public:
+				foreach (string code in AvailablePrivateChannels.Select(ch => ch.Value.Code))
+					tasks.Add(Task.Run(() => AvailableChannels.Remove(code)));
 
-			AvailableChannels = AvailableChannels.Concat(newList.ToDictionary(li => li.Code, li => li)).ToDictionary();
-		}
-		else if (type == ChannelType.Public)
-		{
-			foreach(string code in AvailablePrivateChannels.Select(ch=>ch.Value.Code))
-				AvailableChannels.Remove(code);
-
-			AvailableChannels = AvailableChannels.Concat(newList.ToDictionary(li => li.Code, li => li)).ToDictionary();
-		}
-	}
+				AvailableChannels = AvailableChannels.Concat(incomingChannels.ToDictionary(li => li.Code, li => li)).ToDictionary();
+				break;
+			
+			default:
+				throw new ArgumentException($"Attempted to refresh channels of an invalid type: {value}",nameof(value));
+        }
+        Task.WaitAll([.. tasks]);
+    }
 }

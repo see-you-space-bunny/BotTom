@@ -24,7 +24,7 @@ public partial class ApiConnection
 #region SendMessage
 	private static async Task SendMessage(string channel, string message)
 	{
-		string toSend = $"{Hycybh.MSG} {{ \"channel\": \"{channel}\", \"message\": \"{message}\" }}";
+		string toSend = $"{MessageCode.MSG} {{ \"channel\": \"{channel}\", \"message\": \"{message}\" }}";
 		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {channel}: {message}");
 #if DEBUG
 		if (!await Client.SendAsync(toSend))
@@ -46,7 +46,7 @@ public partial class ApiConnection
 #region SendAd
 	private static async Task SendAd(string channel, string message)
 	{
-		string toSend = $"{Hycybh.LRP} {{ \"channel\": \"{channel}\", \"message\": \"{message}\" }}";
+		string toSend = $"{MessageCode.LRP} {{ \"channel\": \"{channel}\", \"message\": \"{message}\" }}";
 		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {channel}: {message}");
 #if DEBUG
 		if (!await Client.SendAsync(toSend))
@@ -68,7 +68,7 @@ public partial class ApiConnection
 #region SetStatus
 	public static async Task SetStatus(string statusMessage, ChatStatus status, string sendingUser)
 	{
-		string toSend = $"{Hycybh.STA} {{ \"status\": \"{status}\", \"statusmsg\": \"{statusMessage}\", \"character\": \"{sendingUser}\" }}";
+		string toSend = $"{MessageCode.STA} {{ \"status\": \"{status}\", \"statusmsg\": \"{statusMessage}\", \"character\": \"{sendingUser}\" }}";
 		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {status}: {statusMessage}");
 #if DEBUG
 		if (!await Client.SendAsync(toSend))
@@ -89,7 +89,7 @@ public partial class ApiConnection
 #region SendWhisper
 	private static async Task SendWhisper(string targetUser, string message)
 	{
-		string toSend = $"{Hycybh.PRI} {{ \"recipient\": \"{targetUser}\", \"message\": \"{message}\" }}";
+		string toSend = $"{MessageCode.PRI} {{ \"recipient\": \"{targetUser}\", \"message\": \"{message}\" }}";
 		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {targetUser}: {message}");
 #if DEBUG
 		if (!await Client.SendAsync(toSend))

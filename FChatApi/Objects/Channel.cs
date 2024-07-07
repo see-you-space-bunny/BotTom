@@ -95,6 +95,23 @@ public class Channel : IMessageRecipient
 ////////////////////////////////////////////////
 
 
+#region Update (+)
+	public void Update(Channel value)
+	{
+		Name			= value.Name;
+		Type			= value.Type;
+		AdEnabled		= value.AdEnabled;
+		Status			= value.Status;
+		Mods			= value.Mods;
+		Users			= value.Users;
+		Description		= value.Description;
+	}
+#endregion
+
+
+////////////////////////////////////////////////
+
+
 #region User Management (+)
 	/// <summary>
 	/// adds the user to the channel's user list<br/> this does invite/add the actual user form the channel

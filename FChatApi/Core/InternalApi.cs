@@ -22,7 +22,7 @@ namespace FChatApi.Core
 		{
 			string message = Encoding.UTF8.GetString(@event.Data.ToArray());
 			//Console.WriteLine($"Message from server: {message}");
-			await ParseMessage(Enum.Parse<Hycybh>(message.Split(' ').First()), message.Split(" ".ToCharArray(), 2).Last());
+			await ParseMessage(Enum.Parse<MessageCode>(message.Split(' ').First()), message.Split(" ".ToCharArray(), 2).Last());
 		}
 
 		void Client_ChatDisConnected(object sender, EventArgs eventArgs)
@@ -40,11 +40,11 @@ namespace FChatApi.Core
 
 		async static Task IdentifySelf(string accountName, string ticket, string botName, string botClientID, string botClientVersion)
 		{
-			string toSend = $"{Hycybh.IDN}  {{ \"method\": \"ticket\", \"account\": \"{accountName}\", \"ticket\": \"{ticket}\", \"character\": \"{botName}\", \"cname\": \"{botClientID}\", \"cversion\": \"{botClientVersion}\" }}";
+			string toSend = $"{MessageCode.IDN}  {{ \"method\": \"ticket\", \"account\": \"{accountName}\", \"ticket\": \"{ticket}\", \"character\": \"{botName}\", \"cname\": \"{botClientID}\", \"cversion\": \"{botClientVersion}\" }}";
 			await Client.SendAsync(toSend);
 		}
 
-		static JObject ParseToJObject(string message, Hycybh hycybh)
+		static JObject ParseToJObject(string message, MessageCode hycybh)
 		{
 			JObject returnCarrier;
 
@@ -77,7 +77,7 @@ namespace FChatApi.Core
 		///////////////////////////////////////////////////
 
 		#region ParseMessage
-		async Task ParseMessage(Hycybh hycybh, string message)
+		async Task ParseMessage(MessageCode hycybh, string message)
 		{
 			JObject json;
 			try
@@ -89,67 +89,85 @@ namespace FChatApi.Core
 				json = null;
 			}
 
+			List<Task> tasks = [];
 			switch (hycybh)
 			{
-				case Hycybh.STA:
+				case MessageCode.STA:
 					{
-						if (json["character"].ToString().Equals(CharacterName, StringComparison.InvariantCultureIgnoreCase))
-						{
-							Console.WriteLine("Status Changed");
-						}
+						tasks.Add(Task.Run(() =>
+							{
+								if (json["character"].ToString().Equals(CharacterName, StringComparison.InvariantCultureIgnoreCase))
+								{
+									Console.WriteLine("Status Changed");
+								}
+							}
+						));
 					}
 					break;
-				case Hycybh.IDN:
+
+				case MessageCode.IDN:
 					{
 						ConnectedToChat?.Invoke(this, null);
 
-						await RequestInternalChannelList(ChannelType.Private);
-						await RequestInternalChannelList(ChannelType.Public);
+						tasks.Add(RequestInternalChannelList(ChannelType.Private));
+						tasks.Add(RequestInternalChannelList(ChannelType.Public));
 
 						Console.WriteLine("Connected to Chat");
 					}
 					break;
-				case Hycybh.ORS:
+
+				case MessageCode.ORS:
 					{
-						List<Channel> privateChannelList = new List<Channel>();
-						
+						List<Channel> privateChannelList = [];
 						foreach (var channel in json["channels"])
 						{
 							privateChannelList.Add(new Channel(channel["title"].ToString(), channel["name"].ToString(), ChannelType.Private));
 						}
 
-						ChannelTracker.RefreshAvailableChannels(privateChannelList, ChannelType.Private);
-						PrivateChannelsReceivedHandler?.Invoke(this, new ChannelEventArgs() { });
-						Console.WriteLine($"Private Channels Recieved... {privateChannelList.Count} total Private Channels.");
+						tasks.Add(Task.Run(() =>
+							{
+								ChannelTracker.RefreshAvailableChannels(privateChannelList, ChannelType.Private);
+								PrivateChannelsReceivedHandler?.Invoke(this, new ChannelEventArgs() { });
+								Console.WriteLine($"Private Channels Recieved... {privateChannelList.Count} total Private Channels.");
+							}
+						));
 					}
 					break;
-				case Hycybh.CHA:
-					{
-						List<Channel> publicChannelList = new List<Channel>();
 
+				case MessageCode.CHA:
+					{
+						List<Channel> publicChannelList = [];
 						foreach (var channel in json["channels"])
 						{
-							publicChannelList.Add(new Channel(string.Empty, channel["name"].ToString(), ChannelType.Private));
+							string name = channel["name"].ToString();
+							publicChannelList.Add(new Channel(name, name, ChannelType.Public));
 						}
 
-						ChannelTracker.RefreshAvailableChannels(publicChannelList, ChannelType.Public);
-						PublicChannelsReceivedHandler?.Invoke(this, new ChannelEventArgs() { });
-						Console.WriteLine($"Public Channels Recieved... {publicChannelList.Count} total Public Channels.");
+						tasks.Add(Task.Run(() =>
+							{
+								ChannelTracker.RefreshAvailableChannels(publicChannelList, ChannelType.Public);
+								PublicChannelsReceivedHandler?.Invoke(this, new ChannelEventArgs() { });
+								Console.WriteLine($"Public Channels Recieved... {publicChannelList.Count} total Public Channels.");
+							}
+						));
 					}
 					break;
-				case Hycybh.MSG:
+
+				case MessageCode.MSG:
 					{
-						MessageHandler?.Invoke(Hycybh.MSG, new MessageEventArgs() { channel = json["channel"].ToString(), message = json["message"].ToString(), user = json["character"].ToString() });
+						MessageHandler?.Invoke(MessageCode.MSG, new MessageEventArgs() { channel = json["channel"].ToString(), message = json["message"].ToString(), user = json["character"].ToString() });
 						Console.WriteLine(message);
 					}
 					break;
-				case Hycybh.PRI:
+
+				case MessageCode.PRI:
 					{
-						MessageHandler?.Invoke(Hycybh.PRI, new MessageEventArgs() { user = json["character"].ToString(), message = json["message"].ToString() });
+						MessageHandler?.Invoke(MessageCode.PRI, new MessageEventArgs() { user = json["character"].ToString(), message = json["message"].ToString() });
 						Console.WriteLine(message);
 					}
 					break;
-				case Hycybh.JCH:
+
+				case MessageCode.JCH:
 					{
 						User user = UserTracker.GetUserByName(json["character"]["identity"].ToString());
 						Channel tempChannel;
@@ -190,17 +208,22 @@ namespace FChatApi.Core
 								JoinedChannelHandler?.Invoke(this, new ChannelEventArgs() { name = json["title"].ToString(), status = ChannelStatus.Joined, code = tempChannel.Code, type = tempChannel.Type, userJoining = user.Name });
 							}
 
-							channel.AddUser(user);
-							Console.WriteLine($"{user.Name} joined Channel: {channel.Name}. {channel.Users.Count} total users in channel.");
+							tasks.Add(Task.Run(() =>
+								{
+									channel.AddUser(user);
+									Console.WriteLine($"{user.Name} joined Channel: {channel.Name}. {channel.Users.Count} total users in channel.");
+								}
+							));
 						}
 					}
 					break;
-				case Hycybh.LCH:
+
+				case MessageCode.LCH:
 					{
 						if (json["character"].ToString().Equals(CharacterName, StringComparison.InvariantCultureIgnoreCase))
 						{
 							LeftChannelHandler?.Invoke(this, new ChannelEventArgs() { name = json["channel"].ToString(), status = ChannelStatus.Left });
-							ChannelTracker.ChangeChannelState(json["channel"].ToString(), ChannelStatus.Available);
+							ChannelTracker.ChangeChannelStatus(json["channel"].ToString(), ChannelStatus.Available);
 						}
 
 						User user = UserTracker.GetUserByName(json["character"].ToString());
@@ -213,51 +236,62 @@ namespace FChatApi.Core
 
 						if (user != null && channel != null)
 						{
-							channel.RemoveUser(user);
-							Console.WriteLine($"{user.Name} left Channel: {json["channel"]}. {channel.Users.Count} total users in channel.");
+
+							tasks.Add(Task.Run(() =>
+								{
+									channel.RemoveUser(user);
+									Console.WriteLine($"{user.Name} left Channel: {json["channel"]}. {channel.Users.Count} total users in channel.");
+								}
+							));
 						}
 
 					}
 					break;
-				case Hycybh.PIN:
+
+				case MessageCode.PIN:
 					{
-						await Client.SendAsync(Hycybh.PIN.ToString());
+						tasks.Add(Client.SendAsync(MessageCode.PIN.ToString()));
 					}
 					break;
-				case Hycybh.VAR:
+
+				case MessageCode.VAR:
 					{
 
 					}
 					break;
-				case Hycybh.HLO:
+
+				case MessageCode.HLO:
 					{
 
 					}
 					break;
-				case Hycybh.CON:
+
+				case MessageCode.CON:
 					{
-						Console.WriteLine($"{json["count"]} connected users sent.");
+						tasks.Add(Task.Run(() => Console.WriteLine($"{json["count"]} connected users sent.")));
 					}
 					break;
-				case Hycybh.FRL:
+
+				case MessageCode.FRL:
 					{
 						// friends list
 					}
 					break;
-				case Hycybh.IGN:
+
+				case MessageCode.IGN:
 					{
 						// ignore list
 					}
 					break;
-				case Hycybh.ADL:
+
+				case MessageCode.ADL:
 					{
 
 					}
 					break;
-				case Hycybh.LIS:
+
+				case MessageCode.LIS:
 					{
-						Task[] tasks = new Task[json["characters"].Count()];
-						int i = 0;
 						foreach(var userinfo in json["characters"])
 						{
 							User tempUser = new()
@@ -268,19 +302,20 @@ namespace FChatApi.Core
 							};
 							if (!UserTracker.TryAddUser(tempUser))
 							{
-								var user = UserTracker.GetUserByName(tempUser.Name);
-								;
-								tasks[i] = Task.Run(()=>user.Update(tempUser));
+                                tasks.Add(Task.Run(
+									() => UserTracker
+										.GetUserByName(tempUser.Name)
+										.Update(tempUser)));
 							}
 							//UserTracker.SetChatStatus(tempUser, tempUser.ChatStatus, false);
 						}
-						await Task.WhenAll(tasks.Where(t => t != null).ToArray());
 #if DEBUG
-						Console.WriteLine($"Added {json["characters"].Count()} users. Total users: {UserTracker.GetNumberActiveUsers()}");
+						tasks.Add(Task.Run(() => Console.WriteLine($"Added {json["characters"].Count()} users. Total users: {UserTracker.GetNumberActiveUsers()}")));
 #endif
 					}
 					break;
-				case Hycybh.NLN:
+
+				case MessageCode.NLN:
 					{
 						User tempUser = new()
 						{
@@ -288,91 +323,103 @@ namespace FChatApi.Core
 							UserStatus = (UserStatus)Enum.Parse(typeof(UserStatus), json["status"].ToString().ToLowerInvariant(), true),
 							Gender = json["gender"].ToString()
 						};
-						UserTracker.SetChatStatus(tempUser, ChatStatus.Online, false);
+
+						tasks.Add(Task.Run(() => UserTracker.SetChatStatus(tempUser, ChatStatus.Online, false)));
 					}
 					break;
-				case Hycybh.COL:
-					{
-						Channel tempChannel = ChannelTracker.GetChannelByNameOrCode(json["channel"].ToString());
 
-						int counter = 0;
+				case MessageCode.COL:
+					{
+						Channel channel = ChannelTracker.GetChannelByNameOrCode(json["channel"].ToString());
+
+						bool ownerAdded = false;
 						foreach (string username in json["oplist"].Select(user => user.ToString()))
 						{
-							if (string.IsNullOrWhiteSpace(username.ToString()))
+							if (string.IsNullOrWhiteSpace(username))
 							{
 								continue;
 							}
 
-							User tempUser = UserTracker.GetUserByName(username);
+							User user = UserTracker.GetUserByName(username);
 
-							if (counter == 0)
+							if (!ownerAdded)
 							{
-								tempChannel.Owner = tempUser;
+								channel.Owner	= user;
+								ownerAdded		= true;
 							}
 
-							tempChannel.AddMod(tempUser);
+							tasks.Add(Task.Run(() => channel.AddMod(user)));
 						}
 #if DEBUG
-						Console.WriteLine($"Found {tempChannel.Mods.Count} mods for channel: {tempChannel.Name}");
+						tasks.Add(Task.Run(() => Console.WriteLine($"Found {channel.Mods.Count} mods for channel: {channel.Name}")));
 #endif
 					}
 					break;
-				case Hycybh.FLN:
+
+				case MessageCode.FLN:
 					{
-						User tempUser = new()
-						{
-							Name = json["character"].ToString()
-						};
+						User user = UserTracker.GetUserByName(json["character"].ToString());
+						UserTracker.SetChatStatus(user, ChatStatus.Offline, false);
 
-						UserTracker.SetChatStatus(tempUser, ChatStatus.Offline, false);
-						foreach (var channel in ChannelTracker.WatchChannels.Values)
-						{
-							bool needsRemoved = false;
-
-							if (channel.Users.ContainsKey(tempUser.Name))
+						tasks.Add(Task.Run(() =>
 							{
-								needsRemoved = true;
-							}
+								foreach (var channel in ChannelTracker.WatchChannels.Values)
+								{
+									bool needsRemoved = false;
 
-							if (needsRemoved)
-							{
-								channel.RemoveUser(tempUser);
+									if (channel.Users.ContainsKey(user.Name))
+									{
+										needsRemoved = true;
+									}
+
+									if (needsRemoved)
+									{
+										channel.RemoveUser(user);
+									}
+								}
 							}
-						}
+						));
 					}
 					break;
-				case Hycybh.ICH:
+
+				case MessageCode.ICH:
 					{
 						// joining channel
-						Channel tempChannel = ChannelTracker.ChangeChannelState(json["channel"].ToString(), ChannelStatus.Joined);
-						foreach (var user in json["users"])
-						{
-							User tempUser = UserTracker.GetUserByName(user["identity"].ToString());
-							if (null == tempUser)
-							{
-								Console.WriteLine($"Error attempting to add user {user["identity"]} to {json["channel"]} channel's userlist.");
-							}
+						Channel channel = ChannelTracker.ChangeChannelStatus(json["channel"].ToString(), ChannelStatus.Joined);
 
-							tempChannel.AddUser(tempUser);
-							tempChannel.AdEnabled = !json["mode"].ToString().Equals("chat");
+						foreach (User user in json["users"].Select(u => UserTracker.GetUserByName(u["identity"].ToString())))
+						{
+							tasks.Add(Task.Run(() =>
+								{
+									if (null == user)
+									{
+										Console.WriteLine($"Error attempting to add user {user.Name} to {channel.Name} channel's userlist.");
+									}
+
+									channel.AddUser(user);
+									channel.AdEnabled = !json["mode"].ToString().Equals("chat");
+								}
+							));
 						}
 #if DEBUG
-						Console.WriteLine($"Adding {json["users"].Count()} users to {tempChannel.Name} channel's userlist successful.");
+						tasks.Add(Task.Run(() => Console.WriteLine($"Adding {json["users"].Count()} users to {channel.Name} channel's userlist successful.")));
 #endif
 					}
 					break;
-				case Hycybh.CDS:
+
+				case MessageCode.CDS:
 					{
-						Channel tempChannel = ChannelTracker.GetChannelByNameOrCode(json["channel"].ToString());
-						tempChannel.Description = json["description"].ToString();
+						tasks.Add(Task.Run(() => ChannelTracker.GetChannelByNameOrCode(json["channel"].ToString()).Description = json["description"].ToString()));
 					}
 					break;
+
 				default:
 					{
 
 					}
 					break;
 			}
+			await Task.WhenAll([.. tasks]);
 		}
 	}
 	#endregion
