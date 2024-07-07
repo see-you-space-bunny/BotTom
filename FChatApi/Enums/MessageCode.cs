@@ -6,6 +6,7 @@ namespace FChatApi.Enums;
 public enum MessageCode
 {
 	/// <summary>empty/invalid default</summary>
+	[OutgoingMessageFormat("NON")]
 	NON,
 
 	/// <summary><b>Global Account Ban</b><br/>
@@ -13,12 +14,14 @@ public enum MessageCode
 	/// (OUT) &gt;&gt; ACB {"character": "CharacterName"}<br/>
 	/// <i>"CharacterName" is case sensitive!<br/></i>
 	/// </summary>
+	[OutgoingMessageFormat("ACB {\"character\": \"{0}\"}")]
 	ABC,
 
 	/// <summary><b>Admin List</b><br/>
 	/// when incoming provides a list of global ops<br/>
 	/// (INC) &lt;&lt; ADL {"ops": Array["OperatorName"]}
 	/// </summary>
+	[OutgoingMessageFormat("ADL")]
 	ADL,
 
 	/// <summary><b>Add Global Operator</b><br/>
@@ -30,14 +33,16 @@ public enum MessageCode
 	/// <i>"OperatorName" is case sensitive!<br/>
 	/// requires you to be a global (super?) operator</i>
 	/// </summary>
+	[OutgoingMessageFormat("AOP {\"character\": \"{0}\"}")]
 	AOP,
 
 	/// <summary><b>Alt-Watch(Unused)</b><br/>
 	/// sent to ??<br/>
-	/// (OUT) &gt;&gt; ACB {"character": "CharacterName"}<br/>
+	/// (OUT) &gt;&gt; AWC {"character": "CharacterName"}<br/>
 	/// <i>"CharacterName" is case sensitive!<br/>
 	/// returns a "Not Implemented" error if used</i>
 	/// </summary>
+	[OutgoingMessageFormat("ACB {\"character\": \"{0}\"}")]
 	AWC,
 
 	/// <summary><b>Broadcast</b><br/>
@@ -47,6 +52,7 @@ public enum MessageCode
 	/// sends a a global broadcast to the server<br/>
 	/// (OUT) &gt;&gt; BRO {"message": "A String"}
 	/// </summary>
+	[OutgoingMessageFormat("BRO {\"message\": \"{0}\"}")]
 	BRO,
 
 	/// <summary><b>Channel Ban List</b><br/>
@@ -54,6 +60,7 @@ public enum MessageCode
 	/// (OUT) &gt;&gt; CBL {"channel": "ChannelCode"}<br/>
 	/// <i>the ban list itself is returned in a <c>SYS</c> message with the format:</i> <c>Channel bans for $channel: $name1, $name2, ...</c>
 	/// </summary>
+	[OutgoingMessageFormat("CBL {\"channel\": \"{0}\"}")]
 	CBL,
 
 	/// <summary><b>Channel Ban</b><br/>
@@ -66,6 +73,7 @@ public enum MessageCode
 	/// returns <c>ALREADY_CHANNEL_BANNED</c> error if the character is already on the ban list.<br/>
 	/// returns <c>DENIED_ON_OP</c> error if used on a global operator</i>
 	/// </summary>
+	[OutgoingMessageFormat("CBU {\"character\": \"{0}\", \"channel\": \"{1}\"}")]
 	CBU,
 
 	/// <summary><b>Create Private Channel</b><br/>
@@ -77,6 +85,7 @@ public enum MessageCode
 	/// the name must be a HTML-escaped, but escaped characters each count as a single character respectively<br/>
 	/// when successful the api-user is forcibly added to the channel (also triggering a <c>JCH</c> message ?)</i>
 	/// </summary>
+	[OutgoingMessageFormat("CCR {\"channel\": \"{0}\"}")]
 	CCR,
 
 	/// <summary><b>Channel Description</b><br/>
@@ -88,6 +97,7 @@ public enum MessageCode
 	/// <i><c>MAXLENGTH</c> ?? characters<br/>
 	/// returns a <c>DESCRIPTION_TOO_LONG</c> error if description exceeds max <c>MAXLENGTH</c></i>
 	/// </summary>
+	[OutgoingMessageFormat("CDS {\"channel\": \"{0}\", \"description\": \"{1}\"}")]
 	CDS,
 
 	/// <summary><b>Official Channel List</b><br/>
@@ -98,6 +108,7 @@ public enum MessageCode
 	/// (OUT) &gt;&gt; CHA<br/>
 	/// <i><c>cha_flood</c> variable throttles this command</i>
 	/// </summary>
+	[OutgoingMessageFormat("CHA")]
 	CHA,
 
 	/// <summary><b>Channel Invite</b><br/>
@@ -111,6 +122,7 @@ public enum MessageCode
 	/// cannot be used for official channels<br/>
 	/// api-user must be channel operator to perform this action</i>
 	/// </summary>
+	[OutgoingMessageFormat("CIU {\"character\": \"{0}\", \"channel\": \"{1}\"}")]
 	CIU,
 
 	/// <summary><b>Channel Kick</b><br/>
@@ -125,6 +137,7 @@ public enum MessageCode
 	/// api-user must be channel operator to perform this action<br/>
 	/// if the channel is invite only, this also removes the target's invite</i>
 	/// </summary>
+	[OutgoingMessageFormat("CKU {\"character\": \"{0}\", \"channel\": \"{1}\"}")]
 	CKU,
 
 	/// <summary><b>Channel Operator Add</b><br/>
@@ -138,23 +151,27 @@ public enum MessageCode
 	/// returns <c>COL</c> & <c>COA</c><br/>
 	/// also returns <c>SYS</c> unless the silent property is set</i>
 	/// </summary>
+	[OutgoingMessageFormat("COA {\"character\": \"{0}\", \"channel\": \"{1}\"}")]
 	COA,
 
 	/// <summary><b>Channel Operator List</b><br/>
 	/// incoming with a list of channel operators<br/>
 	/// (INC) &lt;&lt; COL {"channel": "ChannelCode", "oplist": Array["OperatorName"]}<br/><br/>
+	/// 
 	/// <i>first entry is ChannelOwner may be string.Empty</i>
 	/// send to request a list of channel operators<br/>
 	/// (OUT) &gt;&gt; COL {"channel": "ChannelCode"}<br/>
 	/// <i>api-user need not be in a channel to make this request<br/>
 	/// returns <c>COL</c> & <c>SYS</c></i>
 	/// </summary>
+	[OutgoingMessageFormat("COL {\"channel\": \"{0}\"}")]
 	COL,
 
 	/// <summary><b>Connection Count</b><br/>
 	/// incoming with count of characters connected to chat<br/>
 	/// (INC) &lt;&lt; CON {"count": 1234}
 	/// </summary>
+	[OutgoingMessageFormat("CON")]
 	CON,
 
 	/// <summary><b>Channel Operator Remove</b><br/>
@@ -168,6 +185,7 @@ public enum MessageCode
 	/// returns <c>COL</c> & <c>COR</c><br/>
 	/// also returns <c>SYS</c> unless the silent property is set</i>
 	/// </summary>
+	[OutgoingMessageFormat("COR {\"character\": \"{0}\", \"channel\": \"{1}\"}")]
 	COR,
 
 	/// <summary><b>Create Public Channel</b><br/>
@@ -176,6 +194,7 @@ public enum MessageCode
 	/// <i><b>requires global operator rights</b><br/>
 	/// returns <c>SYS</c> on success</i>
 	/// </summary>
+	[OutgoingMessageFormat("CRC {\"channel\": \"{1}\"}")]
 	CRC,
 
 	/// <summary><b>Channel Set Owner</b><br/>CSO {"character": "Kira", "channel": "Development"}
@@ -187,6 +206,7 @@ public enum MessageCode
 	/// <i>"CharacterName" is case sensitive!<br/>
 	/// requires you to be the channel owner</i>
 	/// </summary>
+	[OutgoingMessageFormat("CSO {\"character\": \"{0}\", \"channel\": \"{1}\"}")]
 	CSO,
 
 	/// <summary><b>Channel Timeout</b><br/>
@@ -200,6 +220,7 @@ public enum MessageCode
 	/// length is measured in seconds ?<br/>
 	/// requires you to be the channel operator</i>
 	/// </summary>
+	[OutgoingMessageFormat("CTU {\"character\": \"{0}\", \"channel\": \"{1}\", \"length\": {2}}")]
 	CTU,
 
 	/// <summary><b>Channel Remove Ban/Timeout</b><br/>
@@ -209,6 +230,7 @@ public enum MessageCode
 	/// length is measured in seconds ?<br/>
 	/// requires you to be a channel operator</i>
 	/// </summary>
+	[OutgoingMessageFormat("CUB {\"character\": \"{0}\", \"channel\": \"{1}\"}")]
 	CUB,
 
 	/// <summary><b>Remove Global Operator</b><br/>
@@ -220,6 +242,7 @@ public enum MessageCode
 	/// <i>"CharacterName" is case sensitive!<br/>
 	/// requires you to be global (super?) operator</i>
 	/// </summary>
+	[OutgoingMessageFormat("DOP {\"character\": \"{0}\"}")]
 	DOP,
 
 	/// <summary><b>Error Response</b><br/>
@@ -232,18 +255,21 @@ public enum MessageCode
 	/// &gt; 39: The api-user is being timed out from the server.<br/>
 	/// &gt; 40: The api-user is being kicked from the server.
 	/// </summary>
+	[OutgoingMessageFormat("ERR")]
 	ERR,
 
 	/// <summary><b>Offline User Notification</b><br/>
 	/// incoming when a character has gone offline<br/>
 	/// (INC) &lt;&lt; FLN {"character": "CharacterName"}
 	/// </summary>
+	[OutgoingMessageFormat("FLN")]
 	FLN,
 
 	/// <summary><b>Friends List</b><br/>
 	/// incoming with a list of api-user's friends<br/>
 	/// (INC) &lt;&lt; FRL {"characters": Array["FriendName"]}
 	/// </summary>
+	[OutgoingMessageFormat("FRL")]
 	FRL,
 
 	/// <summary><b>Server Welcome Message</b><br/>
@@ -251,12 +277,14 @@ public enum MessageCode
 	/// (INC) &lt;&lt; HLO {"message": "A String"}<br/>
 	/// <i>the message contains the server version</i>
 	/// </summary>
+	[OutgoingMessageFormat("HLO")]
 	HLO,
 
 	/// <summary><b>Channel User List</b><br/>
 	/// incoming with a list of characters in this channel<br/>
 	/// (INC) &lt;&lt; ICH {"channel": "ChannelName", "users": Array[ChannelCharacter], "mode": "A String"}
 	/// </summary>
+	[OutgoingMessageFormat("ICH")]
 	ICH,
 
 	/// <summary><b>Chat Login</b><br/>
@@ -278,6 +306,7 @@ public enum MessageCode
 	/// returns <c>SERVER_FULL</c> if the chat server is full. Do not automatically reconnect.<br/>
 	/// returns <c>ALREADY_IDENT</c> if you are already identified with the server or you have a pending IDN request.</i>
 	/// </summary>
+	[OutgoingMessageFormat("IDN {\"account\": : \"{0}\", \"character\": \"{1}\", \"method\": \"{2}\", \"ticket\": \"{3}\", \"cname\": \"{4}\", \"cversion\": \"{5}\"}")]
 	IDN,
 
 	/// <summary><b>Ignore</b><br/>
@@ -289,6 +318,7 @@ public enum MessageCode
 	/// action <c>remove</c> removes a character from api-user's ignore list. removing <c>*</c> clears the api-user's ignore list<br/>
 	/// action <c>notify</c> notifies a character that their private (<c>PRI</c>) message was ignored. Client should notify for each recieved private message from character's on api-user's ignore list.</i>
 	/// </summary>
+	[OutgoingMessageFormat("IGN {\"channel\": \"{0}\", \"action\": \"{1}\"}")]
 	IGN,
 
 	/// <summary><b>Join Channel</b><br/>
@@ -298,18 +328,22 @@ public enum MessageCode
 	/// send to atempt to join a channel<br/>
 	/// (OUT) &gt;&gt; JCH {"channel": "ChannelCode"}
 	/// </summary>
+	[OutgoingMessageFormat("JCH {\"channel\": \"{0}\"}")]
 	JCH,
 
 	/// <summary><b>Destroy Channel</b><br/>
 	/// send to atempt to destroy a channel<br/>
 	/// (OUT) &gt;&gt; KIC {"channel": "ChannelCode"}<br/>
 	/// <i>api-user must be channel owner to do this</i>
+	/// </summary>
+	[OutgoingMessageFormat("KIC {\"channel\": \"{0}\"}")]
 	KIC,
 
 	/// <summary><b>Character Kinks Data</b><br/>
 	/// incoming with the kink data of a character<br/>
 	/// (INC) &lt;&lt; KID {"type": "A String", "character": "CharacterName", "value": "A String", "message": "A String", "key": "A String"}
 	/// </summary>
+	[OutgoingMessageFormat("KID")]
 	KID,
 
 	/// <summary><b>Global Chat Kick</b><br/>
@@ -317,6 +351,7 @@ public enum MessageCode
 	/// (OUT) &gt;&gt; KIK {"character": "CharacterName"}<br/>
 	/// <i>"CharacterName" is case sensitive!<br/>
 	/// api-user must be channel owner to do this</i>
+	[OutgoingMessageFormat("KIK {\"character\": \"{0}\"}")]
 	KIK,
 
 	/// <summary><b>Leave Channel</b><br/>
@@ -326,11 +361,13 @@ public enum MessageCode
 	/// send to atempt to leave a channel<br/>
 	/// (OUT) &gt;&gt; LCH {"channel": "ChannelCode"}
 	/// </summary>
+	[OutgoingMessageFormat("LCH {\"channel\": \"{0}\"}")]
 	LCH,
 
 	/// <summary><b>Character List</b><br/>
 	/// api-user's character list and online status ?
 	/// </summary>
+	[OutgoingMessageFormat("LIS")]
 	LIS,
 
 	/// <summary><b>Channel Advertisement Message</b><br/>
@@ -340,8 +377,7 @@ public enum MessageCode
 	/// send to post an ad in a channel<br/>
 	/// (OUT) &gt;&gt; LRP {"channel": "ChannelCode", "message": "A String"}
 	/// </summary>
-	[IncomingMessageFormat("""LRP {"character": "(?'character'[\ a-zA-Z0-9\-]+)", "channel": "(?'channel'[a-zA-Z0-9\-]+)", "message": "(?'message'.+)"}""")]
-	[OutgoingMessageFormat("LRP {\"channel\": \"{0}\", \"message\": \"{0}\"}")]
+	[OutgoingMessageFormat("LRP {\"channel\": \"{0}\", \"message\": \"{1}\"}")]
 	LRP,
 
 	/// <summary><b>Channel Message</b><br/>
@@ -353,8 +389,7 @@ public enum MessageCode
 	/// <i>messages are throttled based on <c>msg_flood</c> variable<br/>
 	/// messages length determined by <c>chat_max</c> variable</i>
 	/// </summary>
-	[IncomingMessageFormat("""MSG {"character": "(?'character'[\ a-zA-Z0-9\-]+)", "channel": "(?'channel'[a-zA-Z0-9\-]+)", "message": "(?'message'.+)"}""")]
-	[OutgoingMessageFormat("MSG {\"channel\": \"{0}\", \"message\": \"{0}\"}")]
+	[OutgoingMessageFormat("MSG {\"channel\": \"{0}\", \"message\": \"{1}\"}")]
 	MSG,
 
 	/// <summary><b>Channel Message</b><br/>
@@ -362,15 +397,18 @@ public enum MessageCode
 	/// (INC) &lt;&lt; NLN {"gender": "A String", "status": "A String", "identity": "CharacterName"}<br/>
 	/// <i>This includes the api-user! Wait to recieve this message before issuing any chat commands!!</i>
 	/// </summary>
+	[OutgoingMessageFormat("NLN")]
 	NLN,
 
 	/// <summary><b>Private Channel List</b><br/>
 	/// incoming with a list of private chanels<br/>
 	/// (INC) &lt;&lt; ORS {"channels": Array[PrivateChannel]}
 	/// </summary>
+	[OutgoingMessageFormat("ORS")]
 	ORS,
 
 	/// <summary>a ping</summary>
+	[OutgoingMessageFormat("PIN")]
 	PIN,
 
 	/// <summary><b>Private Message</b><br/>
@@ -383,14 +421,14 @@ public enum MessageCode
 	/// messages are throttled based on <c>msg_flood</c> variable<br/>
 	/// messages length determined by <c>priv_max</c> variable</i>
 	/// </summary>
-	[IncomingMessageFormat("""PRI {"character": "(?'character'[\ a-zA-Z0-9\-]+)", "message": "(?'message'.+)", "recipient": "(?'recipient'[a-zA-Z0-9\-]+)"}""")]
-	[OutgoingMessageFormat("PRI {\"message\": \"{0}\", \"recipient\": \"{0}\"}")]
+	[OutgoingMessageFormat("PRI {\"message\": \"{0}\", \"recipient\": \"{1}\"}")]
 	PRI,
 
 	/// <summary><b>Reload Serzer State</b><br/>
 	/// ??? <br/>
 	/// (OUT) &gt;&gt; RLD {"save": "A String"}
 	/// </summary>
+	[OutgoingMessageFormat("RLD {\"save\": \"{0}\"}")]
 	RLD,
 
 	/// <summary><b>Dice Roll/Bottle Spin</b><br/>
@@ -400,6 +438,7 @@ public enum MessageCode
 	/// send to roll a dice string or spin the bottle<br/>
 	/// (OUT) &gt;&gt; RLL {"channel": "ChannelCode", "dice": "A String"}
 	/// </summary>
+	[OutgoingMessageFormat("RLL {\"channel\": \"{0}\", \"dice\": \"{1}\"}")]
 	RLL,
 
 	/// <summary><b>Channel Message Mode</b><br/>
@@ -409,12 +448,14 @@ public enum MessageCode
 	/// send to request a channel's message mode<br/>
 	/// (OUT) &gt;&gt; RMO {"channel": "ChannelCode", "mode": "A String"}
 	/// </summary>
+	[OutgoingMessageFormat("RMO {\"channel\": \"{0}\", \"mode\": \"{1}\"}")]
 	RMO,
 
 	/// <summary><b>Channel Visibility</b><br/>
 	/// send to ??<br/>
-	/// (OUT) &gt;&gt; RMO {"channel": "ChannelCode", "mode": "A String"}
+	/// (OUT) &gt;&gt; RST {"channel": "ChannelCode", "mode": "VisibilityMode"}
 	/// </summary>
+	[OutgoingMessageFormat("RST {\"channel\": \"{0}\", \"mode\": \"{1}\"}")]
 	RST,
 
 	/// <summary><b>Reward User</b><br/>
@@ -422,6 +463,7 @@ public enum MessageCode
 	/// (OUT) &gt;&gt; RWD {"character": "CharacterName"}<br/>
 	/// <i>"CharacterName" is case sensitive!</i>
 	/// </summary>
+	[OutgoingMessageFormat("RWD {\"character\": \"{0}\"}")]
 	RWD,
 
 	/// <summary><b>Staff Alert</b><br/>
@@ -431,6 +473,7 @@ public enum MessageCode
 	/// send to issue a staff alert ?<br/>
 	/// (OUT) &gt;&gt; SFC {"report": "A String", "callid": 1234, "action": "A String", "logid": "A String"}
 	/// </summary>
+	[OutgoingMessageFormat("SFC {\"report\": \"{0}\", \"callid\": \"{1}\", \"action\": \"{2}\", \"logid\": \"{3}\"}")]
 	SFC,
 
 	/// <summary><b>Status Update</b><br/>
@@ -440,12 +483,14 @@ public enum MessageCode
 	/// when outgoing requests status set<br/>
 	/// (OUT) &lt;&lt; STA {"status": "UserStatusType", "statusmsg": "A String"}
 	/// </summary>
+	[OutgoingMessageFormat("STA {\"status\": \"{0}\", \"statusmsg\": \"{1}\"}")]
 	STA,
 
 	/// <summary><b>System Message</b><br/>
 	/// incoming with a system message<br/>
 	/// (INC) &lt;&lt; SYS {"message": "A String"}
 	/// </summary>
+	[OutgoingMessageFormat("SYS")]
 	SYS,
 
 	/// <summary><b>Global Chat Timeout</b><br/>
@@ -455,6 +500,7 @@ public enum MessageCode
 	/// length is measured in seconds ?<br/>
 	/// requires you to be a global operator</i>
 	/// </summary>
+	[OutgoingMessageFormat("STA {\"character\": \"{0}\", \"reason\": \"{1}\", \"time\": \"{2}\"}")]
 	TMO,
 
 	/// <summary><b>Typing Notification</b><br/>
@@ -466,6 +512,7 @@ public enum MessageCode
 	/// (OUT) &lt;&lt; TPN {"character": "CharacterName", "status": "A String"}<br/>
 	/// <i>"CharacterName" is case sensitive!</i>
 	/// </summary>
+	[OutgoingMessageFormat("STA {\"character\": \"{0}\", \"status\": \"{1}\"}")]
 	TPN,
 
 	/// <summary><b>Uptime Information</b><br/>
@@ -476,6 +523,7 @@ public enum MessageCode
 	/// (OUT) &lt;&lt; UPT {"character": "CharacterName"}<br/>
 	/// <i>"CharacterName" is case sensitive!</i>
 	/// </summary>
+	[OutgoingMessageFormat("STA {\"character\": \"{0}\"}")]
 	UPT,
 
 	/// <summary><b>Remove Global Ban</b><br/>
@@ -484,11 +532,13 @@ public enum MessageCode
 	/// <i>"CharacterName" is case sensitive!<br/>
 	/// requires you to be a global operator</i>
 	/// </summary>
+	[OutgoingMessageFormat("UNB {\"character\": \"{0}\"}")]
 	UNB,
 
 	/// <summary><b>Server Variable</b><br/>
 	/// incoming with a server variable<br/>
 	/// (INC) &lt;&lt; VAR {"value": 1.234, "variable": "A String"}
 	/// </summary>
+	[OutgoingMessageFormat("VAR")]
 	VAR,
 }
