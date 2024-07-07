@@ -54,10 +54,10 @@ public class SystemController
 	/// <param name="recipient">person to reply to</param>
 	public void Respond(string channel, string message, string recipient)
 	{
-		ChatMessageType mt = ChatMessageType.Basic;
+		FChatMessageType mt = FChatMessageType.Basic;
 		if (string.IsNullOrWhiteSpace(channel))
 		{
-			mt = ChatMessageType.Whisper;
+			mt = FChatMessageType.Whisper;
 		}
 
 		Respond(channel, message, recipient, mt);
@@ -70,7 +70,7 @@ public class SystemController
 	/// <param name="message">message to reply with</param>
 	/// <param name="recipient">person to reply to</param>
 	/// <param name="messagetype">type of message we're sending</param>
-	public void Respond(string channel, string message, string recipient, ChatMessageType messagetype)
+	public void Respond(string channel, string message, string recipient, FChatMessageType messagetype)
 	{
 		if (!string.IsNullOrWhiteSpace(channel))
 		{
@@ -92,7 +92,7 @@ public class SystemController
 	/// replies via the f-list api
 	/// </summary>
 	/// <param name="messageBuilder">the builder we're passing to send-message</param>
-	public void Respond(ChatMessageBuilder messageBuilder)
+	public void Respond(FChatMessageBuilder messageBuilder)
 	{
 		Api.EnqueueMessage(messageBuilder);
 	}

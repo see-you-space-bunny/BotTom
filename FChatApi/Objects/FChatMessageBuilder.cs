@@ -1,0 +1,210 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using FChatApi.Enums;
+using FChatApi.Core;
+using System;
+using FChatApi.Attributes;
+using FChatApi.Interfaces;
+
+namespace FChatApi.Objects;
+
+public class FChatMessageBuilder
+{
+#region MessageRecipient
+	/// <summary>
+	/// The message's Recipient as an object that can host a message Queue.<br/>
+	/// Throws <c>InvalidOperationException</c> if referenced while builder is incomplete.
+	/// </summary>
+	public IMessageRecipient MessageRecipient => 
+		HasRecipient ? 
+			((MessageType == FChatMessageType.Whisper) || (Channel == null) ? Recipient : Channel) :
+			throw new InvalidOperationException("Theis message has no valid MessageRecipient.");
+
+	/// <summary>
+	/// Indicates whether or not the message has a valid Recipient.
+	/// </summary>
+	public bool HasRecipient => !(Recipient is null || string.IsNullOrWhiteSpace(Recipient.Name)) && (Channel == null || string.IsNullOrWhiteSpace(Channel.Code));
+#endregion
+
+
+////////////////////////////////////////////////
+
+
+#region Author
+	User Author;
+	public FChatMessageBuilder WithAuthor(User value)
+	{
+		Author = value;
+		return this;
+	}
+	public FChatMessageBuilder WithAuthor(string value)
+	{
+		if (!ApiConnection.TryGetUserByName(value, out User result))
+			throw new KeyNotFoundException();
+		Author = result;
+		return this;
+	}
+#endregion
+
+
+////////////////////////////////////////////////
+
+
+#region Recipient
+	User Recipient;
+	public FChatMessageBuilder WithRecipient(User value)
+	{
+		Recipient = value;
+		return this;
+	}
+	public FChatMessageBuilder WithRecipient(string value)
+	{
+		if (!ApiConnection.TryGetUserByName(value, out User result))
+			throw new KeyNotFoundException();
+		Recipient = result;
+		return this;
+	}
+#endregion
+
+
+////////////////////////////////////////////////
+
+
+#region Channel
+	Channel Channel;
+	public FChatMessageBuilder WithChannel(Channel value)
+	{
+		Channel = value;
+		return this;
+	}
+	public FChatMessageBuilder WithChannel(string value)
+	{
+		Channel = ApiConnection.GetChannelByNameOrCode(value);
+		return this;
+	}
+#endregion
+
+
+////////////////////////////////////////////////
+
+
+#region MessageType
+	FChatMessageType MessageType;
+	public FChatMessageBuilder WithMessageType(FChatMessageType value)
+	{
+		MessageType = value;
+		return this;
+	}
+#endregion
+
+
+////////////////////////////////////////////////
+
+
+#region Message
+	string Message;
+	public FChatMessageBuilder WithMessage(string value)
+	{
+		Message = value;
+		return this;
+	}
+#endregion
+
+
+////////////////////////////////////////////////
+
+
+#region Build Method
+	public FChatMessage Build()
+	{
+		ValidateAuthor();
+
+		if (!HasRecipient)
+			throw new InvalidOperationException("The message you are trying to build has no valid MessageRecipient.");
+
+		StringBuilder messageStringBuilder = new();
+
+		if (!string.IsNullOrWhiteSpace(Mention))
+			messageStringBuilder
+				.Append(Mention)
+				.Append(' ');
+		
+		ValidateMessageType();
+
+		ValidateMessageBody();
+		
+		messageStringBuilder.Append(System.Web.HttpUtility.JavaScriptStringEncode(Message));
+
+		return new FChatMessage(Author,Recipient,MessageType,Channel,messageStringBuilder.ToString());
+	}
+#endregion
+
+
+////////////////////////////////////////////////
+
+
+#region Build Helpers
+	/// <summary>
+	/// validates the presence of an <c>Author</c>
+	/// </summary>
+	private void ValidateAuthor()
+	{
+		if (Author is null || string.IsNullOrWhiteSpace(Author.Name))
+			throw new InvalidOperationException("Attempting to build an unsigned (no Author) message. An outgoing should always have an Author!");
+	}
+
+	/// <remarks>
+	/// this must be run AFTER <c>ValidateMessageType</c>, as until then any non-explicitly set <c>MessageType</c> will default to <c>FChatMessageType.Invalid</c>
+	/// </remarks>
+	/// <summary>
+	/// validates <c>Message</c> minimum and maximum length
+	/// </summary>
+	private void ValidateMessageBody()
+	{
+		if (string.IsNullOrWhiteSpace(Message))
+			throw new InvalidOperationException("Attempting to build an empty message.");
+
+		int maxLength = AttributeEnumExtensions.GetEnumAttribute<FChatMessageType,MaximumLengthAttribute>(MessageType).Length;
+
+		if (Message.Length > maxLength)
+			throw new InvalidOperationException($"Max message length of: {maxLength} characters.");
+	}
+
+	/// <summary>
+	/// validates the <c>MessageType</c> and <c>Channel</c> fields<br/>
+	/// Sets <c>MessageType</c> to <c>FChatMessageType.Whisper</c> if <c>Channel</c> is <c>null</c>
+	/// </summary>
+	private void ValidateMessageType()
+	{
+		if (Channel == null)
+		{
+			MessageType = FChatMessageType.Whisper;
+		}
+		else if (!Channel.AdEnabled && MessageType == FChatMessageType.Advertisement)
+		{
+			throw new InvalidOperationException($"Attempting to post an ad in a channel that doesn't support it. ({Channel.Name})");
+		}
+	}
+#endregion
+
+
+////////////////////////////////////////////////
+
+
+#region Optional Methods
+	string Mention;
+	public FChatMessageBuilder WithMention(string value)
+	{
+		Mention = value;
+		return this;
+	}
+	public FChatMessageBuilder WithoutMention()
+	{
+		Mention = null;
+		return this;
+	}
+#endregion
+}

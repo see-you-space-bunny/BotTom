@@ -33,5 +33,5 @@ public class MessageEventArgs : EventArgs
 	/// <summary>
 	/// advanced message type
 	/// </summary>
-	public ChatMessageType messagetype;
+	public FChatMessageType messagetype;
 }

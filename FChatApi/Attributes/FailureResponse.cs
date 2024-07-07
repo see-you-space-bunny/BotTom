@@ -1,6 +1,7 @@
-using Engine.ModuleHost.Enums;
+using System;
+using FChatApi.Enums;
 
-namespace Engine.ModuleHost.Attributes;
+namespace FChatApi.Attributes;
 
 [AttributeUsage(AttributeTargets.All)]
 public class FailureResponseAttribute : Attribute
@@ -35,8 +36,8 @@ public FailureResponseAttribute(string failure)
 }
 
 public string Message   => _value;
-private const string MyPrefix = "FailureResponse";
-private const string Generic = "I can't do that right now!";
+public const string MyPrefix = "FailureResponse";
+public const string Generic = "I can't do that right now!";
 // This is a named argument
 /* public int NamedInt { get; set; } */
 }

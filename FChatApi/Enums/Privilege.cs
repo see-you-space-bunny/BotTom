@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace Engine.ModuleHost.Enums;
+namespace FChatApi.Enums;
 
 public enum Privilege
 {

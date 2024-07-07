@@ -4,9 +4,9 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Engine.ModuleHost.Enums;
+using FChatApi.Enums;
 
-namespace Engine.ModuleHost.Attributes;
+namespace FChatApi.Attributes;
 
 public static class AttributeEnumExtensions
 {
@@ -28,6 +28,11 @@ public static class AttributeEnumExtensions
 		// Put known enum types here to speed things up later
 		ProcessEnumForAttribute<DescriptionAttribute>(typeof(Privilege));
 		ProcessEnumForAttribute<DescriptionAttribute>(typeof(BotModule));
+
+		ProcessEnumForAttribute<InfoTabAttribute	>(typeof(ProfileInfoField));
+
+		ProcessEnumForAttribute<MaximumLengthAttribute>(typeof(FChatMessageType));
+		
 	}
 
 	/// <summary>
@@ -68,7 +73,7 @@ public static class AttributeEnumExtensions
 	}
 
 	/// <summary>
-	/// Retreives an instance of <c>TAttribute</c> from <c>_staticEnumAttributeLookup</c> that matches the specified <c>enumValue</c>.
+	/// Takes <c>TEnum</c> and retreives an instance of <c>TAttribute</c> from <c>_staticEnumAttributeLookup</c> that matches the specified <c>enumValue</c>.
 	/// </summary>
 	/// <typeparam name="TEnum">The EnumType being looked at.</typeparam>
 	/// <typeparam name="TAttribute">The AttributeType of which we want to retrieve an instance of.</typeparam>
@@ -77,7 +82,7 @@ public static class AttributeEnumExtensions
 	public static TAttribute GetEnumAttribute<TEnum,TAttribute>(this TEnum enumValue) where TEnum : Enum where TAttribute : Attribute
 	{
 		Tuple<Type, Type> key = Tuple.Create(typeof(TEnum), typeof(TAttribute));
-		if (!_staticEnumAttributeLookup.TryGetValue(key, out Dictionary<Enum, Attribute> ?attributeLookup))
+		if (!_staticEnumAttributeLookup.TryGetValue(key, out Dictionary<Enum, Attribute> attributeLookup))
 		{
 			ProcessEnumForAttribute(key);
 			attributeLookup = _staticEnumAttributeLookup[key];
@@ -85,6 +90,16 @@ public static class AttributeEnumExtensions
 
 		return (TAttribute)attributeLookup[enumValue];
 	}
+
+	/// <summary>
+	/// Takes <c>TEnum</c> and retreives an instance of <c>TAttribute</c> from <c>_staticEnumAttributeLookup</c> that matches the specified <c>enumValue</c>.
+	/// </summary>
+	/// <typeparam name="TEnum">The EnumType being looked at.</typeparam>
+	/// <typeparam name="TAttribute">The AttributeType of which we want to retrieve an instance of.</typeparam>
+	/// <param name="enumValue">The specific const EnumValue from which we want to retrieve the data.</param>
+	/// <returns>The instance of the specified <c>enumValue</c>'s <c>TAttribute</c> as passed in the TypeParameter.</returns>
+	public static bool HasEnumAttribute<TEnum,TAttribute>(this TEnum enumValue) where TEnum : Enum where TAttribute : Attribute =>
+		_staticEnumAttributeLookup.ContainsKey(Tuple.Create(typeof(TEnum), typeof(TAttribute)));
 
 	/// <summary>
 	/// Retreives an instance of <c>TAttribute</c> that matches the specified <c>enumValue</c>, using reflection.

@@ -1,21 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Timers;
+using System.Threading;
 using FChatApi.Objects;
 using FChatApi.Enums;
+using FChatApi.Interfaces;
+using System.Linq;
 
 namespace FChatApi.Core;
 
 public partial class ApiConnection
 {
-	private const string GenericBanner  = "//////////////////////////////";
-	private const string ErrorBanner    = "////////////// ERROR   ///////"; 
-	private const string WarningBanner  = "////////////// WARNING ///////"; 
-
+#region Queue & Lock
 	private readonly object SocketLocker = new();
-	static readonly Queue<ChatMessageBuilder> MessageQueue = new();
+	static readonly Dictionary<IMessageRecipient,Queue<FChatMessageBuilder>> MessageQueue = [];
+	static Timer ReplyThread;
+#endregion
 
+
+////////////////////////////////////////////////
+
+
+#region SendMessage
 	private static async Task SendMessage(string channel, string message)
 	{
 		string toSend = $"{Hycybh.MSG} {{ \"channel\": \"{channel}\", \"message\": \"{message}\" }}";
@@ -31,7 +37,13 @@ public partial class ApiConnection
 		Client.SendAsync(toSend);
 #endif
 	}
+#endregion
 
+
+////////////////////////////////////////////////
+
+
+#region SendAd
 	private static async Task SendAd(string channel, string message)
 	{
 		string toSend = $"{Hycybh.LRP} {{ \"channel\": \"{channel}\", \"message\": \"{message}\" }}";
@@ -47,7 +59,13 @@ public partial class ApiConnection
 		Client.SendAsync(toSend);
 #endif
 	}
+#endregion
 
+
+////////////////////////////////////////////////
+
+
+#region SetStatus
 	public static async Task SetStatus(string statusMessage, ChatStatus status, string sendingUser)
 	{
 		string toSend = $"{Hycybh.STA} {{ \"status\": \"{status}\", \"statusmsg\": \"{statusMessage}\", \"character\": \"{sendingUser}\" }}";
@@ -63,7 +81,12 @@ public partial class ApiConnection
 		Client.SendAsync(toSend);
 #endif
 	}
+#endregion
 
+////////////////////////////////////////////////
+
+
+#region SendWhisper
 	private static async Task SendWhisper(string targetUser, string message)
 	{
 		string toSend = $"{Hycybh.PRI} {{ \"recipient\": \"{targetUser}\", \"message\": \"{message}\" }}";
@@ -79,68 +102,107 @@ public partial class ApiConnection
 		Client.SendAsync(toSend);
 #endif
 	}
+#endregion
 
-	private void StartReplyThread()
+
+////////////////////////////////////////////////
+
+
+#region StartReplyThread
+	/// <summary>
+	/// assigns a new <c>ReplyThread</c> that calls <c>ReplyTicker</c><br/>disposes of the old thread if nessecary 
+	/// </summary>
+	/// <param name="interval">miliseconds between calls</param>
+	private void StartReplyThread(int interval)
 	{
-		Timer timer = new(){Interval = 1001};
-		timer.Elapsed += new ElapsedEventHandler(ReplyTicker);
-		timer.Start();
-		Console.WriteLine("Starting Reply-ticket");
+		ReplyThread?.Dispose();
+		ReplyThread = new Timer(ReplyTicker,new AutoResetEvent(true),0,interval);
+		Console.WriteLine($"Starting ReplyTicker with an interval of {interval}");
 	}
+    #endregion
 
-	private async void ReplyTicker(object source, ElapsedEventArgs e)
+
+    ////////////////////////////////////////////////
+
+
+    #region ReplyTicker
+    /// <summary>
+    /// dequeues and sends out messages 
+    /// </summary>
+    private async void ReplyTicker(object state)
 	{
-		ChatMessage message;
+		FChatMessage message;
 		try
 		{
 			lock (SocketLocker)
 			{
 				if (MessageQueue.Count == 0)
 					return;
+				
+				(var currentRecipient, var currentQueue) = MessageQueue
+					.FirstOrDefault(mq=>DateTime.Now > mq.Key.Next && mq.Value.Count > 0);
 
-				var messageBuilder = MessageQueue.Dequeue();
-				message = messageBuilder.Build();
+				if (currentQueue == default)
+					return;
+
+				message = currentQueue
+					.Dequeue()
+					.Build();
+
+				currentRecipient.MessageSent();
+
+				if (currentQueue.Count == 0)
+					MessageQueue.Remove(currentRecipient);
 			}
 		}
-		catch (IncompleteBuilderException ibe)
+		catch (InvalidOperationException e)
 		{
 			Console.WriteLine(ErrorBanner);
-			Console.WriteLine(ibe.Message);
-			Console.WriteLine(ibe.StackTrace);
+			Console.WriteLine(e.Message);
+			Console.WriteLine(e.StackTrace);
 			Console.WriteLine(GenericBanner);
 			return;
 		}
-		catch (NullReferenceException nre)
+		catch (NullReferenceException e)
 		{
 			Console.WriteLine(ErrorBanner);
-			Console.WriteLine(nre.Message);
-			Console.WriteLine(nre.StackTrace);
+			Console.WriteLine(e.Message);
+			Console.WriteLine(e.StackTrace);
 			Console.WriteLine(GenericBanner);
 			return;
 		}
-		catch
+		catch (Exception e)
 		{
+			Console.WriteLine(GenericBanner);
+			Console.WriteLine($"///// Unhandled {e.GetType()} exception when dequeueing message when queue was not empty!");
 			Console.WriteLine(ErrorBanner);
-			Console.WriteLine("Anonymous Error dequeueing message when queue not empty.");
+			Console.WriteLine(e.Message);
+			Console.WriteLine(e.StackTrace);
 			Console.WriteLine(GenericBanner);
 			return;
 		}
 
-		if (message.MessageType == ChatMessageType.Whisper)
+		Task t = null;
+		switch (message.MessageType)
 		{
-			await SendWhisper(message.Recipient, message.Message);
+			case FChatMessageType.Whisper:
+				t = SendWhisper(message.Recipient.Name, message.Message);
+				break;
+
+			case FChatMessageType.Basic:
+				t = SendMessage(message.Channel.Code, message.Message);
+				break;
+
+			case FChatMessageType.Advertisement:
+				t = SendAd(message.Channel.Code, message.Message);
+				break;
+
+			default:
+				Console.WriteLine("Bad reply: " + message.Channel + " / " + message.Recipient + " / " + message);
+				break;
 		}
-		else if (message.MessageType == ChatMessageType.Advertisement)
-		{
-			await SendAd(message.Channel, message.Message);
-		}
-		else if (message.MessageType == ChatMessageType.Basic)
-		{
-			await SendMessage(message.Channel, message.Message);
-		}
-		else
-		{
-			Console.WriteLine("Bad reply: " + message.Channel + " / " + message.Recipient + " / " + message);
-		}
+		if (t is not null)
+			await t;
 	}
+#endregion
 }

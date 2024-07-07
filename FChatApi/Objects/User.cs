@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 using FChatApi.Attributes;
 using FChatApi.Enums;
+using FChatApi.Interfaces;
 
 namespace FChatApi.Objects;
 
-public class User
+public class User : IMessageRecipient
 {
 #region Constants (-)
 	/// <summary>user mention format</summary>
@@ -19,12 +22,18 @@ public class User
 
 
 ////////////////////////////////////////////////
+///
+
+#region Fields (-)
+	/// <summary>character name</summary>
+	private string _name;
+#endregion
 
 
-#region Basic Info (P+)
-	/// <summary>the character's kinks and preferences thereof</summary>
-	public Dictionary<string, KinkPreference> Kinks { get; }
+////////////////////////////////////////////////
 
+
+#region Chat Info (P+)
 	/// <summary>the character's status in chat</summary>
 	public ChatStatus ChatStatus { get; set; }
 	
@@ -33,9 +42,9 @@ public class User
 
 	/// <summary>site memo on this character</summary>
 	public string Memo { get; set; }
-	
-	/// <summary>character name</summary>
-	public string Name { get; set; }
+
+    /// <summary>character name</summary>
+    public string Name { get=>_name; set{ _name = value; Key = value.ToLower(); } }
 	
 	/// <summary>that subscriber subtitle ?SPECULATION</summary>
 	public string Nickname { get; set; }
@@ -46,8 +55,11 @@ public class User
 
 
 #region Profile Info (P+)
+	/// <summary>the character's kinks and preferences thereof</summary>
+	public Dictionary<string, KinkPreference> Kinks { get; }
+
 	/// <summary>all of the character's profile info</summary>
-	public Dictionary<ProfileInfoField,string> ProfileInfo { get; set; }
+	public Dictionary<ProfileInfoField,string> ProfileInfo { get; }
 	
 	/// <summary>age / meme / commentary</summary>
 	public string Age { get=>GetProfileInfo(ProfileInfoField.Age); set=>SetProfileInfo(ProfileInfoField.Age,value); }
@@ -79,11 +91,48 @@ public class User
 
 
 #region Custom Info (P+)
+	
+	/// <summary>key for UserTracker</summary>
+	public string Key { get; private set; }
+	
+	/// <summary>a memo separate from the flist memo feature</summary>
+	public string BotMemo { get; set; }
+
+	/// <summary>the color of the user's nickname</summary>
+	public BBCodeColor NickColor { get; set; }
+
+	/// <summary>the user's pronouns</summary>
+	public string Pronouns { get; set; }
+
+	/// <summary>what privilege level does this user have</summary>
+	public Privilege PrivilegeLevel { get; set; }
+
+	/// <summary>when did this user first register</summary>
+	public DateTime WhenRegistered { get; set; }
+
+	/// <summary>is he user registered with the bot</summary>
+	public bool IsRegistered => WhenRegistered > DateTime.MinValue;
+
 	/// <summary>mentions the user in clickable form</summary>
 	public string Mention => string.Format(MentionFormat,Name);
 
 	/// <summary>inserts an icon of the user</summary>
 	public string Icon => string.Format(IconFormat,Name);
+#endregion
+
+
+////////////////////////////////////////////////
+
+
+#region Message Timers (+)
+	/// <summary>the amount of miliseconds to wait before the next message may be sent</summary>
+	public TimeSpan SleepInterval { get; }
+
+	/// <summary>the next earliest point at which a message may be sent</summary>
+	public DateTime Next { get; set; }
+
+	/// <summary>sets the earliest time the next message can be sent</summary>
+    void IMessageRecipient.MessageSent() => Next = DateTime.Now + SleepInterval;
 #endregion
 
 
@@ -121,15 +170,26 @@ public class User
 	/// </summary>
 	public User()
 	{
+		// Chat Info
 		Name        = string.Empty;
-		Nickname    = string.Empty;
-		Memo        = string.Empty;
-		Gender      = string.Empty;
-
 		UserStatus  = UserStatus.None;
 		ChatStatus  = ChatStatus.Invalid;
 
-		Kinks ??= [];
+		// Profile Info
+		Nickname    = string.Empty;
+		Memo        = string.Empty;
+		ProfileInfo	??= [];
+		Kinks		??= [];
+
+		// IMessageRecipient
+		SleepInterval	= new TimeSpan(0,0,0,0,milliseconds: 1);
+
+		// Custom Info
+		BotMemo			= string.Empty;
+		NickColor		= BBCodeColor.white;
+		Pronouns		= string.Empty;
+		PrivilegeLevel	= Privilege.UnregisteredUser;
+		WhenRegistered	= DateTime.MinValue;
 	}
 #endregion
 
@@ -190,6 +250,90 @@ public class User
 	{
 		if (!ProfileInfo.TryAdd(info,value))
 			ProfileInfo[info] = value;
+	}
+#endregion
+
+
+////////////////////////////////////////////////
+
+
+#region Update (+)
+	public async Task Update(User value)
+	{
+		// Chat Info
+		UserStatus  = value.UserStatus;
+		ChatStatus  = value.ChatStatus;
+
+		// Profile Info
+		Nickname    = value.Nickname;
+		Memo        = value.Memo;
+
+		Task[] tasks =
+        [
+            Task.Run(()=>
+                {
+                    Kinks.Clear();
+                    foreach ((string kink,KinkPreference preference) in value.Kinks)
+                    {
+                        Kinks.TryAdd(kink,preference);
+                    }
+                }
+            ),
+            Task.Run(()=>
+                {
+                    ProfileInfo.Clear();
+                    foreach ((ProfileInfoField field,string info) in value.ProfileInfo)
+                    {
+                        ProfileInfo.TryAdd(field,info);
+                    }
+                }
+            ),
+        ];
+        await Task.WhenAll(tasks.Where(t => t != null).ToArray());
+	}
+
+#endregion
+
+////////////////////////////////////////////////
+
+
+#region Serialization (+)
+	/// <summary>
+	/// deserializes the object to binary
+	/// </summary>
+	/// <param name="reader"></param>
+	/// <returns>a deserialized user object with the Custom Info and Name fields filled</returns>
+	public static User Deserialize(BinaryReader reader)
+	{
+		return new User()
+		{
+			Name			=   (string)		reader.ReadString(),
+			BotMemo			=   (string)		reader.ReadString(),
+			NickColor		=   (BBCodeColor)	reader.ReadUInt16(),
+			PrivilegeLevel	=   (Privilege)		reader.ReadUInt16(),
+			WhenRegistered	=   new DateTime(
+				year: reader.ReadInt32(),
+				month: reader.ReadInt32(), 
+				day: reader.ReadInt32()
+			),
+			Pronouns		=   (string)		reader.ReadString(),
+		};
+	}
+
+	/// <summary>
+	/// serializes the object to binary
+	/// </summary>
+	/// <param name="writer"></param>
+	public void Serialize(BinaryWriter writer)
+	{
+		writer.Write((string)	Name);
+		writer.Write((string)	BotMemo);
+		writer.Write((ushort)	NickColor);
+		writer.Write((ushort)	PrivilegeLevel);
+		writer.Write((int)		WhenRegistered.Year);
+		writer.Write((int)		WhenRegistered.Month);
+		writer.Write((int)		WhenRegistered.Day);
+		writer.Write((string)	Pronouns);
 	}
 #endregion
 }

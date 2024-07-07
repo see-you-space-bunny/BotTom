@@ -34,7 +34,7 @@ namespace FChatApi.Core
 		{
 			Console.WriteLine("Connected to F-Chat servers! Sending identification...");
 			await IdentifySelf(UserName, TicketInformation.Ticket, CharacterName, ClientId, ClientVersion);
-			StartReplyThread();
+			StartReplyThread(20);
 		}
 		#endregion
 
@@ -256,23 +256,33 @@ namespace FChatApi.Core
 					break;
 				case Hycybh.LIS:
 					{
+						Task[] tasks = new Task[json["characters"].Count()];
+						int i = 0;
 						foreach(var userinfo in json["characters"])
 						{
-							User tempUser = new User()
+							User tempUser = new()
 							{
-								Name = userinfo[0].ToString(),
-								Gender = userinfo[1].ToString(),
-								ChatStatus = (ChatStatus)Enum.Parse(typeof(ChatStatus), userinfo[2].ToString().ToLowerInvariant(), true)
+								Name		= userinfo[0].ToString(),
+								Gender		= userinfo[1].ToString(),
+								ChatStatus	= (ChatStatus)Enum.Parse(typeof(ChatStatus), userinfo[2].ToString().ToLowerInvariant(), true)
 							};
-							UserTracker.SetChatStatus(tempUser, tempUser.ChatStatus, false);
+							if (!UserTracker.TryAddUser(tempUser))
+							{
+								var user = UserTracker.GetUserByName(tempUser.Name);
+								;
+								tasks[i] = Task.Run(()=>user.Update(tempUser));
+							}
+							//UserTracker.SetChatStatus(tempUser, tempUser.ChatStatus, false);
 						}
-
+						await Task.WhenAll(tasks.Where(t => t != null).ToArray());
+#if DEBUG
 						Console.WriteLine($"Added {json["characters"].Count()} users. Total users: {UserTracker.GetNumberActiveUsers()}");
+#endif
 					}
 					break;
 				case Hycybh.NLN:
 					{
-						User tempUser = new User()
+						User tempUser = new()
 						{
 							Name = json["identity"].ToString(),
 							UserStatus = (UserStatus)Enum.Parse(typeof(UserStatus), json["status"].ToString().ToLowerInvariant(), true),
@@ -302,13 +312,14 @@ namespace FChatApi.Core
 
 							tempChannel.AddMod(tempUser);
 						}
-
+#if DEBUG
 						Console.WriteLine($"Found {tempChannel.Mods.Count} mods for channel: {tempChannel.Name}");
+#endif
 					}
 					break;
 				case Hycybh.FLN:
 					{
-						User tempUser = new User()
+						User tempUser = new()
 						{
 							Name = json["character"].ToString()
 						};
@@ -345,8 +356,9 @@ namespace FChatApi.Core
 							tempChannel.AddUser(tempUser);
 							tempChannel.AdEnabled = !json["mode"].ToString().Equals("chat");
 						}
-
+#if DEBUG
 						Console.WriteLine($"Adding {json["users"].Count()} users to {tempChannel.Name} channel's userlist successful.");
+#endif
 					}
 					break;
 				case Hycybh.CDS:

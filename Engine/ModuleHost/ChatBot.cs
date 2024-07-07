@@ -9,10 +9,10 @@ using FChatApi.Core;
 using FChatApi.Objects;
 using Engine.Serialization;
 using Engine.ModuleHost.CardiApi;
-using Engine.ModuleHost.Attributes;
 using Engine.ModuleHost.Enums;
 using Engine.ModuleHost.Plugins;
 using Engine.ModuleHost.CommandHandling;
+using FChatApi.Enums;
 
 namespace Engine.ModuleHost
 {

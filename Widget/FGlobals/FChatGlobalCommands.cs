@@ -12,13 +12,14 @@ using System.Reactive.Concurrency;
 using Discord;
 using FChatApi.Core;
 using FChatApi.Objects;
+using FChatApi.Attributes;
 using Engine.ModuleHost;
 using Engine.ModuleHost.CardiApi;
 using Engine.ModuleHost.Enums;
-using Engine.ModuleHost.Attributes;
 using Engine.ModuleHost.Plugins;
 using Engine.ModuleHost.CommandHandling;
 using Widget.FGlobals.Enums;
+using FChatApi.Enums;
 
 namespace Widget.FGlobals;
 
@@ -27,7 +28,7 @@ public partial class FChatGlobalCommands : FChatPlugin
 
 
 #if DEBUG
-	internal ChatMessageBuilder MostRecentMessage = null!; 
+	internal FChatMessageBuilder MostRecentMessage = null!; 
 #endif
 
 	public FChatGlobalCommands(TimeSpan? updateInterval = null) : this(null!,updateInterval)
@@ -51,7 +52,7 @@ public partial class FChatGlobalCommands : FChatPlugin
 
 	public override void HandleRecievedMessage(BotCommand command)
 	{
-		ChatMessageBuilder messageBuilder = new ChatMessageBuilder()
+		FChatMessageBuilder messageBuilder = new FChatMessageBuilder()
 			.WithAuthor(ApiConnection.CharacterName)
 			.WithRecipient(command.UserName)
 			.WithChannel(command.Channel);
@@ -64,6 +65,7 @@ public partial class FChatGlobalCommands : FChatPlugin
 			var tempUser = command.UserName.ToRegisteredUser();
 			switch (botCommand)
 			{
+#region Register
 				case GlobalCommand.Register:
 					if (!(command.User! ?? new RegisteredUser()).IsLinked)
 					{
@@ -82,36 +84,62 @@ public partial class FChatGlobalCommands : FChatPlugin
 						tempUser.WhenRegistered = DateTime.Now;
 						if (ChatBot.RegisteredUsers.TryAdd(command.UserName.ToLower(),tempUser))
 						{
-							messageBuilder.WithMessage(AttributeEnumExtensions.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>(botCommand).Message);
+							messageBuilder
+								.WithMessage(
+									!string.IsNullOrWhiteSpace(botCommand.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>().Message)
+									?	botCommand.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>().Message
+									:	FailureResponseAttribute.Generic);
 						}
 						else
 						{
-							messageBuilder.WithMessage(AttributeEnumExtensions.GetEnumAttribute<GlobalCommand,FailureResponseAttribute>(botCommand).Message);
+							messageBuilder
+								.WithMessage(
+									!string.IsNullOrWhiteSpace(GlobalCommand.Whoami.GetEnumAttribute<GlobalCommand,FailureResponseAttribute>().Message)
+									?	GlobalCommand.Whoami.GetEnumAttribute<GlobalCommand,FailureResponseAttribute>().Message
+									:	FailureResponseAttribute.Generic);
 						}
 					}
 					else
 					{
-						messageBuilder.WithMessage(AttributeEnumExtensions.GetEnumAttribute<GlobalCommand,AccessDeniedResponseAttribute>(botCommand).Message);
+						messageBuilder
+							.WithMessage(
+								!string.IsNullOrWhiteSpace(botCommand.GetEnumAttribute<GlobalCommand,AccessDeniedResponseAttribute>().Message)
+								?	botCommand.GetEnumAttribute<GlobalCommand,AccessDeniedResponseAttribute>().Message
+								:	AccessDeniedResponseAttribute.Generic);
 					}
 					break;
+#endregion
 
+#region UnRegister
 				case GlobalCommand.UnRegister:
 					if (command.PrivilegeLevel >= commandPrivilege && (command.User! ?? new RegisteredUser()).IsLinked)
 					{
 						ChatBot.RegisteredUsers.Remove(command.UserName.ToLower());
-						messageBuilder.WithMessage(AttributeEnumExtensions.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>(botCommand).Message);
+						messageBuilder
+							.WithMessage(
+								!string.IsNullOrWhiteSpace(botCommand.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>().Message)
+								?	botCommand.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>().Message
+								:	FailureResponseAttribute.Generic);
 					}
 					else
 					{
-						messageBuilder.WithMessage(AttributeEnumExtensions.GetEnumAttribute<GlobalCommand,AccessDeniedResponseAttribute>(botCommand).Message);
+						messageBuilder
+							.WithMessage(
+								!string.IsNullOrWhiteSpace(botCommand.GetEnumAttribute<GlobalCommand,AccessDeniedResponseAttribute>().Message)
+								?	botCommand.GetEnumAttribute<GlobalCommand,AccessDeniedResponseAttribute>().Message
+								:	AccessDeniedResponseAttribute.Generic);
 					}
 					break;
+#endregion
 
+#region Whoami
 				case GlobalCommand.Whoami:
 					if (command.PrivilegeLevel >= commandPrivilege && (command.User! ?? new RegisteredUser()).IsLinked)
 					{
 						var sb = new StringBuilder();
-						sb.Append(AttributeEnumExtensions.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>(botCommand).Message);
+						sb.Append(!string.IsNullOrWhiteSpace(botCommand.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>().Message)
+								?	botCommand.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>().Message
+								:	FailureResponseAttribute.Generic);
 						sb.Append($"You are {command.User!.Mention.NameAndNickname.Basic}. ");
 						sb.Append($"You are a {command.PrivilegeLevel}. ");
 						sb.Append($"You are registered since {command.User.WhenRegistered.ToShortDateString()}.");
@@ -119,21 +147,36 @@ public partial class FChatGlobalCommands : FChatPlugin
 					}
 					else
 					{
-						messageBuilder.WithMessage(AttributeEnumExtensions.GetEnumAttribute<GlobalCommand,FailureResponseAttribute>(botCommand).Message);
+						messageBuilder
+							.WithMessage(
+								!string.IsNullOrWhiteSpace(GlobalCommand.Whoami.GetEnumAttribute<GlobalCommand,FailureResponseAttribute>().Message)
+								?	GlobalCommand.Whoami.GetEnumAttribute<GlobalCommand,FailureResponseAttribute>().Message
+								:	FailureResponseAttribute.Generic);
 					}
 					break;
+#endregion
 
+#region Shutdown
 				case GlobalCommand.Shutdown:
 					if (command.PrivilegeLevel >= commandPrivilege && (command.User! ?? new RegisteredUser()).IsLinked)
 					{
 						ChatBot.SetShutdownFlag();
-						messageBuilder.WithMessage(AttributeEnumExtensions.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>(botCommand).Message);
+						messageBuilder
+							.WithMessage(
+								!string.IsNullOrWhiteSpace(botCommand.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>().Message)
+								?	botCommand.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>().Message
+								:	FailureResponseAttribute.Generic);
 					}
 					else
 					{
-						messageBuilder.WithMessage(AttributeEnumExtensions.GetEnumAttribute<GlobalCommand,AccessDeniedResponseAttribute>(botCommand).Message);
+						messageBuilder
+							.WithMessage(
+								!string.IsNullOrWhiteSpace(botCommand.GetEnumAttribute<GlobalCommand,AccessDeniedResponseAttribute>().Message)
+								?	botCommand.GetEnumAttribute<GlobalCommand,AccessDeniedResponseAttribute>().Message
+								:	AccessDeniedResponseAttribute.Generic);
 					}
 					break;
+#endregion
 
 				default:
 					break;

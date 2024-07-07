@@ -9,7 +9,7 @@ namespace FChatApi.Objects;
 /// <param name="msg">full, scrubbed message</param>
 /// <param name="user">who sent the message</param>
 /// <param name="type">the type of message this is</param>
-public class MessageContents(string ch, string msg, string user, ChatMessageType type)
+public class MessageContents(string ch, string msg, string user, FChatMessageType type)
 {
 	public string channel = ch;
 
@@ -17,5 +17,5 @@ public class MessageContents(string ch, string msg, string user, ChatMessageType
 
 	public string sendinguser = user;
 
-	public ChatMessageType messageType = type;
+	public FChatMessageType messageType = type;
 }

@@ -1,7 +1,6 @@
 using System.ComponentModel;
-using Engine.ModuleHost;
-using Engine.ModuleHost.Attributes;
-using Engine.ModuleHost.Enums;
+using FChatApi.Attributes;
+using FChatApi.Enums;
 
 namespace Widget.FGlobals.Enums;
 

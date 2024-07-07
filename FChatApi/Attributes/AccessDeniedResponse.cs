@@ -1,6 +1,7 @@
-using Engine.ModuleHost.Enums;
+using System;
+using FChatApi.Enums;
 
-namespace Engine.ModuleHost.Attributes;
+namespace FChatApi.Attributes;
 
 [AttributeUsage(AttributeTargets.All)]
 public class AccessDeniedResponseAttribute : Attribute
@@ -36,7 +37,7 @@ public AccessDeniedResponseAttribute(string accessDenied)
 
 public string Message    => _value;
 
-private const string MyPrefix = "AccessDeniedResponse";
+public const string MyPrefix = "AccessDeniedResponse";
 public const string BanTimeout = "If you are reading this message, you have been denied access to the bot! Do not attempt to cirvumvent this.";
 public const string Generic = "You do not have permission to do that.";
 

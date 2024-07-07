@@ -1,18 +1,18 @@
 using System.ComponentModel;
 
-namespace Engine.ModuleHost.Enums;
+namespace FChatApi.Enums;
 
 public enum BotModule
 {
 	[Description("")]
-	None = 0x00,
+	None	= 0x00,
+	
+	[Description("")]
+	System	= 0x01,
 
 	[Description("")]
-	Clock,
+	Clock	= 0x02,
 	
 	[Description("")]
-	XCG,
-	
-	[Description("")]
-	System,
+	XCG		= 0x03,
 }

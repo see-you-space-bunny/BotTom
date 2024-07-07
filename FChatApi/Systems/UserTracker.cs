@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using FChatApi.Objects;
 using FChatApi.Enums;
+using FChatApi.Core;
 
 namespace FChatApi.Systems
 {
@@ -15,9 +16,9 @@ namespace FChatApi.Systems
 			KnownUsers = [];
 		}
 
-		public bool AddUser(User user)
+		public bool TryAddUser(User user)
 		{
-			if (KnownUsers.TryAdd(user.Name, user))
+			if (KnownUsers.TryAdd(user.Key, user))
 			{
 				return true;
 			}
@@ -35,19 +36,21 @@ namespace FChatApi.Systems
 			return KnownUsers.Where(user => user.Value.UserStatus == status);
 		}
 
-		public User GetUserByName(string name)
+		public User GetUserByName(string name) => GetUserByKey(name.ToLower());
+		
+		public User GetUserByKey(string key)
 		{
-			if (KnownUsers.TryGetValue(name.ToLower(), out User value))
+			if (KnownUsers.TryGetValue(key, out User value))
 			{
 				return value;
 			}
 
 			User foundUser = new()
 			{
-				Name = name,
+				Name = key,
 				ChatStatus = ChatStatus.Offline
 			};
-			AddUser(foundUser);
+			TryAddUser(foundUser);
 
 			return foundUser;
 		}
@@ -55,10 +58,10 @@ namespace FChatApi.Systems
 		public void SetChatStatus(User user, ChatStatus status, bool logging = true)
 		{
 			user.ChatStatus = status;
-			if (GetUserByName(user.Name) == null)
-				AddUser(user);
+			if (GetUserByName(user.Key) == null)
+				TryAddUser(user);
 
-			User thisUser = KnownUsers[user.Name];
+			User thisUser = KnownUsers[user.Key];
 			if (null == thisUser)
 				throw new System.Exception($"Error attempting to resolve user: {user.Name}.");
 
@@ -69,10 +72,10 @@ namespace FChatApi.Systems
 		public void SetUserStatus(User user, UserStatus status, bool logging = true)
 		{
 			user.UserStatus = status;
-			if (GetUserByName(user.Name) == null)
-				AddUser(user);
+			if (GetUserByName(user.Key) == null)
+				TryAddUser(user);
 
-			User thisUser = KnownUsers[user.Name];
+			User thisUser = KnownUsers[user.Key];
 			if (null == thisUser)
 				throw new System.Exception($"Error attempting to resolve user: {user.Name}.");
 

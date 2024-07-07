@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using FChatApi.Core;
 using FChatApi.Enums;
+using FChatApi.Interfaces;
 
 namespace FChatApi.Objects;
 
-public class Channel
+public class Channel : IMessageRecipient
 {
 #region Properties (+)
 	/// <summary>does the channel permit ads to be sent</summary>
@@ -44,6 +45,35 @@ public class Channel
 ////////////////////////////////////////////////
 
 
+#region Message Timers (+)
+	/// <summary>the amount of miliseconds to wait before the next message may be sent</summary>
+	public TimeSpan SleepInterval { get; }
+
+	/// <summary>the next earliest point at which a message may be sent</summary>
+	public DateTime Next { get; set; }
+
+	/// <summary>sets the earliest time the next message can be sent</summary>
+    void IMessageRecipient.MessageSent() => Next = DateTime.Now + SleepInterval;
+#endregion
+
+
+////////////////////////////////////////////////
+
+
+#region Constructor (-)
+	/// <summary>assigns default/empty values to <c>Status</c>,<c>Mods</c>,<c>Users</c>,<c>CreatedByApi</c> and <c>Description</c></summary>
+	private Channel()
+	{
+		Status			= ChannelStatus.Available;
+		Mods			= [];
+		Users			= [];
+		CreatedByApi	= false;
+		Description		= string.Empty;
+		SleepInterval	= new TimeSpan(0,0,0,0,milliseconds: 1001);
+	}
+#endregion
+
+
 #region Constructor (+)
 	/// <summary>
 	/// this constructor does not assign <c>Description</c>,<c>Mods</c> or <c>Users</c>
@@ -54,10 +84,10 @@ public class Channel
 	/// <param name="adenabled">does the channel permit ads to be sent</param>
 	public Channel(string name, string code, ChannelType type, bool adEnabled = false) : this()
 	{
-		Name			= name;
-		Code			= code;
-		Type			= type;
-		AdEnabled		= adEnabled;
+		Name		= name;
+		Code		= code;
+		Type		= type;
+		AdEnabled	= adEnabled;
 	}
 #endregion
 
@@ -162,22 +192,6 @@ public class Channel
 	{
 		Mods.Remove(value.Name);
 		return this;
-	}
-#endregion
-
-
-////////////////////////////////////////////////
-
-
-#region Constructor (-)
-	/// <summary>assigns default/empty values to <c>Status</c>,<c>Mods</c>,<c>Users</c>,<c>CreatedByApi</c> and <c>Description</c></summary>
-	private Channel()
-	{
-		Status			= ChannelStatus.Available;
-		Mods			= [];
-		Users			= [];
-		CreatedByApi	= false;
-		Description		= string.Empty;
 	}
 #endregion
 }

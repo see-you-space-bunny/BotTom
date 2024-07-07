@@ -11,11 +11,16 @@ using System.Threading.Tasks;
 using System.Net.Http.Json;
 using FChatApi.Systems;
 using FChatApi.Objects;
+using FChatApi.Enums;
 
 namespace FChatApi.Core;
 
 public partial class ApiConnection
 {
+	internal const string GenericBanner  = "//////////////////////////////";
+	internal const string ErrorBanner    = "////////////// ERROR   ///////"; 
+	internal const string WarningBanner  = "////////////// WARNING ///////"; 
+
 	public static WatsonWsClient Client { get; set; } = null;
 	public static TicketInformation TicketInformation { get; set; } = null;
 	public static string UserName { get; set; } = string.Empty;
@@ -98,6 +103,7 @@ public partial class ApiConnection
 		{
 			UserName = username;
 			CharacterName = charactername;
+			UserTracker.TryAddUser(new User(){ Name = CharacterName, ChatStatus = ChatStatus.Online});
 			Client = new WatsonWsClient(new Uri("wss://chat.f-list.net/chat2"));
 			Client.ServerConnected += Client_ChatConnected;
 			Client.ServerDisconnected += Client_ChatDisConnected;

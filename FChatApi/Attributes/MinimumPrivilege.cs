@@ -1,6 +1,7 @@
-using Engine.ModuleHost.Enums;
+using System;
+using FChatApi.Enums;
 
-namespace Engine.ModuleHost.Attributes;
+namespace FChatApi.Attributes;
 
 [AttributeUsage(AttributeTargets.All)]
 public class MinimumPrivilegeAttribute : Attribute

@@ -1,6 +1,7 @@
 using FChatApi.Objects;
 using Engine.ModuleHost.CardiApi;
-using Engine.ModuleHost.Enums;
+using FChatApi.Enums;
+using Privilege = FChatApi.Enums.Privilege;
 
 namespace Engine.ModuleHost.CommandHandling;
 

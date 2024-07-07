@@ -4,20 +4,26 @@ using System.Linq;
 using System.Threading.Tasks;
 using FChatApi.Objects;
 using FChatApi.Enums;
+using FChatApi.Interfaces;
 
 namespace FChatApi.Core;
 
 public partial class ApiConnection
 {
+	private static void ConnectionCheck()
+	{
+		if (!IsConnected())
+			throw new Exception("You must be connected to chat to do this.");
+	}
+
 	/// <summary>
 	/// 
 	/// </summary>
 	/// <param name="channelname"></param>
 	public static async Task JoinChannel(string channelname)
 	{
-		if (!IsConnected()) throw new Exception("You must be connected to chat to do this.");
-
-		string toSend = Hycybh.JCH.ToString() + string.Format(" {{\"channel\": \"{0}\"}}", channelname);
+		ConnectionCheck();
+		string toSend = $"{Hycybh.JCH} {{\"channel\": \"{channelname}\"}}";
 		Console.WriteLine($"Attempting to join: {channelname}");
 		await Client.SendAsync(toSend);
 	}
@@ -28,8 +34,7 @@ public partial class ApiConnection
 	/// <param name="channelType"></param>
 	private async Task RequestInternalChannelList(ChannelType channelType)
 	{
-		if (!IsConnected()) throw new Exception("You must be connected to chat to do this.");
-
+		ConnectionCheck();
 		string toSend = channelType == ChannelType.Private ? Hycybh.ORS.ToString() : Hycybh.CHA.ToString();
 		Console.WriteLine($"Attempting to retrieve all {channelType} channels from server.");
 		await Client.SendAsync(toSend);
@@ -92,10 +97,8 @@ public partial class ApiConnection
 	/// <param name="channelname"></param>
 	public static async void LeaveChannel(string channelname)
 	{
-		if (!IsConnected())
-			throw new Exception("You must be connected to chat to do this.");
-
-		string toSend = Hycybh.LCH.ToString() + string.Format(" {{\"channel\": \"{0}\"}}", channelname);
+		ConnectionCheck();
+		string toSend = $"{Hycybh.LCH} {{\"channel\": \"{channelname}\"}}";
 		Console.WriteLine($"Attempting to leave channel: {channelname}");
 		await Client.SendAsync(toSend);
 	}
@@ -106,10 +109,8 @@ public partial class ApiConnection
 	/// <param name="channelName"></param>
 	public static async void CreateChannel(string channelName)
 	{
-		if (!IsConnected())
-			throw new Exception("You must be connected to chat to do this.");
-
-		string toSend = Hycybh.CCR.ToString() + string.Format(" {{\"channel\": \"{0}\"}}", channelName);
+		ConnectionCheck();
+		string toSend = $"{Hycybh.CCR} {{\"channel\": \"{channelName}\"}}";
 		Console.WriteLine($"Attempting to create channel: {channelName}");
 		ChannelTracker.StartChannelCreation(channelName);
 		await Client.SendAsync(toSend);
@@ -122,10 +123,8 @@ public partial class ApiConnection
 	/// <param name="channelname"></param>
 	public static async void Mod_InviteUserToChannel(string username, string channelname)
 	{
-		if (!IsConnected())
-			throw new Exception("You must be connected to chat to do this.");
-
-		string toSend = Hycybh.CIU.ToString() + string.Format(" {{\"channel\": \"{0}\", \"character\": \"{1}\"}}", channelname, username);
+		ConnectionCheck();
+		string toSend = $"{Hycybh.CIU} {{\"channel\": \"{channelname}\", \"character\": \"{username}\"}}";
 		Console.WriteLine(toSend);
 		await Client.SendAsync(toSend);
 	}
@@ -137,10 +136,8 @@ public partial class ApiConnection
 	/// <param name="description"></param>
 	public static async void Mod_SetChannelDescription(string channel, string description)
 	{
-		if (!IsConnected())
-			throw new Exception("You must be connected to chat to do this.");
-
-		string toSend = Hycybh.CDS.ToString() + string.Format(" {{\"channel\": \"{0}\", \"description\": \"{1}\"}}", channel, description);
+		ConnectionCheck();
+		string toSend = $"{Hycybh.CDS} {{\"channel\": \"{channel}\", \"description\": \"{description}\"}}";
 		Console.WriteLine(toSend);
 		await Client.SendAsync(toSend);
 	}
@@ -153,33 +150,31 @@ public partial class ApiConnection
 	/// <param name="duration"></param>
 	public static async void Mod_SetChannelUserStatus(string channel, string user, UserRoomStatus status, int duration = -1)
 	{
-		if (!IsConnected())
-			throw new Exception("You must be connected to chat to do this.");
-
-		string toSend = string.Empty;
-		switch (status)
+		ConnectionCheck();
+        string toSend;
+        switch (status)
 		{
 			case UserRoomStatus.Banned:
 				{
-					toSend = Hycybh.CDS.ToString() + string.Format(" {{\"character\": \"{0}\", \"channel\": \"{1}\"}}", user, channel);
+					toSend = $"{Hycybh.CDS} {{\"character\": \"{user}\", \"channel\": \"{channel}\"}}";
 					Console.WriteLine($"Attempting to ban {user} from {channel}.");
 				}
 				break;
 			case UserRoomStatus.Moderator:
 				{
-					toSend = Hycybh.COA.ToString() + string.Format(" {{\"character\": \"{0}\", \"channel\": \"{1}\"}}", user, channel);
+					toSend = $"{Hycybh.COA} {{\"character\": \"{user}\", \"channel\": \"{channel}\"}}";
 					Console.WriteLine($"Attempting to promote {user} to Channel Op in {channel}.");
 				}
 				break;
 			case UserRoomStatus.User:
 				{
-					toSend = Hycybh.COR.ToString() + string.Format(" {{\"character\": \"{0}\", \"channel\": \"{1}\"}}", user, channel);
+					toSend = $"{Hycybh.COR} {{\"character\": \"{user}\", \"channel\": \"{channel}\"}}";
 					Console.WriteLine($"Attempting to demote {user} from Channel Op to basic User in {channel}.");
 				}
 				break;
 			case UserRoomStatus.Kicked:
 				{
-					toSend = Hycybh.CKU.ToString() + string.Format(" {{\"character\": \"{0}\", \"channel\": \"{1}\"}}", user, channel);
+					toSend = $"{Hycybh.CKU} {{\"character\": \"{user}\", \"channel\": \"{channel}\"}}";
 					Console.WriteLine($"Attempting to kick {user} out of {channel}.");
 				}
 				break;
@@ -187,14 +182,13 @@ public partial class ApiConnection
 				{
 					if (duration < 1) duration = 1;
 					if (duration > 90) duration = 90;
-					toSend = Hycybh.CTU.ToString() + string.Format(" {{\"character\": \"{0}\", \"channel\": \"{1}\", \"length\": \"{2}\"}}", user, channel, duration);
+					toSend = $"{Hycybh.CTU} {{\"character\": \"{user}\", \"channel\": \"{channel}\", \"length\": \"{duration}\"}}";
 					Console.WriteLine($"Attempting to timeout {user} from {channel} for {duration} seconds.");
 				}
 				break;
+			default:
+				return;
 		}
-
-		if (string.IsNullOrWhiteSpace(toSend))
-			return;
 
 		await Client.SendAsync(toSend);
 	}
@@ -211,8 +205,10 @@ public partial class ApiConnection
 		{
 			await SetStatus((ChatStatus)Enum.Parse(typeof(ChatStatus), statusType), statusMessage, user);
 		}
-
-		throw new Exception($"Invalid ChatStatus: {statusType}");
+		else
+		{
+			throw new Exception($"Invalid ChatStatus: {statusType}");
+		}
 	}
 
 	/// <summary>
@@ -223,15 +219,8 @@ public partial class ApiConnection
 	/// <param name="user"></param>
 	public static async Task SetStatus(ChatStatus statusType, string statusMessage, string user)
 	{
-		int LENGTH_MAX = 255;
-
-		statusMessage ??= string.Empty;
-		if (statusMessage.Length > LENGTH_MAX /* STATUS MAX LENGTH */)
-			throw new Exception($"Max message length of: {LENGTH_MAX} characters.");
-
-		if (!IsConnected()) throw new Exception("You must be connected to chat to do this.");
-
-		string toSend = Hycybh.STA.ToString() + string.Format(" {{\"status\": \"{0}\", \"statusmsg\": \"{1}\", \"character\": \"{2}\"}}", statusType.ToString().ToLowerInvariant(), statusMessage, user);
+		ConnectionCheck();
+		string toSend = $"{Hycybh.STA} {{\"status\": \"{statusType.ToString().ToLowerInvariant()}\", \"statusmsg\": \"{statusMessage ?? string.Empty}\", \"character\": \"{user}\"}}";
 		Console.WriteLine(toSend);
 		await Client.SendAsync(toSend);
 	}
@@ -239,15 +228,20 @@ public partial class ApiConnection
 	/// <summary>
 	/// 
 	/// </summary>
-	/// <param name="channel"></param>
-	/// <param name="message"></param>
-	/// <param name="recipient"></param>
-	/// <param name="messageType"></param>
-	public void EnqueueMessage(ChatMessageBuilder messageBuilder)
+	/// <param name="messageBuilder"></param>
+	public void EnqueueMessage(FChatMessageBuilder messageBuilder)
 	{
 		lock (SocketLocker)
 		{
-			MessageQueue.Enqueue(messageBuilder);
+			if (messageBuilder.HasRecipient)
+			{
+				MessageQueue.TryAdd(messageBuilder.MessageRecipient,new Queue<FChatMessageBuilder>());
+				MessageQueue[messageBuilder.MessageRecipient].Enqueue(messageBuilder);
+			}
+			else
+			{
+				throw new InvalidOperationException("The message you are trying to send has no valid MessageRecipient.");
+			}
 		}
 	}
 
@@ -258,13 +252,13 @@ public partial class ApiConnection
 	/// <param name="message"></param>
 	/// <param name="recipient"></param>
 	/// <param name="messageType"></param>
-	public void EnqueueMessage(string channel, string message, string recipient, ChatMessageType messageType = ChatMessageType.Basic)
+	public void EnqueueMessage(string channel, string message, string recipient, FChatMessageType messageType = FChatMessageType.Basic)
 	{
-		EnqueueMessage(new ChatMessageBuilder()
-			.WithRecipient(recipient)
-			.WithChannel(ChannelTracker.GetChannelByNameOrCode(channel))
-			.WithMessage(message)
-			.WithMessageType(messageType)
+		EnqueueMessage(new FChatMessageBuilder()
+				.WithRecipient(recipient)
+				.WithChannel(ChannelTracker.GetChannelByNameOrCode(channel))
+				.WithMessage(message)
+				.WithMessageType(messageType)
 		);
 	}
 }

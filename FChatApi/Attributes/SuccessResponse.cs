@@ -1,6 +1,7 @@
-using Engine.ModuleHost.Enums;
+using System;
+using FChatApi.Enums;
 
-namespace Engine.ModuleHost.Attributes;
+namespace FChatApi.Attributes;
 
 [AttributeUsage(AttributeTargets.All)]
 public class SuccessResponseAttribute : Attribute
@@ -36,7 +37,8 @@ public SuccessResponseAttribute(string success)
 }
 
 public string Message   => _value;
-private const string MyPrefix = "SuccessResponse";
+public const string MyPrefix = "SuccessResponse";
+public const string Generic = "Working. . .";
 
 // This is a named argument
 /* public int NamedInt { get; set; } */

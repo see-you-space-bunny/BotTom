@@ -7,6 +7,7 @@ using FChatApi.Core;
 using FChatApi.Objects;
 using Engine.ModuleHost.CardiApi;
 using Engine.ModuleHost.Enums;
+using FChatApi.Enums;
 
 namespace Engine.ModuleHost.CommandHandling;
 

@@ -43,7 +43,7 @@ public class RegisteredUser
 	private string _name;
 
 	/// <summary>the user's kink preferences</summary>
-	public Dictionary<KinkPreference, List<string>> Kinks => _cardiApiUser!.Kinks;
+	public Dictionary<string, KinkPreference> Kinks => _cardiApiUser!.Kinks;
 
 	/// <summary>the character's status in chat</summary>
 	public ChatStatus ChatStatus { get=>_cardiApiUser!.ChatStatus; set { _cardiApiUser!.ChatStatus=value; } }
@@ -184,7 +184,5 @@ public class RegisteredUser
 	////////////////////////////////////////
 
 
-	
-
-	public List<string> GetKinks(KinkPreference preference) => _cardiApiUser!.GetKinks(preference);
+	public IEnumerable<string> GetKinks(KinkPreference preference) => _cardiApiUser!.GetKinks(preference);
 }
