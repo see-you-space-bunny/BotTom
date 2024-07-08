@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using FChatApi.Core;
 using FChatApi.Enums;
 using FChatApi.Interfaces;

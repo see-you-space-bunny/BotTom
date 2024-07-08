@@ -1,23 +1,10 @@
-﻿using System;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using org.mariuszgromada.math.mxparser;
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-using BotTom.Machines;
-using BotTom.FChat;
-using FChatApi;
+﻿using BotTom.FChat;
 using FChatApi.Core;
 using FChatApi.Enums;
 using Engine.ModuleHost;
-using Engine.ModuleHost.Enums;
 using Engine.ModuleHost.CommandHandling;
 using Widget.CardGame;
 using Widget.FGlobals;
-using Widget.LevelGame;
 //using Widget.TabletopAids;
 
 namespace BotTom;

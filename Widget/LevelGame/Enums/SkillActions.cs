@@ -1,5 +1,3 @@
-using Widget.LevelGame.Attributes;
-
 namespace Widget.LevelGame.Enums;
 
 public enum SkillActions

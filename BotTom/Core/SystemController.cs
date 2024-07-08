@@ -1,7 +1,6 @@
 using FChatApi.Core;
 using FChatApi.Objects;
 using FChatApi.Enums;
-using System;
 
 namespace BotTom.FChat;
 

@@ -1,4 +1,3 @@
-using System.Text;
 using System.ComponentModel;
 using FChatApi.Core;
 using FChatApi.Objects;
@@ -9,8 +8,6 @@ using Widget.CardGame.Commands;
 using Widget.CardGame.PersistentEntities;
 using Widget.CardGame.DataStructures;
 using Widget.CardGame.Exceptions;
-using Engine.ModuleHost.CardiApi;
-using Engine.ModuleHost.Enums;
 using Engine.ModuleHost.Plugins;
 using Engine.ModuleHost.CommandHandling;
 using Widget.CardGame.Attributes;

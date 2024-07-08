@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using FChatApi.Objects;
 using FChatApi.Enums;
-using FChatApi.Core;
 
 namespace FChatApi.Systems;
 

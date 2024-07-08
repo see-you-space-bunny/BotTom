@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Widget.CardGame;
 using Widget.CardGame.Enums;
 
 namespace Widget.CardGame.Attributes;

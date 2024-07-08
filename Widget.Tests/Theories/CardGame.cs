@@ -1,12 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Xunit;
 using Xunit.Abstractions;
 using Widget.CardGame;
-using Widget.CardGame.Attributes;
-using Widget.CardGame.Enums;
 using FChatApi.Core;
 
 namespace Widget.Tests.Theories;

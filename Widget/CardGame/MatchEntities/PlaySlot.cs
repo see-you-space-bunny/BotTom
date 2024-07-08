@@ -1,12 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Xml;
-
 namespace Widget.CardGame.MatchEntities
 {
-	public class PlaySlot
+    public class PlaySlot
 	{
 		private const string OutputFormat = "[color={0}]([/color]{1}[color={0}]/[/color]{2}[color={0}])[/color]";
 		private const string OutputFormatDamaged = "[color=white][u][color=red][b]{0}[/b][/color][/u][/color]";

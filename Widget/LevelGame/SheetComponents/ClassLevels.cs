@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace Widget.LevelGame.SheetComponents;
 
 public class ClassLevels(CharacterClass @class,int level=0)

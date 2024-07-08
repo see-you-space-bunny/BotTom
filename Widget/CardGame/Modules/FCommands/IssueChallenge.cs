@@ -3,7 +3,6 @@ using FChatApi.Objects;
 using Widget.CardGame.Enums;
 using Widget.CardGame.Commands;
 using Widget.CardGame.PersistentEntities;
-using Engine.ModuleHost.CardiApi;
 using Engine.ModuleHost.Plugins;
 using Engine.ModuleHost.CommandHandling;
 

@@ -1,4 +1,3 @@
-using Engine.ModuleHost.CardiApi;
 using Engine.ModuleHost.CommandHandling;
 
 namespace Widget.Tests.LabAssistant;

@@ -1,5 +1,4 @@
 ﻿using System;
-using FChatApi.Objects;
 using FChatApi.Enums;
 
 namespace FChatApi.EventArguments;

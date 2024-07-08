@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Threading;
 using FChatApi.Objects;
 using FChatApi.Enums;
-using FChatApi.Interfaces;
-using System.Linq;
 using FChatApi.Attributes;
-using System.Collections.Specialized;
 
 namespace FChatApi.Core;
 

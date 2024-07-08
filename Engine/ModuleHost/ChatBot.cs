@@ -1,14 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Reactive.Concurrency;
-using Discord;
 using Discord.WebSocket;
 using FChatApi.Core;
 using FChatApi.Objects;
-using Engine.Serialization;
-using Engine.ModuleHost.CardiApi;
 using Engine.ModuleHost.Enums;
 using Engine.ModuleHost.Plugins;
 using Engine.ModuleHost.CommandHandling;
@@ -16,12 +9,12 @@ using FChatApi.Enums;
 
 namespace Engine.ModuleHost
 {
-	/// <summary>
-	/// This is our main bot interface
-	/// </summary>
-	public class ChatBot
+    /// <summary>
+    /// This is our main bot interface
+    /// </summary>
+    public class ChatBot
 	{
-		public static Dictionary<string,RegisteredUser> RegisteredUsers { get; } = [];
+		public static Dictionary<string,RegisteredUser> Users { get; } = [];
 
 		/// <summary>
 		/// our list of active plugins
@@ -70,7 +63,7 @@ namespace Engine.ModuleHost
 				for (uint i=0;i<count;i++)
 				{
 					var tempRegUser = RegisteredUser.Deserialize(reader);
-					if (RegisteredUsers.TryAdd(tempRegUser.Name.ToLower(),tempRegUser))
+					if (Users.TryAdd(tempRegUser.Name.ToLower(),tempRegUser))
 						continue;
 				}
 			}
@@ -118,8 +111,8 @@ namespace Engine.ModuleHost
 		public async Task Update()
 		{
 			if (_nextUserRefresh > DateTime.Now)
-				foreach (var regUser in RegisteredUsers.Keys)
-					if (RegisteredUsers.TryGetValue(regUser, out RegisteredUser? registeredUser) && ApiConnection.TryGetOnlineUserByName(regUser,out User user))
+				foreach (var regUser in Users.Keys)
+					if (Users.TryGetValue(regUser, out RegisteredUser? registeredUser) && ApiConnection.TryGetOnlineUserByName(regUser,out User user))
 						registeredUser.Update(user);
 
 			var tasks = new Task[Plugins.Count];
@@ -143,8 +136,8 @@ namespace Engine.ModuleHost
 			{
 				using var stream = File.Create(Path.Combine(Environment.CurrentDirectory, "sessiondata", "RegisterdPlayers"));
 				var writer = new BinaryWriter(stream);
-				writer.Write((uint)RegisteredUsers.Count);
-				foreach (RegisteredUser regUser in RegisteredUsers.Values)
+				writer.Write((uint)Users.Count);
+				foreach (RegisteredUser regUser in Users.Values)
 				{
 					regUser.Serialize(writer);
 				}

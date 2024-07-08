@@ -1,15 +1,12 @@
-using System.Linq;
 using Engine.ModuleHost.CommandHandling;
 using Engine.ModuleHost;
 using FChatApi.Core;
-using FChatApi.Systems;
-using FChatApi.Objects;
 using FChatApi.Enums;
 using FChatApi.EventArguments;
 
 namespace BotTom
 {
-	public partial class Program
+    public partial class Program
 	{
 		/// <summary>
 		/// Takes care of pushing messages to the bot
@@ -22,7 +19,7 @@ namespace BotTom
 		{
 			if (F_CommandParser.TryConvertCommand(
 				e.user,
-				ChatBot.RegisteredUsers.TryGetValue(e.user.ToLower(),out var regUser) ? regUser : null,
+				ChatBot.Users.TryGetValue(e.user.ToLower(),out var regUser) ? regUser : null,
 				e.channel   != null ? ApiConnection.GetChannelByNameOrCode(e.channel)           : null,
 				e.message,
 				out BotCommand ?command

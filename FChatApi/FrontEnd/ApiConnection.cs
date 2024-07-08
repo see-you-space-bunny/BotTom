@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text;
-using Newtonsoft.Json;
 using WatsonWebsocket;
 using System.Net.Http;
 using System.Threading.Tasks;

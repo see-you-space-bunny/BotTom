@@ -1,7 +1,3 @@
-using FChatApi;
-using FChatApi.Objects;
-using Engine.ModuleHost.CommandHandling;
-using Discord;
 using Discord.WebSocket;
 
 namespace Engine.ModuleHost.Plugins;

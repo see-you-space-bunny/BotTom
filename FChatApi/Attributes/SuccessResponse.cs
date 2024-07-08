@@ -1,5 +1,4 @@
 using System;
-using FChatApi.Enums;
 
 namespace FChatApi.Attributes;
 

@@ -1,11 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Xunit;
 using Xunit.Abstractions;
 using Widget.LevelGame;
-using Widget.LevelGame.Enums;
 
 namespace Widget.Tests.Facts;
 

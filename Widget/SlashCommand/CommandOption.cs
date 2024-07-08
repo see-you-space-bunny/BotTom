@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace Widget.SlashCommand;
 /**
 internal class CommandOption<T>(string keyWord, string description, object? defaultValue, bool isRequired = false)

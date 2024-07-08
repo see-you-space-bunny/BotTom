@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace Widget.LevelGame.SheetComponents;
 
 public class CharacterResource(int current = 0,int hardLimit = -1,int softLimit = -1,bool moreIsBetter = true)

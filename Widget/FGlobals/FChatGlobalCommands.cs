@@ -1,21 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Text;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Security.AccessControl;
-using System.Runtime.CompilerServices;
-using System.Reactive.Concurrency;
-using Discord;
 using FChatApi.Core;
 using FChatApi.Objects;
 using FChatApi.Attributes;
 using Engine.ModuleHost;
-using Engine.ModuleHost.CardiApi;
-using Engine.ModuleHost.Enums;
 using Engine.ModuleHost.Plugins;
 using Engine.ModuleHost.CommandHandling;
 using Widget.FGlobals.Enums;
@@ -82,7 +70,7 @@ public partial class FChatGlobalCommands : FChatPlugin
 							tempUser.PrivilegeLevel = Privilege.RegisteredUser;
 						}
 						tempUser.WhenRegistered = DateTime.Now;
-						if (ChatBot.RegisteredUsers.TryAdd(command.UserName.ToLower(),tempUser))
+						if (ChatBot.Users.TryAdd(command.UserName.ToLower(),tempUser))
 						{
 							messageBuilder
 								.WithMessage(
@@ -114,7 +102,7 @@ public partial class FChatGlobalCommands : FChatPlugin
 				case GlobalCommand.UnRegister:
 					if (command.PrivilegeLevel >= commandPrivilege && (command.User! ?? new RegisteredUser()).IsLinked)
 					{
-						ChatBot.RegisteredUsers.Remove(command.UserName.ToLower());
+						ChatBot.Users.Remove(command.UserName.ToLower());
 						messageBuilder
 							.WithMessage(
 								!string.IsNullOrWhiteSpace(botCommand.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>().Message)
