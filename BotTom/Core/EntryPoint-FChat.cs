@@ -14,7 +14,6 @@ using FChatApi.Core;
 using FChatApi.Enums;
 using Engine.ModuleHost;
 using Engine.ModuleHost.Enums;
-using Engine.ModuleHost.CardiApi;
 using Engine.ModuleHost.CommandHandling;
 using Widget.CardGame;
 using Widget.FGlobals;
@@ -28,14 +27,14 @@ partial class Program
 	// -----------------------------------------------
 	//             User Information
 	// -----------------------------------------------
-	static readonly string F_UserNameArg          = "UserName";
-	static readonly string F_PassWordArg          = "Password";
-	static readonly string F_CharacterNameArg     = "CharacterName";
-	static readonly string F_StartingChannelArg   = "StartingChannel";
-	static readonly string F_RetryAttemptsArg     = "RetryAttempts";
-	static readonly string F_CommandCharArg       = "CommandChar";
-	static readonly string F_OwnerListArg					= "OwnerList";
-	static readonly string F_GlobalOpsListArg   	= "GlobalOpsList";
+	static readonly string F_UserNameArg			= "UserName";
+	static readonly string F_PassWordArg			= "Password";
+	static readonly string F_CharacterNameArg		= "CharacterName";
+	static readonly string F_StartingChannelArg		= "StartingChannel";
+	static readonly string F_RetryAttemptsArg		= "RetryAttempts";
+	static readonly string F_CommandCharArg			= "CommandChar";
+	static readonly string F_OwnerListArg			= "OwnerList";
+	static readonly string F_GlobalOpsListArg		= "GlobalOpsList";
 	// -----------------------------------------------
 
 	static string F_StartingChannel = string.Empty;

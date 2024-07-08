@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -17,119 +18,114 @@ namespace FChatApi.Core;
 
 public partial class ApiConnection
 {
-	internal const string GenericBanner  = "//////////////////////////////";
-	internal const string ErrorBanner    = "////////////// ERROR   ///////"; 
-	internal const string WarningBanner  = "////////////// WARNING ///////"; 
-
-	public static WatsonWsClient Client { get; set; } = null;
-	public static TicketInformation TicketInformation { get; set; } = null;
-	public static string UserName { get; set; } = string.Empty;
-	public static string CharacterName { get; set; } = string.Empty;
-	public static string ClientId { get; set; } = "Fii_Bot";
-	public static string ClientVersion { get; set; } = "2.1.0.0";
-	public static TimeSpan ConnectionTimeout { get; set; } = new TimeSpan(0, 0, 10);
-	public static UserTracker UserTracker { get; set; } = new UserTracker();
-	public static ChannelTracker ChannelTracker { get; set; } = new ChannelTracker();
-
+#region GetMyCharacterList
 	/// <summary>
-	/// 
+	/// attempts to retrieve the api-user's character list from the ticket information
 	/// </summary>
-	/// <returns></returns>
-	public static List<string> GetCharacterList()
-	{
-		if (TicketInformation != null)
-		{
-			return [.. TicketInformation.Characters];
-		}
-		throw new Exception("You must acquire a ticket before attempting to retrieve a character list.");
-	}
+	/// <exception cref="NullReferenceException">if the api contains no valid ticket information</exception>
+	/// <returns>a list of character names</returns>
+	public static List<string> GetMyCharacterList() =>
+		TicketInformation is not null ?
+			[.. TicketInformation.Characters] :
+			throw new NullReferenceException("You must acquire a ticket before attempting to retrieve a character list.");
+#endregion
 
+#region GetTicketInformation
 	/// <summary>
-	/// 
+	/// attempts to retrieve ticket information from the website
 	/// </summary>
-	/// <param name="username"></param>
-	/// <param name="password"></param>
-	/// <returns></returns>
-	public static async Task<TicketInformation> GetTicketInformation(string username, string password)
-	{
-		try
-		{
-			// fchat login info and url
-			string fchatURI = "https://www.f-list.net/json/getApiTicket.php";
-			string completeString = $"{fchatURI}?account={username}&password={password}&no_friends=true&no_bookmarks=true";
+	/// <param name="username">account username</param>
+	/// <param name="password">account password</param>
+	/// <returns>ticket information</returns>
+	public static async Task<TicketInformation> GetTicketInformation(string username, string password) =>
+		await HttpClient
+			.GetFromJsonAsync<TicketInformation>(
+				string.Format(
+					TicketRequestFormat,
+					username,
+					password,
+					true,
+					true
+				)
+			);
+#endregion
 
-			using(var client = new HttpClient())
-			{
-				TicketInformation = await client.GetFromJsonAsync<TicketInformation>(completeString);
-			}
-			UserName = username;
-			return TicketInformation;
-		}
-		catch(Exception e)
-		{
-			throw new Exception($"Failure obtaining ticket: {e}");
-		}
-	}
-
+#region ConnectToChat
 	/// <summary>
-	/// 
+	/// attempts to connect the api to the chat server with the provided information
 	/// </summary>
-	/// <param name="username"></param>
-	/// <param name="password"></param>
-	/// <param name="charactername"></param>
+	/// <param name="username">account username</param>
+	/// <param name="password">account password</param>
+	/// <param name="charactername">name of api-user's character to log in with</param>
+	/// <param name="connectionTimeout">how long to wait until connection attempt times out</param>
+	/// <exception cref="Exception">if the client failed to start, or api could not properly dispose of the previous client</exception>
+	/// <exception cref="ArgumentException">if the connection timeout argument is too large, or if attempting to log into a character not associated with api-user's account</exception>
 	/// <returns></returns>
-	public async Task<bool> ConnectToChat(string username, string password, string charactername)
+	public async Task ConnectToChat(string username, string password, string charactername, TimeSpan? connectionTimeout = null)
 	{
-		TicketInformation = await GetTicketInformation(username, password);
-
-		if (TicketInformation == null)
+		if (connectionTimeout is not null && ((TimeSpan)connectionTimeout).TotalSeconds > MaximumConnectionTimeoutValue)
 		{
-			throw new Exception("Error obtaining ticket information");
+			throw new ArgumentException($"Connection timeout may not be longer than {MaximumConnectionTimeoutValue} seconds");
 		}
 
-		try
+		Task<TicketInformation> ticketTask = GetTicketInformation(username, password);
+
+		if (Client is not null)
 		{
-			if (Client != null)
+			try
 			{
 				Client.Dispose();
-				Client = null;
+				Client	= null;
+			}
+			catch (Exception e)
+			{
+				throw new Exception($"Error disposing of previous client: {e}");
 			}
 		}
-		catch (Exception e)
+
+		Client	= new WatsonWsClient(new Uri(ChatWebsocketURI));
+
+		Client.ServerConnected		+= Client_ChatConnected;
+		Client.ServerDisconnected	+= Client_ChatDisconnected;
+		Client.MessageReceived		+= Client_MessageReceived;
+
+		TicketInformation	= await ticketTask;
+		UserName			= username;
+		CharacterName		= GetMyCharacterList().FirstOrDefault(c=>c.Equals(charactername,StringComparison.InvariantCultureIgnoreCase));
+
+		if (CharacterName == default)
 		{
-			throw new Exception($"Error disposing of previous client: {e}");
+			throw new ArgumentException("Cannot log into a character not on your character list.");
 		}
+
+		UserTracker.AddUser(new User(){ Name = CharacterName, ChatStatus = ChatStatus.Online});
+
 		try
 		{
-			UserName = username;
-			CharacterName = charactername;
-			UserTracker.TryAddUser(new User(){ Name = CharacterName, ChatStatus = ChatStatus.Online});
-			Client = new WatsonWsClient(new Uri("wss://chat.f-list.net/chat2"));
-			Client.ServerConnected += Client_ChatConnected;
-			Client.ServerDisconnected += Client_ChatDisconnected;
-			Client.MessageReceived += Client_MessageReceived;
 			Client.Start();
 		}
 		catch (Exception e)
 		{
 			throw new Exception($"Error connecting to chat: {e}");
 		}
-		DateTime whenToTimeout = DateTime.Now + ConnectionTimeout;
+
+		connectionTimeout ??= DefaultConnectionTimeout;
+#if DEBUG
+		Console.WriteLine(NoticeBanner);
+		Console.WriteLine("Client successfully started!");
+		Console.WriteLine($"Connection timeout set to {((TimeSpan)connectionTimeout).Seconds} seconds.");
+		Console.WriteLine(GenericBanner);
+#endif
+		DateTime whenToTimeout = DateTime.Now + (TimeSpan)connectionTimeout;
 		while (!Client.Connected && DateTime.Now < whenToTimeout);
-		return true;
 	}
+#endregion
 
+#region IsConnected
 	/// <summary>
-	/// 
+	/// checks if a client exists and that that client is connected
 	/// </summary>
-	/// <returns></returns>
-	public static bool IsConnected()
-	{
-		if (Client != null)
-		{
-			return Client.Connected;
-		}
-
-		return false;
-	}
+	/// <returns>the api's connection status</returns>
+	public static bool IsConnected() => Client is not null && Client.Connected;
+#endregion
 }

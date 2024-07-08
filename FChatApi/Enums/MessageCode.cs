@@ -218,7 +218,10 @@ public enum MessageCode
 	/// (OUT) &gt;&gt; CTU {"character": "CharacterName", "channel": "ChannelCode", "length": 1234}<br/>
 	/// <i>"CharacterName" is case sensitive!<br/>
 	/// length is measured in seconds ?<br/>
-	/// requires you to be the channel operator</i>
+	/// requires you to be the channel operator</i><br/>
+	/// &gt; 300 = 5 minutes, 900 = 15 minutes, 1800 = 30 minutes,<br/>
+	/// &gt; 3600 = 1 hour, 7200 = 1 hours, 28800 = 8 hours,<br/>
+	/// &gt; 86400 = 1 day, 604800 = 1 week, 1209600 = 2 weeks<br/>
 	/// </summary>
 	[OutgoingMessageFormat("CTU {\"character\": \"{0}\", \"channel\": \"{1}\", \"length\": {2}}")]
 	CTU,
@@ -312,11 +315,12 @@ public enum MessageCode
 	/// <summary><b>Ignore</b><br/>
 	/// send to perform various ignore functionality actions<br/>
 	/// (OUT) &gt;&gt; IGN {"character": "CharacterName", "action": "IgnoreAction"}<br/>
-	/// <i>"CharacterName" is case sensitive!<br/>
-	/// action <c>list</c> requests a list of api-user's ignored characters ?<br/>
-	/// action <c>add</c> adds a character to api-user's ignore list<br/>
-	/// action <c>remove</c> removes a character from api-user's ignore list. removing <c>*</c> clears the api-user's ignore list<br/>
-	/// action <c>notify</c> notifies a character that their private (<c>PRI</c>) message was ignored. Client should notify for each recieved private message from character's on api-user's ignore list.</i>
+	/// <i>"CharacterName" is case sensitive!</i><br/>
+	/// &gt; action <c>list</c> requests a list of api-user's ignored characters ?<br/>
+	/// &gt; action <c>add</c> adds a character to api-user's ignore list<br/>
+	/// &gt; action <c>remove</c> removes a character from api-user's ignore list. removing <c>*</c> clears the api-user's ignore list<br/>
+	/// &gt; action <c>notify</c> notifies a character that their private (<c>PRI</c>) message was ignored.
+	/// <br/><i>Client should notify for each recieved private message from character's on api-user's ignore list.</i>
 	/// </summary>
 	[OutgoingMessageFormat("IGN {\"channel\": \"{0}\", \"action\": \"{1}\"}")]
 	IGN,
@@ -386,8 +390,8 @@ public enum MessageCode
 	/// 
 	/// send to post a chat message in a channel<br/>
 	/// (OUT) &gt;&gt; LRP {"channel": "ChannelCode", "message": "A String"}<br/>
-	/// <i>messages are throttled based on <c>msg_flood</c> variable<br/>
-	/// messages length determined by <c>chat_max</c> variable</i>
+	/// &gt; messages are throttled based on <c>msg_flood</c> variable<br/>
+	/// &gt; message length determined by <c>chat_max</c> variable
 	/// </summary>
 	[OutgoingMessageFormat("MSG {\"channel\": \"{0}\", \"message\": \"{1}\"}")]
 	MSG,
@@ -417,9 +421,9 @@ public enum MessageCode
 	/// 
 	/// send to post a chat message in a channel<br/>
 	/// (OUT) &gt;&gt; PRI {"message": "A String", "recipient": "CharacterName"}<br/><br/>
-	/// <i>"CharacterName" is case sensitive!<br/>
-	/// messages are throttled based on <c>msg_flood</c> variable<br/>
-	/// messages length determined by <c>priv_max</c> variable</i>
+	/// <i>"CharacterName" is case sensitive!</i><br/>
+	/// &gt; messages are throttled based on <c>msg_flood</c> variable<br/>
+	/// &gt; messages length determined by <c>priv_max</c> variable
 	/// </summary>
 	[OutgoingMessageFormat("PRI {\"message\": \"{0}\", \"recipient\": \"{1}\"}")]
 	PRI,
@@ -497,8 +501,11 @@ public enum MessageCode
 	/// send to globally time out a character and their client<br/>
 	/// (OUT) &lt;&lt; TMO {"character": "CharacterName", "reason": "A String", "time": "A String"}<br/>
 	/// <i>"CharacterName" is case sensitive!<br/>
-	/// length is measured in seconds ?<br/>
-	/// requires you to be a global operator</i>
+	/// requires you to be a global operator<br/>
+	/// length is measured in seconds.</i><br/>
+	/// &gt; 300 = 5 minutes, 900 = 15 minutes, 1800 = 30 minutes,<br/>
+	/// &gt; 3600 = 1 hour, 7200 = 1 hours, 28800 = 8 hours,<br/>
+	/// &gt; 86400 = 1 day, 604800 = 1 week, 1209600 = 2 weeks<br/>
 	/// </summary>
 	[OutgoingMessageFormat("STA {\"character\": \"{0}\", \"reason\": \"{1}\", \"time\": \"{2}\"}")]
 	TMO,

@@ -26,12 +26,14 @@ public static class AttributeEnumExtensions
 		_staticEnumAttributeLookup = [];
 
 		// Put known enum types here to speed things up later
-		ProcessEnumForAttribute<DescriptionAttribute>(typeof(Privilege));
-		ProcessEnumForAttribute<DescriptionAttribute>(typeof(BotModule));
+		ProcessEnumForAttribute<DescriptionAttribute			>(typeof(Privilege));
+		ProcessEnumForAttribute<DescriptionAttribute			>(typeof(BotModule));
+		
+		ProcessEnumForAttribute<DescriptionAttribute			>(typeof(IgnoreAction));
+		ProcessEnumForAttribute<MaximumLengthAttribute			>(typeof(FChatMessageType));
+		ProcessEnumForAttribute<OutgoingMessageFormatAttribute	>(typeof(MessageCode));
 
-		ProcessEnumForAttribute<InfoTabAttribute	>(typeof(ProfileInfoField));
-
-		ProcessEnumForAttribute<MaximumLengthAttribute>(typeof(FChatMessageType));
+		ProcessEnumForAttribute<InfoTabAttribute				>(typeof(ProfileInfoField));
 		
 	}
 

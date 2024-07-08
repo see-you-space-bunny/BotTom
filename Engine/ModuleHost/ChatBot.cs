@@ -119,7 +119,7 @@ namespace Engine.ModuleHost
 		{
 			if (_nextUserRefresh > DateTime.Now)
 				foreach (var regUser in RegisteredUsers.Keys)
-					if (RegisteredUsers.TryGetValue(regUser, out RegisteredUser? registeredUser) && ApiConnection.TryGetUserByName(regUser,out User user))
+					if (RegisteredUsers.TryGetValue(regUser, out RegisteredUser? registeredUser) && ApiConnection.TryGetOnlineUserByName(regUser,out User user))
 						registeredUser.Update(user);
 
 			var tasks = new Task[Plugins.Count];

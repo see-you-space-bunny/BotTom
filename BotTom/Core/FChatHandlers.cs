@@ -83,7 +83,7 @@ namespace BotTom
 		/// <param name="e">our event args</param>
 		static async void HandlePrivateChannelsReceived(object sender, ChannelEventArgs e)
 		{
-			var privateChannels = ApiConnection.RequestChannelList(ChannelType.Private);
+			var privateChannels = ApiConnection.GetChannelListByType(ChannelType.Private);
 
 			// check and join starting channel here
 			if (privateChannels.Any(x => x.Code.Equals(F_StartingChannel, StringComparison.InvariantCultureIgnoreCase)))

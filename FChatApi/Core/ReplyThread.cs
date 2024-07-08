@@ -11,31 +11,43 @@ namespace FChatApi.Core;
 
 public partial class ApiConnection
 {
-#region Queue & Lock
+#region Queue & Lock F(-)
+	/// <summary>
+	/// lock object to prevent access conflicts<br/>
+	/// ensures messages wait to be sent
+	/// </summary>
 	private readonly object SocketLocker = new();
-	static readonly Dictionary<IMessageRecipient,Queue<FChatMessageBuilder>> MessageQueue = [];
-	static Timer ReplyThread;
+
+	/// <summary>the message queue, keyed to recipient</summary>
+	private static readonly Dictionary<IMessageRecipient,Queue<FChatMessageBuilder>> MessageQueue = [];
+
+	/// <summary>the reply thread that periodically checks and handles the message queue</summary>
+	private static Timer ReplyThread;
 #endregion
 
 
 ////////////////////////////////////////////////
 
 
-#region SendMessage
-	private static async Task SendMessage(string channel, string message)
+#region (+) EnqueueMessage
+	/// <summary>
+	/// enqueues a message by its IMessageRecipient
+	/// </summary>
+	/// <param name="value">chat message builder</param>
+	public void EnqueueMessage(FChatMessageBuilder value)
 	{
-		string toSend = $"{MessageCode.MSG} {{ \"channel\": \"{channel}\", \"message\": \"{message}\" }}";
-		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {channel}: {message}");
-#if DEBUG
-		if (!await Client.SendAsync(toSend))
+		lock (SocketLocker)
 		{
-			Console.WriteLine(WarningBanner);
-			Console.WriteLine($"Unable to send message: {toSend}");
-			Console.WriteLine(GenericBanner);
+			if (value.HasRecipient)
+			{
+				MessageQueue.TryAdd(value.MessageRecipient,new Queue<FChatMessageBuilder>());
+				MessageQueue[value.MessageRecipient].Enqueue(value);
+			}
+			else
+			{
+				throw new InvalidOperationException("The message you are trying to send has no valid MessageRecipient.");
+			}
 		}
-#else
-		Client.SendAsync(toSend);
-#endif
 	}
 #endregion
 
@@ -43,72 +55,31 @@ public partial class ApiConnection
 ////////////////////////////////////////////////
 
 
-#region SendAd
-	private static async Task SendAd(string channel, string message)
+#region (+) EnqueueMessage
+	/// <summary>
+	/// enqueues a message
+	/// </summary>
+	/// <param name="channelcode">channel code, if any</param>
+	/// <param name="message">the message to be sent</param>
+	/// <param name="recipient">the recipient character, if any</param>
+	/// <param name="type">the type of message</param>
+	public void EnqueueMessage(string channelcode, string message, string recipient, FChatMessageType type = FChatMessageType.Basic)
 	{
-		string toSend = $"{MessageCode.LRP} {{ \"channel\": \"{channel}\", \"message\": \"{message}\" }}";
-		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {channel}: {message}");
-#if DEBUG
-		if (!await Client.SendAsync(toSend))
-		{
-			Console.WriteLine(WarningBanner);
-			Console.WriteLine($"Unable to send message: {toSend}");
-			Console.WriteLine(GenericBanner);
-		}
-#else
-		Client.SendAsync(toSend);
-#endif
+		EnqueueMessage(new FChatMessageBuilder()
+				.WithRecipient(recipient)
+				.WithChannel(GetChannelByCode(channelcode))
+				.WithMessage(message)
+				.WithMessageType(type)
+		);
 	}
 #endregion
 
 
 ////////////////////////////////////////////////
-
-
-#region SetStatus
-	public static async Task SetStatus(string statusMessage, ChatStatus status, string sendingUser)
-	{
-		string toSend = $"{MessageCode.STA} {{ \"status\": \"{status}\", \"statusmsg\": \"{statusMessage}\", \"character\": \"{sendingUser}\" }}";
-		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {status}: {statusMessage}");
-#if DEBUG
-		if (!await Client.SendAsync(toSend))
-		{
-			Console.WriteLine(WarningBanner);
-			Console.WriteLine($"Unable to send message: {toSend}");
-			Console.WriteLine(GenericBanner);
-		}
-#else
-		Client.SendAsync(toSend);
-#endif
-	}
-#endregion
-
 ////////////////////////////////////////////////
 
 
-#region SendWhisper
-	private static async Task SendWhisper(string targetUser, string message)
-	{
-		string toSend = $"{MessageCode.PRI} {{ \"recipient\": \"{targetUser}\", \"message\": \"{message}\" }}";
-		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {targetUser}: {message}");
-#if DEBUG
-		if (!await Client.SendAsync(toSend))
-		{
-			Console.WriteLine(WarningBanner);
-			Console.WriteLine($"Unable to send message: {toSend}");
-			Console.WriteLine(GenericBanner);
-		}
-#else
-		Client.SendAsync(toSend);
-#endif
-	}
-#endregion
-
-
-////////////////////////////////////////////////
-
-
-#region StartReplyThread
+#region (-) StartReplyThread
 	/// <summary>
 	/// assigns a new <c>ReplyThread</c> that calls <c>ReplyTicker</c><br/>disposes of the old thread if nessecary 
 	/// </summary>
@@ -117,19 +88,20 @@ public partial class ApiConnection
 	{
 		ReplyThread?.Dispose();
 		ReplyThread = new Timer(ReplyTicker,new AutoResetEvent(true),0,interval);
-		Console.WriteLine($"Starting ReplyTicker with an interval of {interval}");
+		Console.WriteLine($"Starting ReplyTicker with a base interval of {interval} ms.");
 	}
-    #endregion
+#endregion
 
 
-    ////////////////////////////////////////////////
+////////////////////////////////////////////////
+////////////////////////////////////////////////
 
 
-    #region ReplyTicker
-    /// <summary>
-    /// dequeues and sends out messages 
-    /// </summary>
-    private async void ReplyTicker(object state)
+#region (-) ReplyTicker
+	/// <summary>
+	/// dequeues and sends out messages 
+	/// </summary>
+	private async void ReplyTicker(object state)
 	{
 		FChatMessage message;
 		try
@@ -145,11 +117,7 @@ public partial class ApiConnection
 				if (currentQueue == default)
 					return;
 
-				message = currentQueue
-					.Dequeue()
-					.Build();
-
-				currentRecipient.MessageSent();
+				message = currentQueue.Dequeue().Build();
 
 				if (currentQueue.Count == 0)
 					MessageQueue.Remove(currentRecipient);
@@ -182,27 +150,13 @@ public partial class ApiConnection
 			return;
 		}
 
-		Task t = null;
-		switch (message.MessageType)
+		await (message.MessageType switch
 		{
-			case FChatMessageType.Whisper:
-				t = SendWhisper(message.Recipient.Name, message.Message);
-				break;
-
-			case FChatMessageType.Basic:
-				t = SendMessage(message.Channel.Code, message.Message);
-				break;
-
-			case FChatMessageType.Advertisement:
-				t = SendAd(message.Channel.Code, message.Message);
-				break;
-
-			default:
-				Console.WriteLine("Bad reply: " + message.Channel + " / " + message.Recipient + " / " + message);
-				break;
-		}
-		if (t is not null)
-			await t;
+			FChatMessageType.Whisper		=> User_SendWhisper(message.Recipient.Name, message.Message),
+			FChatMessageType.Basic			=> User_SendChannelMessage(message.Channel.Code, message.Message),
+			FChatMessageType.Advertisement	=> User_SendChannelAd(message.Channel.Code, message.Message),
+			_	=> Task.Run(() => Console.WriteLine("Bad reply: " + message.Channel + " / " + message.Recipient + " / " + message)),
+		});
 	}
 #endregion
 }

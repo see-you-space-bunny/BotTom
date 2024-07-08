@@ -23,7 +23,7 @@ public partial class ApiConnection
 ///////////////////////////////////////////////////
 
 
-#region MessageReceived (E)
+#region (E) MessageReceived
 	async void Client_MessageReceived(object sender, MessageReceivedEventArgs @event)
 	{
 		string message = Encoding.UTF8.GetString(@event.Data.ToArray());
@@ -32,14 +32,16 @@ public partial class ApiConnection
 	}
 #endregion
 
-#region ChatDisConnected (E)
+
+#region (E) ChatDisConnected
 	void Client_ChatDisconnected(object sender, EventArgs eventArgs)
 	{
 		Console.WriteLine("Disconnected from F-Chat servers!");
 	}
 #endregion
 
-#region ChatConnected (E)
+
+#region (E) ChatConnected
 	async void Client_ChatConnected(object sender, EventArgs eventArgs)
 	{
 		Console.WriteLine("Connected to F-Chat servers! Sending identification...");
@@ -53,8 +55,8 @@ public partial class ApiConnection
 
 
 
-#region IdentifySelf
-	async static Task IdentifySelf(string accountName, string ticket, string botName, string botClientID, string botClientVersion)
+#region (-) IdentifySelf
+	private async static Task IdentifySelf(string accountName, string ticket, string botName, string botClientID, string botClientVersion)
 	{
 		string toSend = $"{MessageCode.IDN}  {{ \"method\": \"ticket\", \"account\": \"{accountName}\", \"ticket\": \"{ticket}\", \"character\": \"{botName}\", \"cname\": \"{botClientID}\", \"cversion\": \"{botClientVersion}\" }}";
 		await Client.SendAsync(toSend);
@@ -65,8 +67,8 @@ public partial class ApiConnection
 ///////////////////////////////////////////////////
 
 
-#region ParseToJObject
-	static JObject ParseToJObject(string message, MessageCode hycybh)
+#region (-) ParseToJObject
+	private static JObject ParseToJObject(string message, MessageCode hycybh)
 	{
 		JObject returnCarrier;
 
@@ -99,8 +101,8 @@ public partial class ApiConnection
 	///////////////////////////////////////////////////
 
 
-#region ParseMessage
-	async Task ParseMessage(MessageCode messageCode, string message)
+#region (-) ParseMessage
+	private async Task ParseMessage(MessageCode messageCode, string message)
 	{
 		JObject json;
 		try
@@ -135,8 +137,8 @@ public partial class ApiConnection
 			{
 				ConnectedToChat?.Invoke(this, null);
 
-				tasks.Add(RequestInternalChannelList(ChannelType.Private));
-				tasks.Add(RequestInternalChannelList(ChannelType.Public));
+				tasks.Add(RequestChannelListFromServer(ChannelType.Private));
+				tasks.Add(RequestChannelListFromServer(ChannelType.Public));
 
 				Console.WriteLine("Connected to Chat");
 			}
@@ -203,90 +205,11 @@ public partial class ApiConnection
 #endregion
 
 #region JCH
-			case MessageCode.JCH:
-			{
-				User user = UserTracker.GetUserByName(json["character"]["identity"].ToString());
-				Channel channel;
-				try
-				{
-					channel = ChannelTracker.GetChannelByNameOrCode(json["title"].ToString());
-				}
-				catch
-				{
-					channel = ChannelTracker.AddManualChannel(json["title"].ToString(), ChannelStatus.Available, json["channel"].ToString());
-				}
-
-				if (user.Name.Equals(CharacterName))
-				{
-					ChannelTracker.WatchChannels.Add(channel.Code,channel);
-				}
-
-				if (channel == null)
-				{
-					return;
-				}
-
-				// creating channel
-				bool creating = channel.Status == ChannelStatus.Creating && user.Name.Equals(CharacterName);
-				if (creating)
-				{
-					channel = ChannelTracker.FinalizeChannelCreation(json["title"].ToString(), json["channel"].ToString(), user);
-					Console.WriteLine($"Created Channel: {json["channel"]}");
-					CreatedChannelHandler?.Invoke(this, new ChannelEventArgs() { name = channel.Name, status = ChannelStatus.Joined, code = channel.Code, type = channel.Type });
-				}
-				else
-				{
-					// join channel
-					channel = ChannelTracker.GetChannelByNameOrCode(json["channel"].ToString());
-					if (user != null && channel != null)
-					{
-						if (!creating)
-						{
-							JoinedChannelHandler?.Invoke(this, new ChannelEventArgs() { name = json["title"].ToString(), status = ChannelStatus.Joined, code = channel.Code, type = channel.Type, userJoining = user.Name });
-						}
-
-						tasks.Add(Task.Run(() =>
-							{
-								channel.AddUser(user);
-								Console.WriteLine($"{user.Name} joined Channel: {channel.Name}. {channel.Users.Count} total users in channel.");
-							}
-						));
-					}
-				}
-			}
-			break;
+			case MessageCode.JCH: tasks.Add(Handler_JCH(json)); break;
 #endregion
 
 #region LCH
-			case MessageCode.LCH:
-			{
-				if (json["character"].ToString().Equals(CharacterName, StringComparison.InvariantCultureIgnoreCase))
-				{
-					LeftChannelHandler?.Invoke(this, new ChannelEventArgs() { name = json["channel"].ToString(), status = ChannelStatus.Left });
-					ChannelTracker.ChangeChannelStatus(json["channel"].ToString(), ChannelStatus.Available);
-				}
-
-				User user = UserTracker.GetUserByName(json["character"].ToString());
-				Channel channel = ChannelTracker.GetChannelByNameOrCode(json["channel"].ToString());
-
-				if (user.Name.Equals(CharacterName))
-				{
-					ChannelTracker.WatchChannels.Remove(channel.Code);
-				}
-
-				if (user != null && channel != null)
-				{
-
-					tasks.Add(Task.Run(() =>
-						{
-							channel.RemoveUser(user);
-							Console.WriteLine($"{user.Name} left Channel: {json["channel"]}. {channel.Users.Count} total users in channel.");
-						}
-					));
-				}
-
-			}
-			break;
+			case MessageCode.LCH: tasks.Add(Handler_LCH(json)); break;
 #endregion
 
 #region PIN
@@ -366,7 +289,7 @@ public partial class ApiConnection
 					//UserTracker.SetChatStatus(tempUser, tempUser.ChatStatus, false);
 				}
 #if DEBUG
-				tasks.Add(Task.Run(() => Console.WriteLine($"Added {json["characters"].Count()} users. Total users: {UserTracker.GetNumberActiveUsers()}")));
+				Console.WriteLine($"Added {json["characters"].Count()} users. Total users: {UserTracker.Count()}");
 #endif
 			}
 			break;
@@ -382,7 +305,7 @@ public partial class ApiConnection
 					Gender = json["gender"].ToString()
 				};
 
-				tasks.Add(Task.Run(() => UserTracker.SetChatStatus(tempUser, ChatStatus.Online, false)));
+				tasks.Add(Task.Run(() => UserTracker.Character_SetChatStatus(tempUser, ChatStatus.Online, false)));
 			}
 			break;
 #endregion
@@ -411,7 +334,7 @@ public partial class ApiConnection
 					tasks.Add(Task.Run(() => channel.AddMod(user)));
 				}
 #if DEBUG
-				tasks.Add(Task.Run(() => Console.WriteLine($"Found {channel.Mods.Count} mods for channel: {channel.Name}")));
+				Console.WriteLine($"Found {channel.Mods.Count} mods for channel: {channel.Name}");
 #endif
 			}
 			break;
@@ -421,11 +344,11 @@ public partial class ApiConnection
 			case MessageCode.FLN:
 			{
 				User user = UserTracker.GetUserByName(json["character"].ToString());
-				UserTracker.SetChatStatus(user, ChatStatus.Offline, false);
+				UserTracker.Character_SetChatStatus(user, ChatStatus.Offline, false);
 
 				tasks.Add(Task.Run(() =>
 					{
-						foreach (var channel in ChannelTracker.WatchChannels.Values)
+						foreach (var channel in ChannelTracker.JoinedChannels.Values)
 						{
 							bool needsRemoved = false;
 
@@ -466,7 +389,7 @@ public partial class ApiConnection
 					));
 				}
 #if DEBUG
-				tasks.Add(Task.Run(() => Console.WriteLine($"Adding {json["users"].Count()} users to {channel.Name} channel's userlist successful.")));
+				Console.WriteLine($"Adding {json["users"].Count()} users to {channel.Name} channel's userlist successful.");
 #endif
 			}
 			break;
