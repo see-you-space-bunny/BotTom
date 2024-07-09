@@ -1,5 +1,6 @@
 using Xunit.Abstractions;
-using Widget.LevelGame;
+
+using LevelGame;
 
 namespace Widget.Tests.Facts;
 

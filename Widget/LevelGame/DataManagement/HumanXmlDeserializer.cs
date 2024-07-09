@@ -1,9 +1,10 @@
-using System.Globalization;
 using System.Xml;
-using Widget.LevelGame.Enums;
-using Widget.LevelGame.SheetComponents;
+using System.Globalization;
 
-namespace Widget.LevelGame;
+using LevelGame.Enums;
+using LevelGame.SheetComponents;
+
+namespace LevelGame;
 
 public static class HumanXmlDeserializer
 {

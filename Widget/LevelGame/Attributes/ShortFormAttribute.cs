@@ -1,4 +1,4 @@
-namespace Widget.LevelGame.Attributes;
+namespace LevelGame.Attributes;
 
 [AttributeUsage(AttributeTargets.All)]
 sealed class ShortFormAttribute : Attribute

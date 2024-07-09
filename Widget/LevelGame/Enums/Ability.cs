@@ -1,7 +1,8 @@
 using System.ComponentModel;
-using Widget.LevelGame.Attributes;
 
-namespace Widget.LevelGame.Enums;
+using LevelGame.Attributes;
+
+namespace LevelGame.Enums;
 
 // Abilities always in order: Offense, Defense, Flexile
 public enum Ability

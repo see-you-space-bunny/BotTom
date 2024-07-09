@@ -1,5 +1,7 @@
 using System.ComponentModel;
+
 using FChatApi.Objects;
+
 using CardGame.Enums;
 using CardGame.Interfaces;
 using CardGame.MatchEntities;
@@ -8,7 +10,7 @@ using CardGame.PersistentEntities;
 namespace CardGame.Commands;
 
 
-internal class MatchChallenge : ICommandIO<string>
+public class MatchChallenge : ICommandIO<string>
 {
 	internal enum State
 	{
@@ -48,7 +50,7 @@ internal class MatchChallenge : ICommandIO<string>
 	internal Event PreviousEvent;
 	internal State PreviousState;
 	internal State CurrentState;
-	private readonly State[] EndStates = [State.Confirmed,State.Exited];
+	private readonly State[] EndStates = [State.Confirmed,State.Exited,State.Cancelled,State.Expired];
 
 	/**
 	internal string InfoMessage => GetStateInfo(CurrentState);
@@ -123,5 +125,5 @@ internal class MatchChallenge : ICommandIO<string>
 		return new BoardState(Player1,Player2);
 	}
 
-	string ICommandIO<string>.AlternateKey => Target.Identity.ToLower();
+	string ICommandIO<string>.AlternateKey => Target.Key;
 }

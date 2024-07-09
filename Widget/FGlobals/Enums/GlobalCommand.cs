@@ -2,7 +2,7 @@ using System.ComponentModel;
 using FChatApi.Attributes;
 using FChatApi.Enums;
 
-namespace Widget.FGlobals.Enums;
+namespace FGlobals.Enums;
 
 public enum GlobalCommand
 {

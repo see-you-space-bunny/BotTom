@@ -1,11 +1,12 @@
 using FChatApi.Objects;
 using FChatApi.Tokenizer;
-using CardGame.Enums;
+
 using ModularPlugins;
+using ModularPlugins.Interfaces;
 
 namespace CardGame;
 
-public partial class FChatTournamentOrganiser<TModuleType> : FChatPlugin<TModuleType>, IFChatPlugin
+public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 {
 	private bool PlayTurn<TBotModule>(
         BotCommand command, FChatMessageBuilder commandResponse,

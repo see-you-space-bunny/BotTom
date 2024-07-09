@@ -1,3 +1,5 @@
+#define UNIT_TEST
+
 using Xunit.Abstractions;
 
 namespace FChatApi.Tests.Facts;

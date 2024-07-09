@@ -4,6 +4,8 @@ using FChatApi.Enums;
 using FChatApi.Tokenizer;
 using FChatApi.EventArguments;
 
+using ModularPlugins.Interfaces;
+
 namespace ModularPlugins;
 
 /// <summary>
@@ -15,13 +17,8 @@ namespace ModularPlugins;
 /// <param name="api"></param>
 /// <param name="commandChar">the symbol that wakes the module up</param>
 /// <param name="updateInterval">how often this module runs Update().<br/>defaults to: Never</param>
-public class FChatPlugin<TModuleType>(
-    ApiConnection api, TModuleType moduleType, TimeSpan updateInterval)
-		: PluginBase<TModuleType>(moduleType,updateInterval), IFChatPlugin
+public class FChatPlugin(ApiConnection api, TimeSpan updateInterval) : PluginBase(updateInterval), IFChatPlugin
 {
-	int IFChatPlugin.ModuleType => ModuleType!.GetHashCode();
-
-
 	/// <summary>our api connection</summary>
 	public ApiConnection FChatApi { get; } = api;
 
@@ -49,7 +46,7 @@ public class FChatPlugin<TModuleType>(
 	/// <summary>
 	/// Add Operators to the module
 	/// </summary>
-	public FChatPlugin<TModuleType> SetOperators(IEnumerable<string> values,Privilege privilege)
+	public FChatPlugin SetOperators(IEnumerable<string> values,Privilege privilege)
 	{
 		if (privilege >= Privilege.GlobalOperator)
 		{

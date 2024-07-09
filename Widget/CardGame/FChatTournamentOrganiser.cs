@@ -1,39 +1,43 @@
 using System.ComponentModel;
+
+using FChatApi;
 using FChatApi.Core;
 using FChatApi.Objects;
 using FChatApi.Enums;
-using CardGame.Enums;
-using CardGame.MatchEntities;
-using CardGame.Commands;
-using CardGame.PersistentEntities;
-using CardGame.DataStructures;
-using CardGame.Exceptions;
-using CardGame.Attributes;
 using FChatApi.Attributes;
 using FChatApi.Tokenizer;
 using FChatApi.EventArguments;
-using FChatApi;
+
 using ModularPlugins;
+
+using CardGame.Enums;
+using CardGame.Commands;
+using CardGame.Exceptions;
+using CardGame.Attributes;
+using CardGame.MatchEntities;
+using CardGame.DataStructures;
+using CardGame.PersistentEntities;
+
+using ModularPlugins.Interfaces;
 
 namespace CardGame;
 
-public partial class FChatTournamentOrganiser<TModuleType> : FChatPlugin<TModuleType>, IFChatPlugin
+public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 {
-	internal Dictionary<string,(User FChatUser,PlayerCharacter ModuleCharacter)> RegisteredCharacters { get; }
+	public Dictionary<string,PlayerCharacter> PlayerCharacters { get; }
 
-	internal Dictionary<string,MatchChallenge> IncomingChallenges { get; }
-	internal Dictionary<string,MatchChallenge> OutgoingChallenges => IncomingChallenges.ToOutgoing();
+	public Dictionary<string,MatchChallenge	> IncomingChallenges { get; }
+	public Dictionary<string,MatchChallenge	> OutgoingChallenges => IncomingChallenges.ToOutgoing();
 
-	internal List<BoardState> OngoingMatches { get; }
+	public List<BoardState> OngoingMatches { get; }
 
 #if DEBUG
-	internal FChatMessageBuilder MostRecentMessage = null!; 
+	public FChatMessageBuilder MostRecentMessage = null!; 
 #endif
 
-	public FChatTournamentOrganiser(ApiConnection api,TModuleType moduleType,TimeSpan updateInterval) : base(api,moduleType,updateInterval)
+	public FChatTournamentOrganiser(ApiConnection api,TimeSpan updateInterval) : base(api,updateInterval)
 	{
-		ModuleType              = default!;
-		RegisteredCharacters    = [];
+		PlayerCharacters		= [];
 		IncomingChallenges      = [];
 		OngoingMatches          = [];
 	}
@@ -54,7 +58,6 @@ public partial class FChatTournamentOrganiser<TModuleType> : FChatPlugin<TModule
 		FChatMessageBuilder messageBuilder = new FChatMessageBuilder()
 			.WithAuthor(ApiConnection.CharacterName)
 			.WithRecipient(command.User.Name)
-			.WithMention(command.User.Mention)
 			.WithChannel(command.Channel);
 		
 		string message = ValidateCommandUse(command);
@@ -72,6 +75,12 @@ public partial class FChatTournamentOrganiser<TModuleType> : FChatPlugin<TModule
 		MostRecentMessage = messageBuilder;
 #endif
 		FChatApi.EnqueueMessage(messageBuilder);
+
+		foreach ((string key,MatchChallenge mc) in IncomingChallenges)
+		{
+			if (mc.AtTerminalStage)
+				IncomingChallenges.Remove(key);
+		}
 	}
 
 
@@ -109,20 +118,25 @@ public partial class FChatTournamentOrganiser<TModuleType> : FChatPlugin<TModule
 			switch (moduleCommand)
 			{
 				case CardGameCommand.Challenge:
-					if (IssueChallenge(command,messageBuilder.WithoutMention(),alertTargetMessage))
+					if (IssueChallenge(command,messageBuilder,alertTargetMessage))
 						FChatApi.EnqueueMessage(alertTargetMessage);
 					break;
 
 				case CardGameCommand.Accept:
-					if (AcceptChallenge(command,messageBuilder.WithoutMention(),alertTargetMessage))
+					if (AcceptChallenge(command,messageBuilder,alertTargetMessage))
+						FChatApi.EnqueueMessage(alertTargetMessage);
+					break;
+
+				case CardGameCommand.Reject:
+					if (RejectChallenge(command,messageBuilder,alertTargetMessage))
 						FChatApi.EnqueueMessage(alertTargetMessage);
 					break;
 				
 				default:
 					messageBuilder
-						.WithRecipient(command.User!.Name)
-						.WithMessage("That is not a valid command!")
-						.WithMention(RegisteredCharacters[command.User.Name.ToLower()].FChatUser.Mention);
+						.WithRecipient(command.User.Name)
+						.WithMention(command.User.Mention)
+						.WithMessage("--> That is not a valid command!");
 					break;
 			}
 		}
@@ -142,16 +156,12 @@ public partial class FChatTournamentOrganiser<TModuleType> : FChatPlugin<TModule
 			messageBuilder.WithMessage(
 				disallowedCommand.Reason switch
 				{
-					CommandState.InsufficientPermission    => $"{RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention}, you don't have permission to do that!",
-					CommandState.AwaitingResponse          => $"{RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention}, you still have a challenge!",
-					CommandState.ResponseRequired          => $"{RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention}, you need to respond to {IncomingChallenges[command.User!.Name.ToLower()].Challenger.Mention}'s challenge first!",
+					CommandState.InsufficientPermission    => $"{command.User.Mention}, you don't have permission to do that!",
+					CommandState.AwaitingResponse          => $"{command.User.Mention}, you still have a challenge!",
+					CommandState.ResponseRequired          => $"{command.User.Mention}, you need to respond to {IncomingChallenges[command.User!.Name.ToLower()].Challenger.Mention}'s challenge first!",
 					_ => throw new ArgumentOutOfRangeException(nameof(disallowedCommand.Reason), $"Unexpected {typeof(CommandState)} value: {disallowedCommand.Reason}")
 				}
 			);
-		}
-		catch (Exception e)
-		{
-			Console.WriteLine(e.Message);
 		}
 	}
 

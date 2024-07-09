@@ -10,6 +10,7 @@ public class MatchPlayer
 	private const char MetaPointSymbol = '❚';
 
 
+	internal string Key => PlayerCharacter.Key;
 	internal PlayerCharacter PlayerCharacter;
 	internal (CharacterStat First,CharacterStat Second) DeckArchetype;
 	internal short Health;
@@ -51,7 +52,7 @@ public class MatchPlayer
 	public override string ToString()
 	{
 		return string.Format(OutputFormat,
-			PlayerCharacter.MentionAndIdentity,
+			PlayerCharacter.User.Mention,
 			Health,
 			DeckSize,
 			Slot1.ToString(),
@@ -64,7 +65,7 @@ public class MatchPlayer
 	public string ToString(bool activePlayer)
 	{
 		return string.Format(OutputFormat,
-			activePlayer ? EncloseWithColor(PlayerCharacter.MentionAndIdentity,"green") : PlayerCharacter.MentionAndIdentity,
+			activePlayer ? EncloseWithColor(PlayerCharacter.User.Mention,"green") : PlayerCharacter.User.Mention,
 			Health,
 			DeckSize,
 			Slot1.ToString(),

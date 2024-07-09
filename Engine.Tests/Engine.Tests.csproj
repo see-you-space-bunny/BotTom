@@ -31,10 +31,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Engine\Serialization\Serialization.csproj" />
 		<ProjectReference Include="..\Engine\Envy\Envy.csproj" />
-		<ProjectReference Include="..\Engine\ModuleHost\ModuleHost.csproj" />
 		<ProjectReference Include="..\Engine\DiceRoll\DiceRoll.csproj" />
+		<ProjectReference Include="..\Engine\ModuleHost\ModuleHost.csproj" />
+		<ProjectReference Include="..\Engine\Serialization\Serialization.csproj" />
 	</ItemGroup>
 
 </Project>

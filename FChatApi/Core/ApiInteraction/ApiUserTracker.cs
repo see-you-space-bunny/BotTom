@@ -57,4 +57,33 @@ public partial class ApiConnection
 		return user is not null;
 	}
 #endregion
+
+
+#region (~) IsRegistered
+	internal bool IsUserRegistered(User user) =>
+		UserTracker.IsUserRegistered(user);
+#endregion
+
+
+#region (~) Register
+	internal bool RegisterUser(User user) =>
+		UserTracker.RegisterUser(user);
+#endregion
+
+
+#region (~) UnRegister
+	internal bool UnRegisterUser(User user) =>
+		UserTracker.UnRegisterUser(user);
+#endregion
+
+
+#region (~) UnRegister
+	public static void ImportRegisteredUsers()
+	{
+		foreach (User user in RegisteredUsers.Values)
+		{
+			UserTracker.AddUser(user);
+		}
+	}
+#endregion
 }

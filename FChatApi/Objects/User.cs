@@ -306,19 +306,23 @@ public class User : IMessageRecipient
 	/// <returns>a deserialized user object with the Custom Info and Name fields filled</returns>
 	public static User Deserialize(BinaryReader reader)
 	{
-		return new User()
+		User user = new User()
 		{
 			Name			=   (string)		reader.ReadString(),
 			BotMemo			=   (string)		reader.ReadString(),
 			NickColor		=   (BBCodeColor)	reader.ReadUInt16(),
 			PrivilegeLevel	=   (Privilege)		reader.ReadUInt16(),
-			WhenRegistered	=   new DateTime(
+		};
+		if (reader.ReadBoolean())
+		{
+			user.WhenRegistered	=   new DateTime(
 				year: reader.ReadInt32(),
 				month: reader.ReadInt32(), 
 				day: reader.ReadInt32()
-			),
-			Pronouns		=   (string)		reader.ReadString(),
-		};
+			);
+		}
+		user.Pronouns		=   (string)		reader.ReadString();
+		return user;
 	}
 
 	/// <summary>
@@ -331,9 +335,13 @@ public class User : IMessageRecipient
 		writer.Write((string)	BotMemo);
 		writer.Write((ushort)	NickColor);
 		writer.Write((ushort)	PrivilegeLevel);
-		writer.Write((int)		WhenRegistered.Year);
-		writer.Write((int)		WhenRegistered.Month);
-		writer.Write((int)		WhenRegistered.Day);
+		if (IsRegistered)
+		{
+			writer.Write(true);
+			writer.Write((int)		WhenRegistered.Year);
+			writer.Write((int)		WhenRegistered.Month);
+			writer.Write((int)		WhenRegistered.Day);
+		}
 		writer.Write((string)	Pronouns);
 	}
 #endregion

@@ -1,4 +1,4 @@
-namespace Widget.LevelGame.SheetComponents;
+namespace LevelGame.SheetComponents;
 
 public class ClassLevels(CharacterClass @class,int level=0)
 {

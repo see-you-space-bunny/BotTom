@@ -12,17 +12,17 @@ internal class ChannelTracker
 {
 
 	/// <summary>all known channels</summary>
-	private Dictionary<string,Channel> AllAvailableChannels;
+	internal Dictionary<string,Channel> AllAvailableChannels;
 
 	/// <summary>
 	/// 
 	/// </summary>
-	private Dictionary<string,Channel> AvailablePublicChannels => AllAvailableChannels.Where((ch)=>ch.Value.Type == ChannelType.Public).ToDictionary();
+	internal Dictionary<string,Channel> AvailablePublicChannels => AllAvailableChannels.Where((ch)=>ch.Value.Type == ChannelType.Public).ToDictionary();
 
 	/// <summary>
 	/// 
 	/// </summary>
-	private Dictionary<string,Channel> AvailablePrivateChannels => AllAvailableChannels.Where((ch)=>ch.Value.Type == ChannelType.Private).ToDictionary();
+	internal Dictionary<string,Channel> AvailablePrivateChannels => AllAvailableChannels.Where((ch)=>ch.Value.Type == ChannelType.Private).ToDictionary();
 
 	/// <summary>
 	/// 
@@ -135,7 +135,7 @@ internal class ChannelTracker
 		LeaveChannel(GetChannelByNameOrCode(channelnameorcode).Code);
 #endregion
 
-#region (~) ChangeChannelStatus
+#region (~) ChangeChStatus
 	/// <summary>
 	/// changes the status of a channel
 	/// </summary>
@@ -158,6 +158,7 @@ internal class ChannelTracker
 	}
 #endregion
 
+#region (~) CombinedChList
 	/// <summary>
 	/// retrieves a combined list of all currently channels<br/>may optionally be filtered to a specific <c>ChannelStatus</c>
 	/// </summary>
@@ -179,7 +180,9 @@ internal class ChannelTracker
 		}
 		throw new ArgumentException("Attempted to filter channel list by invalid status.",nameof(status));
 	}
+#endregion
 
+#region (~) GetChList
 	/// <summary>
 	/// 
 	/// </summary>
@@ -198,6 +201,8 @@ internal class ChannelTracker
 			ChannelStatus.AllValid	=> AllAvailableChannels.Where(ch => ch.Value.Status >= ChannelStatus.AllValid).ToDictionary(),
 			_ 						=> AllAvailableChannels.Where(ch => ch.Value.Status.Equals(value)).ToDictionary(),
 		};
+#endregion
+
 
     /// <summary>
     /// 
@@ -206,27 +211,11 @@ internal class ChannelTracker
     /// <param name="value">the type of channel that's being put into the list</param>
     internal void RefreshAvailableChannels(List<Channel> incomingChannels, ChannelType value)
     {
-        List<Task> tasks = [];
-        switch (value)
-        {
-			case ChannelType.Private:
-				foreach (string code in AvailablePrivateChannels.Select(ch => ch.Value.Code))
-					tasks.Add(Task.Run(() => AllAvailableChannels.Remove(code)));
+        if (!(value > ChannelType.Invalid))
+			throw new ArgumentException($"Attempted to refresh channels of an invalid type: {value}",nameof(value));
 
-				AllAvailableChannels = AllAvailableChannels.Concat(incomingChannels.ToDictionary(li => li.Code, li => li)).ToDictionary();
-				break;
-
-			case ChannelType.Public:
-				foreach (string code in AvailablePrivateChannels.Select(ch => ch.Value.Code))
-					tasks.Add(Task.Run(() => AllAvailableChannels.Remove(code)));
-
-				AllAvailableChannels = AllAvailableChannels.Concat(incomingChannels.ToDictionary(li => li.Code, li => li)).ToDictionary();
-				break;
-			
-			default:
-				throw new ArgumentException($"Attempted to refresh channels of an invalid type: {value}",nameof(value));
-        }
-        Task.WaitAll([.. tasks]);
+		AllAvailableChannels = AllAvailableChannels.Where(kv => kv.Value.Type != value).ToDictionary();
+		AllAvailableChannels = AllAvailableChannels.Concat(incomingChannels.ToDictionary(li => li.Code, li => li)).ToDictionary();
     }
 }
 #pragma warning restore CA1822 // Mark members as static

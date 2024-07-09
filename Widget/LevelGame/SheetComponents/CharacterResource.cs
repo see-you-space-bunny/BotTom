@@ -1,4 +1,4 @@
-namespace Widget.LevelGame.SheetComponents;
+namespace LevelGame.SheetComponents;
 
 public class CharacterResource(int current = 0,int hardLimit = -1,int softLimit = -1,bool moreIsBetter = true)
 {

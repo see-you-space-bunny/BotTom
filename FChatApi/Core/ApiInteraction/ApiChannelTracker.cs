@@ -64,9 +64,8 @@ public partial class ApiConnection
 	/// <param name="value"></param>
 	/// <returns></returns>
 	public static Channel GetChannelByCode(string value) =>
-		ChannelTracker.JoinedChannels.TryGetValue(value.ToLowerInvariant(), out Channel channel) ?
-			channel :
-			throw new ArgumentException($"The requested channel \"{value}\" could not be found.",nameof(value));
+		ChannelTracker.GetChannelByNameOrCode(value);
+	
 #endregion
 
 

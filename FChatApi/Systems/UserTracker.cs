@@ -12,17 +12,50 @@ internal class UserTracker
 	private readonly Dictionary<string,User> KnownUsers;
 #endregion
 
+#region (-) RegisteredUsers
+	internal readonly Dictionary<string,User> RegisteredUsers;
+#endregion
+
 
 #region (~) Constructor
 	internal UserTracker()
 	{
 		KnownUsers = [];
+		RegisteredUsers = [];
 	}
 #endregion
 
 
 #region (~) Count
 	internal int Count => KnownUsers.Count;
+#endregion
+
+
+#region (~) IsRegistered
+	internal bool IsUserRegistered(User user) =>
+		RegisteredUsers.ContainsKey(user.Key);
+#endregion
+
+
+#region (~) Register
+	internal bool RegisterUser(User user)
+	{
+		if (RegisteredUsers.TryAdd(user.Key,user))
+		{
+			user.WhenRegistered = DateTime.Now;
+			return true;
+		}
+		return false;
+	}
+#endregion
+
+
+#region (~) UnRegister
+	internal bool UnRegisterUser(User user)
+	{
+		user.WhenRegistered = DateTime.MinValue;
+		return RegisteredUsers.Remove(user.Key);
+	}
 #endregion
 
 

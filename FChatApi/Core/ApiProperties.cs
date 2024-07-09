@@ -4,6 +4,7 @@ using WatsonWebsocket;
 using System.Net.Http;
 using FChatApi.Systems;
 using FChatApi.Objects;
+using System.Collections.Generic;
 
 namespace FChatApi.Core;
 
@@ -103,7 +104,7 @@ public partial class ApiConnection
 #endregion
 
 
-#region Instance Trackers P(+)
+#region Instance Trackers P(-)
 	/// <summary>
 	/// the api's user tracker</i>
 	/// </summary>
@@ -113,6 +114,14 @@ public partial class ApiConnection
 	/// the api's channel tracker</i>
 	/// </summary>
 	private static ChannelTracker ChannelTracker { get; set; } = new ChannelTracker();
+#endregion
+
+
+#region RegisteredUsers P(+)
+	/// <summary>
+	/// the api's channel tracker</i>
+	/// </summary>
+	public static Dictionary<string,User> RegisteredUsers => UserTracker.RegisteredUsers;
 #endregion
 
 

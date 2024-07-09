@@ -8,7 +8,10 @@
 
 	<ItemGroup>
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-			<_Parameter1>Engine.Tests</_Parameter1>
+			<_Parameter1>Engine.Tests.Facts</_Parameter1>
+		</AssemblyAttribute>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>Engine.Tests.Theories</_Parameter1>
 		</AssemblyAttribute>
 	</ItemGroup>
 

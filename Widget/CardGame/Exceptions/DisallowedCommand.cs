@@ -2,7 +2,6 @@ using CardGame.Enums;
 
 namespace CardGame.Exceptions;
 
-
 [Serializable]
 internal class DisallowedCommandException : Exception
 {

@@ -120,8 +120,10 @@ public partial class ApiConnection
 	{
 		Task[] tasks = new Task[2];
 		ConnectedToChat?.Invoke(this, null);
+#if !UNIT_TEST
 		tasks[0] = RequestChannelListFromServer(ChannelType.Private);
 		tasks[1] = RequestChannelListFromServer(ChannelType.Public);
+#endif
 		Console.WriteLine("Connected to Chat");
 		return Task.Run(() => Task.WaitAll([.. tasks]));
 	}

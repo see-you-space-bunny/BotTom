@@ -1,17 +1,21 @@
 using System.Text;
 using System.ComponentModel;
+
 using FChatApi.Core;
-using FChatApi.Objects;
-using FChatApi.Attributes;
 using FChatApi.Enums;
+using FChatApi.Objects;
 using FChatApi.Tokenizer;
+using FChatApi.Attributes;
 using FChatApi.EventArguments;
+
 using ModularPlugins;
-using Widget.FGlobals.Enums;
+using ModularPlugins.Interfaces;
+
+using FGlobals.Enums;
 
 namespace FGlobals;
 
-public partial class FChatGlobalCommands<TBotModule> : FChatPlugin<TBotModule>
+public partial class FChatGlobalCommands : FChatPlugin, IFChatPlugin
 {
 
 
@@ -19,7 +23,7 @@ public partial class FChatGlobalCommands<TBotModule> : FChatPlugin<TBotModule>
     internal FChatMessageBuilder MostRecentMessage = null!;
 #endif
 
-    public FChatGlobalCommands(ApiConnection api, TBotModule moduleType, TimeSpan updateInterval) : base(api, moduleType, updateInterval)
+    public FChatGlobalCommands(ApiConnection api, TimeSpan updateInterval) : base(api, updateInterval)
     { }
 
     private static void PreProcessEnumAttributes()

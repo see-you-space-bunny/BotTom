@@ -1,6 +1,7 @@
 ﻿#if DEBUG
 using System;
 using System.Threading.Tasks;
+using FChatApi.Objects;
 #endif
 
 namespace FChatApi.Core;
@@ -26,5 +27,18 @@ public partial class ApiConnection
 
 	public static void DebugSetCharacterName(string value) =>
 		CharacterName = value;
+
+	public static void DebugAddCharacters(string[] value)
+	{
+		foreach (string name in value)
+			UserTracker.AddUser(new User() { Name = name, });
+	}
+
+	public static void DebugRegisterAllCharacters()
+	{
+		foreach (User user in RegisteredUsers.Values)
+			UserTracker.RegisterUser(user);
+		ImportRegisteredUsers();
+	}
 #endif
 }

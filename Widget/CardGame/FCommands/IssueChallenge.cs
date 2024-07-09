@@ -1,14 +1,19 @@
 using System.Text;
+
 using FChatApi.Objects;
+using FChatApi.Tokenizer;
+
+using ModularPlugins;
+
 using CardGame.Enums;
 using CardGame.Commands;
 using CardGame.PersistentEntities;
-using FChatApi.Tokenizer;
-using ModularPlugins;
+using FChatApi.Core;
+using System.Text.RegularExpressions;
 
 namespace CardGame;
 
-public partial class FChatTournamentOrganiser<TModuleType> : FChatPlugin<TModuleType>
+public partial class FChatTournamentOrganiser : FChatPlugin
 {
 	private bool IssueChallenge(BotCommand command,FChatMessageBuilder commandResponse,FChatMessageBuilder targetAlertResponse)
 	{
@@ -45,24 +50,23 @@ public partial class FChatTournamentOrganiser<TModuleType> : FChatPlugin<TModule
 				.WithMessage($"Too few arguments! You need to specify who your are challenging.");
 			return false;
 		}
-
-		string target;
-		if (stat2 == default)
-		{
-			target = string.Join(' ',command.Parameters[2..]);
-		}
-		else if (command.Parameters.Length > 3)
-		{
-			target = string.Join(' ',command.Parameters[3..]);
-		}
-		else
+		
+		if (command.Parameters.Length < 2)
 		{
 			commandResponse
 				.WithMessage($"You have to specify a user to challenge.");
 			return false;
 		}
 
-		var (exitEarly, errMessage, player) = ValidateIssueChallenge(command.User!.Name,target);
+		string target;
+		string remainingParameters = string.Join(' ',command.Parameters[(stat2 == default ? 1 : 2)..]);
+		var m = Regex.Match(remainingParameters,CommandStringInterpreter.UserPatternComplete);
+		if (m.Groups.TryGetValue(CommandStringInterpreter.Player,out Group? group))
+			target = group.Value;
+		else
+			target = remainingParameters;
+
+		var (exitEarly, errMessage, player) = ValidateIssueChallenge(command.User.Key,target);
 
 		if (exitEarly)
 		{
@@ -74,14 +78,14 @@ public partial class FChatTournamentOrganiser<TModuleType> : FChatPlugin<TModule
 		//////////
 
 		responseBuilder
-			.Append(RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention)
+			.Append(command.User.Mention)
 			.Append(" has challenged ")
 			.Append(player.Name)
 			.Append(" to a [b]Duel[/b]! ")
 			.Append("[i]Hint:[/i] To accept this challenge, use the command \"tom!xcg accept [i]stat1[/i] [i]stat2[/i]\"");
 
 		alertBuilder
-			.Append(RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention)
+			.Append(command.User.Mention)
 			.Append(" has challenged you to a [b]Duel[/b]! ")
 			.Append("[i]Hint:[/i] To accept this challenge, use the command \"tom!xcg accept [i]stat1[/i] [i]stat2[/i]\"");
 		
@@ -99,9 +103,9 @@ public partial class FChatTournamentOrganiser<TModuleType> : FChatPlugin<TModule
 		IncomingChallenges.Add(
 			player.Name.ToLower(),
 			new MatchChallenge(
-				command.User!,
-				RegisteredCharacters[command.User!.Name.ToLower()].ModuleCharacter.CreateMatchPlayer(stat1,stat2),
-				RegisteredCharacters[player.Name.ToLower()].ModuleCharacter
+				command.User,
+				PlayerCharacters[command.User.Key].CreateMatchPlayer(stat1,stat2),
+				PlayerCharacters[player.Key]
 			)
 		);
 		IncomingChallenges[player.Name.ToLower()].AdvanceState(MatchChallenge.Event.Initiate);
@@ -110,39 +114,39 @@ public partial class FChatTournamentOrganiser<TModuleType> : FChatPlugin<TModule
 
 	private (bool exitEarly,string message,User target) ValidateIssueChallenge(string challenger,string target)
 	{
-		User player;
-		if (!RegisteredCharacters.TryGetValue(target.ToLower(), out (User FChatUser,PlayerCharacter ModuleCharacter) userAndPlayer))
+		if (!ApiConnection.TryGetUserByName(target,out User challengeTarget))
 		{
 			return (true,"You can't challenge a user that is not registered.",new User());
 		}
-		else
-		{
-			player = userAndPlayer.FChatUser;
-		}
+		if (!PlayerCharacters.ContainsKey(challenger.ToLowerInvariant()))
+			PlayerCharacters.Add(challenger.ToLowerInvariant(),new PlayerCharacter(ApiConnection.GetUserByName(challenger)));
+
+		if (!PlayerCharacters.ContainsKey(challengeTarget.Key))
+			PlayerCharacters.Add(challengeTarget.Key,new PlayerCharacter(challengeTarget));
 
 		if (target == challenger)
 		{
-			return (true,"You can't challenge yourself.",new User());
+			return (true,"You can't challenge yourself.",challengeTarget);
 		}
 		else if (OutgoingChallenges.ContainsKey(challenger.ToLower()))
 		{
-			return (true,"You can't have more than one pending challenge.",new User());
+			return (true,"You can't have more than one pending challenge.",challengeTarget);
 		}
-		else if (!RegisteredCharacters.ContainsKey(player.Name.ToLower()))
+		else if (!PlayerCharacters.ContainsKey(challengeTarget.Name.ToLower()))
 		{
-			return (true,"That player is already being challenged by you.",new User());
+			return (true,"That player is already being challenged by you.",challengeTarget);
 		}
-		else if (IncomingChallenges.ContainsKey(player.Name.ToLower()))
+		else if (IncomingChallenges.ContainsKey(challengeTarget.Name.ToLower()))
 		{
-			if (IncomingChallenges[player.Name.ToLower()].Challenger.Name == challenger)
+			if (IncomingChallenges[challengeTarget.Name.ToLower()].Challenger.Name == challenger)
 			{
-				return (true,"That player is already being challenged by you.",new User());
+				return (true,"That player is already being challenged by you.",challengeTarget);
 			}
 			else
 			{
-				return (true,"That player is already being challenged by someone.",new User());
+				return (true,"That player is already being challenged by someone.",challengeTarget);
 			}
 		}
-		return (false,string.Empty,player);
+		return (false,string.Empty,challengeTarget);
 	}
 }

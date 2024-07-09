@@ -21,7 +21,7 @@ public partial class Program
 		}
 	}
 	
-	static void ConnectedToChat(object sender, ChannelEventArgs e)
+	static void ConnectedToChat(object sender, ChannelEventArgs @event)
 	{
 #if DEBUG
 		ApiConnection.User_CreateChannel("Tom's Test Kitchen");
@@ -32,26 +32,26 @@ public partial class Program
 	/// We've joined a channel
 	/// </summary>
 	/// <param name="sender">our sending object</param>
-	/// <param name="e">our event args</param>
-	static void HandleJoinedChannel(object sender, ChannelEventArgs e)
+	/// <param name="event">our event args</param>
+	static void HandleJoinedChannel(object sender, ChannelEventArgs @event)
 	{
-		if (e.User.Name.Equals(F_CharacterName))
+		if (@event.User.Name.Equals(F_CharacterName))
 		{
-			F_Bot!.HandleJoinedChannel(e);
+			F_Bot!.HandleJoinedChannel(@event);
 		}
 #if DEBUG
-		else if (e.User.Name.Equals(FCHAT_OWNER,StringComparison.InvariantCultureIgnoreCase))
+		else if (@event.User.Name.Equals(FCHAT_OWNER,StringComparison.InvariantCultureIgnoreCase))
 		{
-			ApiConnection.Mod_ChannelPromoteUser(e.Channel,FCHAT_OWNER);
+			ApiConnection.Mod_ChannelPromoteUser(@event.Channel,FCHAT_OWNER);
 		}
 #endif
 	}
 	
-	static void HandleCreatedChannel(object sender, ChannelEventArgs e)
+	static void HandleCreatedChannel(object sender, ChannelEventArgs @event)
 	{
-		ApiConnection.Mod_ChannelInviteUser(e.Channel,FCHAT_OWNER);
+		ApiConnection.Mod_ChannelInviteUser(@event.Channel,FCHAT_OWNER);
 #if DEBUG
-		ApiConnection.User_SetStatus(ChatStatus.DND,$"[session={e.Channel.Name}]{e.Channel.Code}[/session]");
+		ApiConnection.User_SetStatus(ChatStatus.DND,$"[session={@event.Channel.Name}]{@event.Channel.Code}[/session]");
 #endif
 	}
 
@@ -59,8 +59,8 @@ public partial class Program
 	/// We've left a channel
 	/// </summary>
 	/// <param name="sender">our sending object</param>
-	/// <param name="e">our event args</param>
-	static void HandleLeftChannel(object sender, ChannelEventArgs e)
+	/// <param name="event">our event args</param>
+	static void HandleLeftChannel(object sender, ChannelEventArgs @event)
 	{
 
 	}
@@ -69,8 +69,8 @@ public partial class Program
 	/// We got a private list of channels
 	/// </summary>
 	/// <param name="sender">our sending object</param>
-	/// <param name="e">our event args</param>
-	static async void HandlePrivateChannelsReceived(object sender, ChannelEventArgs e)
+	/// <param name="event">our event args</param>
+	static async void HandlePrivateChannelsReceived(object sender, ChannelEventArgs @event)
 	{
 		var privateChannels = ApiConnection.GetChannelListByType(ChannelType.Private);
 
@@ -101,8 +101,8 @@ public partial class Program
 	/// We got a public list of channels
 	/// </summary>
 	/// <param name="sender">our sending object</param>
-	/// <param name="e">our event args</param>
-	static void HandlePublicChannelsReceived(object sender, ChannelEventArgs e)
+	/// <param name="event">our event args</param>
+	static void HandlePublicChannelsReceived(object sender, ChannelEventArgs @event)
 	{
 	}
 }

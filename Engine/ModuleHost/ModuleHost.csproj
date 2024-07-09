@@ -17,17 +17,20 @@
 
 	<ItemGroup>
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-			<_Parameter1>Engine.Tests</_Parameter1>
+			<_Parameter1>Engine.Tests.Facts</_Parameter1>
+		</AssemblyAttribute>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>Engine.Tests.Theories</_Parameter1>
 		</AssemblyAttribute>
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\DiceRoll\DiceRoll.csproj" />
-		<ProjectReference Include="..\Serialization\Serialization.csproj" />
+		<ProjectReference Include="..\..\FChatApi\FChatApi.csproj" />
+		<ProjectReference Include="..\..\Widget\Plugins\Plugins.csproj" />
 		<ProjectReference Include="..\..\Widget\FGlobals\FGlobals.csproj" />
 		<ProjectReference Include="..\..\Widget\CardGame\CardGame.csproj" />
-		<ProjectReference Include="..\..\Widget\Plugins\Plugins.csproj" />
-		<ProjectReference Include="..\..\FChatApi\FChatApi.csproj" />
+		<ProjectReference Include="..\Serialization\Serialization.csproj" />
 	</ItemGroup>
 
 </Project>

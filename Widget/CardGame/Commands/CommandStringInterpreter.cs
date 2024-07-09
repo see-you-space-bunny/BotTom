@@ -56,6 +56,7 @@ internal partial class CommandStringInterpreter
 	internal const string OptionAmountPattern       = NamedPatternStart + Amount  + NamedIntegerPattern;
 
 	internal const string UserPattern               = @"\[user\](((?'"+Player+@"'[a-zA-Z0-9\-\ ]"+OptionLengthPlayer+@")\[\/user\]";
+	internal const string UserPatternComplete		= @"(\[user\](?'"+Player+@"'[a-zA-Z0-9\-\ ]"+OptionLengthPlayer+@")\[\/user\]"+EndOfCommand+@"){1}";
 
 	[GeneratedRegex(
 		StartOfCommand      + BotIdentifier +

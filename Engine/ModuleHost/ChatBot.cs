@@ -1,7 +1,7 @@
 using System.Reactive.Concurrency;
 using FChatApi.Objects;
 using Engine.ModuleHost.Enums;
-using ModularPlugins;
+using ModularPlugins.Interfaces;
 using System.ComponentModel;
 using FChatApi.Attributes;
 using FChatApi.Core;
@@ -13,7 +13,7 @@ namespace Engine.ModuleHost;
 /// </summary>
 public partial class ChatBot
 {
-	public static Dictionary<string,User> RegisteredUsers { get; } = [];
+	public static Dictionary<string,User> RegisteredUsers { get => ApiConnection.RegisteredUsers; }
 
 	/// <summary>
 	/// our list of active plugins
@@ -31,6 +31,7 @@ public partial class ChatBot
 		AttributeEnumExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(BotModule));
 
 		DeserializeUsers();
+		ApiConnection.ImportRegisteredUsers();
 	}
 
 	private static void DeserializeUsers(string? path = null)
@@ -48,8 +49,8 @@ public partial class ChatBot
 
 			for (uint i=0;i<count;i++)
 			{
-				var tempRegUser = User.Deserialize(reader);
-				if (RegisteredUsers.TryAdd(tempRegUser.Name.ToLower(),tempRegUser))
+				var user = User.Deserialize(reader);
+				if (RegisteredUsers.TryAdd(user.Name.ToLower(),user))
 					continue;
 			}
 		}
@@ -76,9 +77,9 @@ public partial class ChatBot
 	/// </summary>
 	/// <param name="type">type to return</param>
 	/// <returns>plugin if found, otherwise null</returns>
-	public IFChatPlugin GetPlugin<TPlugin>() where TPlugin : struct
+	public IFChatPlugin GetPlugin<TPlugin>(BotModule value)
 	{
-		return FChatPlugins.FirstOrDefault(p => p.GetType() == typeof(FChatPlugin<TPlugin>)).Value;
+		return FChatPlugins.FirstOrDefault(p => p.Key == value).Value;
 	}
 
 	/// <summary>
@@ -117,8 +118,8 @@ public partial class ChatBot
 			using (var stream = File.Create(Path.Combine(Environment.CurrentDirectory, "sessiondata", "KnownUsers")))
 			{
 				var writer = new BinaryWriter(stream);
-				writer.Write((uint)userlist.Count());
-				foreach (User user in userlist)
+				writer.Write((uint)RegisteredUsers.Count);
+				foreach (User user in RegisteredUsers.Values)
 				{
 					user.Serialize(writer);
 				}

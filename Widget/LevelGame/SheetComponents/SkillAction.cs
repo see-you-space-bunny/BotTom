@@ -1,6 +1,6 @@
-using Widget.LevelGame.Enums;
+using LevelGame.Enums;
 
-namespace Widget.LevelGame.SheetComponents;
+namespace LevelGame.SheetComponents;
 
 public class SkillAction : CharacterResource
 {

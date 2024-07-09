@@ -1,12 +1,17 @@
 ﻿using BotTom.FChat;
+
 using FChatApi.Core;
 using FChatApi.Enums;
-using Engine.ModuleHost;
 using FChatApi.Tokenizer;
-using FGlobals;
+
+using Engine.ModuleHost;
 using Engine.ModuleHost.Enums;
+
+using ModularPlugins;
+using ModularPlugins.Interfaces;
+
+using FGlobals;
 using CardGame;
-//using Widget.TabletopAids;
 
 namespace BotTom;
 
@@ -159,10 +164,10 @@ partial class Program
 
 ////////////// Add our plugins here ////////////////////////////////////////////////
 #if DEBUG
-			F_Bot.AddPlugin(BotModule.System,new FChatGlobalCommands<BotModule>(F_Chat,BotModule.System,TimeSpan.MaxValue)
+			F_Bot.AddPlugin(BotModule.System,new FChatGlobalCommands(F_Chat,TimeSpan.MaxValue)
 				.SetOperators(F_Owner,		Privilege.OwnerOperator)
 				.SetOperators(F_GlobalOps,	Privilege.GlobalOperator));
-			F_Bot.AddPlugin(BotModule.XCG,new FChatTournamentOrganiser<BotModule>(F_Chat,BotModule.XCG,new TimeSpan(15000)));
+			F_Bot.AddPlugin(BotModule.XCG,new FChatTournamentOrganiser(F_Chat,new TimeSpan(15000)));
 #else
 			F_Bot.AddPlugin<FChatGlobalCommands>(new FChatGlobalCommands(F_Chat)
 				.SetOperators(F_Owner,		Privilege.OwnerOperator)

@@ -1,14 +1,17 @@
 using System.Text;
+
 using FChatApi.Objects;
 using FChatApi.Enums;
+using FChatApi.Tokenizer;
+
+using ModularPlugins;
+
 using CardGame.Enums;
 using CardGame.Commands;
-using ModularPlugins;
-using FChatApi.Tokenizer;
 
 namespace CardGame;
 
-public partial class FChatTournamentOrganiser<TModuleType> : FChatPlugin<TModuleType>
+public partial class FChatTournamentOrganiser : FChatPlugin
 {
 	private bool AcceptChallenge(BotCommand command,FChatMessageBuilder commandResponse,FChatMessageBuilder challengerAlertResponse)
 	{
@@ -42,7 +45,7 @@ public partial class FChatTournamentOrganiser<TModuleType> : FChatPlugin<TModule
 		var responseBuilder = new StringBuilder()
 			.Append(command.User!.Mention)
 			.Append(" has accepted ")
-			.Append(IncomingChallenges[command.User!.Name.ToLower()].Challenger.Mention)
+			.Append(IncomingChallenges[command.User.Key].Challenger.Mention)
 			.Append("'s challenge!");
 
 		var alertBuilder    = new StringBuilder()
@@ -57,14 +60,14 @@ public partial class FChatTournamentOrganiser<TModuleType> : FChatPlugin<TModule
 
 		challengerAlertResponse
 			.WithMessage(alertBuilder.ToString())
-			.WithRecipient(IncomingChallenges[command.User!.Name.ToLower()].Challenger.Name)
+			.WithRecipient(IncomingChallenges[command.User.Key].Challenger.Name)
 			.WithMessageType(FChatMessageType.Whisper);
 		
 		//////////
 
-		IncomingChallenges[command.User!.Name.ToLower()].AdvanceState(MatchChallenge.Event.Confirm);
+		IncomingChallenges[command.User.Key].AdvanceState(MatchChallenge.Event.Confirm);
 
-		OngoingMatches.Add(IncomingChallenges[command.User!.Name.ToLower()].AcceptWithDeckArchetype(stat1,stat2));
+		OngoingMatches.Add(IncomingChallenges[command.User.Key].AcceptWithDeckArchetype(stat1,stat2));
 		return true;
 	}
 }

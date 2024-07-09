@@ -1,8 +1,13 @@
+using FChatApi.Interfaces;
+using FChatApi.Objects;
+
 namespace CardGame.MatchEntities;
 
 public class BoardState(MatchPlayer player1,MatchPlayer player2)
 {
-	private const string OutputFormat = "{0} It is turn {1} and the state of the game is now: [spoiler]\n{2}\n{3}[/spoiler]";
+	private const string OutputFormat = "{0} It is now turn {1} and the state of the game is as follows: [spoiler]\n{2}\n{3}[/spoiler]";
+
+	public Channel? Channel { get; set; }
 
 	private readonly MatchPlayer _player1 = player1;
 	private readonly MatchPlayer _player2 = player2;

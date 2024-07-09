@@ -1,7 +1,7 @@
-using Widget.LevelGame.Enums;
-using Widget.LevelGame.SheetComponents;
+using LevelGame.Enums;
+using LevelGame.SheetComponents;
 
-namespace Widget.LevelGame;
+namespace LevelGame;
 
 public class Actor : GameObject
 {

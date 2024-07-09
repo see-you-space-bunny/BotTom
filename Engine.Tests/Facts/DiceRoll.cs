@@ -1,4 +1,5 @@
 using Engine.DiceRoll;
+
 using Xunit.Abstractions;
 
 namespace Engine.Tests.Facts;

@@ -3,11 +3,8 @@ namespace ModularPlugins;
 /// <summary>
 /// Our base plugin for others to derive off of
 /// </summary>
-public abstract class PluginBase<TModuleType>
+public abstract class PluginBase
 {
-	/// <summary>the type of module this is</summary>
-	public TModuleType ModuleType { get; protected set; }
-
 	/// <summary>how often this module runs Update()</summary>
 	public TimeSpan UpdateInterval { get; }
 
@@ -19,9 +16,8 @@ public abstract class PluginBase<TModuleType>
 	/// </summary>
 	/// <param name="commandChar">the symbol that wakes the module up</param>
 	/// <param name="updateInterval">how often this module runs Update().<br/>defaults to: Never</param>
-	public PluginBase(TModuleType moduleType,TimeSpan? updateInterval = null)
+	public PluginBase(TimeSpan? updateInterval = null)
 	{
-		ModuleType      = moduleType;
 		UpdateInterval  = updateInterval ?? Timeout.InfiniteTimeSpan;
 	}
 

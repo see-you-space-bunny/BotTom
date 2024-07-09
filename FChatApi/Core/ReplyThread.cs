@@ -36,6 +36,7 @@ public partial class ApiConnection
 	/// <param name="value">chat message builder</param>
 	public void EnqueueMessage(FChatMessageBuilder value)
 	{
+#if !UNIT_TEST
 		lock (SocketLocker)
 		{
 			if (value.HasRecipient)
@@ -48,6 +49,9 @@ public partial class ApiConnection
 				throw new InvalidOperationException("The message you are trying to send has no valid MessageRecipient.");
 			}
 		}
+#else
+	Console.Writeline(string.Format("Sending Message: @ {0} | {1}",value.MessageRecipient.Name,value.Build().Message));
+#endif
 	}
 #endregion
 

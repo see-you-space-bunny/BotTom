@@ -42,7 +42,7 @@ public partial class ApiConnection
 
 
 #region (E) ChatConnected
-	async void Client_ChatConnected(object sender, EventArgs eventArgs)
+	internal async void Client_ChatConnected(object sender, EventArgs eventArgs)
 	{
 		Console.WriteLine("Connected to F-Chat servers! Sending identification...");
 		await IdentifySelf(UserName, TicketInformation.Ticket, CharacterName, ClientId, ClientVersion);
@@ -68,24 +68,24 @@ public partial class ApiConnection
 
 
 #region (-) ParseToJObject
-	private static JObject ParseToJObject(string message, MessageCode hycybh)
+	private static JObject ParseToJObject(string message, MessageCode value)
 	{
-		JObject returnCarrier;
+		JObject json;
 
 		try
 		{
 			if (message.Split(' ').Length <= 1)
 			{
-				if (string.Equals(hycybh.ToString(), message))
+				if (string.Equals(value.ToString(), message))
 				{
 					return null;
 				}
 
-				returnCarrier = JObject.Parse(message);
+				json = JObject.Parse(message);
 			}
 			else
 			{
-				returnCarrier = JObject.Parse(message.Replace(hycybh.ToString(), "").TrimStart());
+				json = JObject.Parse(message.Replace(value.ToString(), "").TrimStart());
 			}
 		}
 		catch
@@ -93,7 +93,7 @@ public partial class ApiConnection
 			throw new Exception($"Failure to parse message: {message}");
 		}
 
-		return returnCarrier;
+		return json;
 	}
 #endregion
 
@@ -102,7 +102,7 @@ public partial class ApiConnection
 
 
 #region (-) ParseMessage
-	private async Task ParseMessage(MessageCode messageCode, string message)
+	public async Task ParseMessage(MessageCode messageCode, string message)
 	{
 		JObject json = messageCode switch {
 			MessageCode.NON => throw new ArgumentException("Invalid (NON) message code.",nameof(messageCode)),

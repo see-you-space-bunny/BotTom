@@ -1,4 +1,4 @@
-namespace Widget.LevelGame.Enums;
+namespace LevelGame.Enums;
 
 public enum SkillActions
 {

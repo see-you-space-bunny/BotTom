@@ -1,4 +1,4 @@
-namespace Widget.LevelGame;
+namespace LevelGame;
 
 public class GameObject(int level)
 {

@@ -1,6 +1,6 @@
-using Widget.LevelGame.Enums;
+using LevelGame.Enums;
 
-namespace Widget.LevelGame;
+namespace LevelGame;
 
 public static class ActorExtensions
 {
