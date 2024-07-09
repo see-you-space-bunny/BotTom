@@ -1,6 +1,6 @@
-using Widget.CardGame.Interfaces;
+using CardGame.Interfaces;
 
-namespace Widget.CardGame.DataStructures;
+namespace CardGame.DataStructures;
 
 public static class DictionaryHandling
 {

@@ -22,8 +22,7 @@ internal class UserTracker
 
 
 #region (~) Count
-	internal int Count() =>
-		KnownUsers.Count;
+	internal int Count => KnownUsers.Count;
 #endregion
 
 
@@ -48,10 +47,8 @@ internal class UserTracker
 
 
 #region (~) UserByName
-
 	internal User GetUserByName(string value) 
-		=> GetUserByKey(value.ToLower());
-
+		=> GetUserByKey(value.ToLowerInvariant());
 #endregion
 
 
@@ -65,15 +62,10 @@ internal class UserTracker
 	internal void Character_SetChatStatus(User user, ChatStatus status, bool logging = true)
 	{
 		user.ChatStatus = status;
-		if (GetUserByName(user.Key) == null)
-			AddUser(user);
+		AddUser(user);
 
-		User thisUser = KnownUsers[user.Key];
-		if (null == thisUser)
-			throw new Exception($"Error attempting to resolve user: {user.Name}.");
-
-		thisUser.ChatStatus = status;
-		if (logging) Console.WriteLine($"{thisUser.Name}'s chat status changed to: {status}");
+		if (logging)
+			Console.WriteLine($"{user.Name}'s chat status changed to: {status}");
 	}
 #endregion
 

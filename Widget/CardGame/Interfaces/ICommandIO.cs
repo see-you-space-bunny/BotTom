@@ -1,4 +1,4 @@
-namespace Widget.CardGame.Interfaces
+namespace CardGame.Interfaces
 {
     public interface ICommandIO<TKey>
 	{

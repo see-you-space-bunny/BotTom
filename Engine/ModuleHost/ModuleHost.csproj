@@ -24,6 +24,9 @@
 	<ItemGroup>
 		<ProjectReference Include="..\DiceRoll\DiceRoll.csproj" />
 		<ProjectReference Include="..\Serialization\Serialization.csproj" />
+		<ProjectReference Include="..\..\Widget\FGlobals\FGlobals.csproj" />
+		<ProjectReference Include="..\..\Widget\CardGame\CardGame.csproj" />
+		<ProjectReference Include="..\..\Widget\Plugins\Plugins.csproj" />
 		<ProjectReference Include="..\..\FChatApi\FChatApi.csproj" />
 	</ItemGroup>
 

@@ -1,6 +1,6 @@
-namespace Widget.CardGame.Enums
+namespace CardGame.Enums
 {
-	public enum CommandPermission
+	public enum CommandState
 	{
 		SufficientPermission,
 		InsufficientPermission,

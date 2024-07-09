@@ -1,6 +1,6 @@
 using Xunit.Abstractions;
-using Widget.CardGame;
 using FChatApi.Core;
+using CardGame;
 
 namespace Widget.Tests.Theories;
 
@@ -15,9 +15,9 @@ public class @CardGame(ITestOutputHelper output)
 		//          "The Cooler Daniel","tom!xcg accept STR LUC")]
 		public void TestCommand(string player1,string msgChallenge,string player2,string msgResponse)
 		{
-				ApiConnection.CharacterName = BotInfoAssistant.BotName;
+				ApiConnection.DebugSetCharacterName(BotInfoAssistant.BotName);
 
-				var tournamentOrganiser = new FChatTournamentOrganiser(null);
+				var tournamentOrganiser = new FChatTournamentOrganiser<int>(null!,0,TimeSpan.MaxValue);
 
 				var command1 = ChatMessageAssistant.NewDummyMessage(player1,msgChallenge);
 				tournamentOrganiser.HandleRecievedMessage(command1!);

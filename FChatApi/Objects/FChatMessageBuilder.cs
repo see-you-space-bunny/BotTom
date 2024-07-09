@@ -17,14 +17,14 @@ public class FChatMessageBuilder
 	/// </summary>
 	public IMessageRecipient MessageRecipient => 
 		HasRecipient ? 
-			((MessageType == FChatMessageType.Whisper) || (Channel == null) ? Recipient : Channel) :
+			((MessageType == FChatMessageType.Whisper) || (Channel is null) ? Recipient : Channel) :
 			throw new InvalidOperationException("This message has no valid MessageRecipient.");
 
 	/// <summary>
 	/// Indicates whether or not the message has a valid Recipient.
 	/// </summary>
 	public bool HasRecipient =>
-		!(Recipient is null || string.IsNullOrWhiteSpace(Recipient.Name)) && (Channel == null || string.IsNullOrWhiteSpace(Channel.Code));
+		!(Recipient is null || string.IsNullOrWhiteSpace(Recipient.Name)) || !(Channel is null || string.IsNullOrWhiteSpace(Channel.Code));
 #endregion
 
 
@@ -171,6 +171,14 @@ public class FChatMessageBuilder
 		else if (!Channel.AdEnabled && MessageType == FChatMessageType.Advertisement)
 		{
 			throw new InvalidOperationException($"Attempting to post an ad in {Channel.Name} ({Channel.Code}), but that channel doesn't support it.");
+		}
+		else if (Recipient is null)
+		{
+			MessageType = FChatMessageType.Basic;
+		}
+		else if (MessageType == FChatMessageType.Invalid)
+		{
+			throw new InvalidOperationException($"Cannot send a message with unspecified type.");
 		}
 	}
 	

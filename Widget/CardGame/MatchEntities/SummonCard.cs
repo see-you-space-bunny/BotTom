@@ -1,6 +1,6 @@
-using Widget.CardGame.Enums;
+using CardGame.Enums;
 
-namespace Widget.CardGame.MatchEntities
+namespace CardGame.MatchEntities
 {
     public struct SummonCard(short power,short health,CharacterStat cardArchetype)
 	{

@@ -1,4 +1,4 @@
-namespace Widget.CardGame.Attributes;
+namespace CardGame.Attributes;
 
 [AttributeUsage(AttributeTargets.All)]
 public class StatAliasAttribute : Attribute

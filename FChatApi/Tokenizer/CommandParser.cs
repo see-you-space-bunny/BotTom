@@ -1,23 +1,27 @@
 using System.Text;
 using FChatApi.Objects;
 using FChatApi.Enums;
+using FChatApi.EventArguments;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using FChatApi.Attributes;
 
-namespace Engine.ModuleHost.CommandHandling;
+namespace FChatApi.Tokenizer;
 
 public class CommandParser
 {
 	private int ModuleStartIndex { get => BotPrefix.Length; }
 	public string BotPrefix { get; private set; }
 
-	public CommandParser() : this(string.Empty,null!)
+	public CommandParser() : this(string.Empty)
 	{ }
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-	public CommandParser(string botPrefix,List<string> ops = null!)
+	public CommandParser(string botPrefix)
 	{
 		WithBotPrefix(botPrefix);
 	}
-#pragma warning restore CS8618
 
 	public CommandParser WithBotPrefix(string value)
 	{
@@ -25,44 +29,52 @@ public class CommandParser
 		return this;
 	}
 
-	public bool TryConvertCommand(string username,User user,Channel? channel,string unparsed,out BotCommand? botCommand)
+	public bool TryConvertCommand(MessageEventArgs e,out BotCommand command)
+		=> TryConvertCommand(e.User,e.Channel,e.Message,e.MessageType,out command);
+
+	public bool TryConvertCommand(User user,Channel channel,string message,FChatMessageType type,out BotCommand command)
 	{
 		// Not a command
-		if (!unparsed.StartsWith(BotPrefix))
+		if (!message.StartsWith(BotPrefix))
 		{
-			botCommand = null;
+			command = null;
 			return false;
 		}
 
 		// parse the command; starts after the comand prefix
-		string[] parsedTokens = Parse(unparsed[ModuleStartIndex..]).ToArray();
+		string[] parsedTokens = Parse(message[ModuleStartIndex..]).ToArray();
 		if (parsedTokens.Length < 2)
 		{
 #if DEBUG
 			Console.WriteLine("it might be getting the bot's attention but doesn't have enough for a real command");
 #endif
-			botCommand = null;
+			command = null;
 			return false;
 		}
 		
-		if (!Enum.TryParse(parsedTokens[0],true,out BotModule botModule))
+		string botModule = default;
+		if (!(parsedTokens.Length == 0))
 		{
 			// Not a recognized module
-#if DEBUG
-			Console.WriteLine("Not a recognized module, defaulting to 'System'");
-#endif
-			botModule = BotModule.System;
+			botModule = parsedTokens[0];
+		}
+		
+		string moduleCommand = default;
+		if (!(parsedTokens.Length < 0))
+		{
+			// Not a recognized command
+			moduleCommand = parsedTokens[1];
 		}
 
 		// Command cannot be issued by a non-user
-		if (string.IsNullOrWhiteSpace(username) && user == null)
+		if (user == null)
 		{
 			// Some operations may still trigger, but they will be exceptions
 #if DEBUG
 			Console.WriteLine("Command cannot be issued by a non-user");
 			Console.WriteLine("Some operations may still trigger, but they will be exceptions");
 #endif
-			botCommand = null;
+			command = null;
 			return false;
 		}
 
@@ -79,7 +91,7 @@ public class CommandParser
 			privilege = user!.PrivilegeLevel;
 		}
 		
-		botCommand = new BotCommand(username,user, channel, botModule, parsedTokens[1], parsedTokens.Skip(1).ToArray(),privilege);
+		command = new BotCommand(user, channel, botModule, moduleCommand, parsedTokens.Skip(2).ToArray());
 		return true;
 	}
 

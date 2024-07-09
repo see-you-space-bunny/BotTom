@@ -16,7 +16,7 @@ readonly string _value;
 /// <param name="success">added to most successful calls</param>
 public SuccessResponseAttribute()
 {
-	this._value    = $"{MyPrefix}: N/A";
+	this._value    = $"{MyPrefix}: ";
 	
 	// TODO: Implement code here
 	/* throw new System.NotImplementedException(); */

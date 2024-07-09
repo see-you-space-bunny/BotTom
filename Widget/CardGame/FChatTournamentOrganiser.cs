@@ -2,22 +2,24 @@ using System.ComponentModel;
 using FChatApi.Core;
 using FChatApi.Objects;
 using FChatApi.Enums;
-using Widget.CardGame.Enums;
-using Widget.CardGame.MatchEntities;
-using Widget.CardGame.Commands;
-using Widget.CardGame.PersistentEntities;
-using Widget.CardGame.DataStructures;
-using Widget.CardGame.Exceptions;
-using Engine.ModuleHost.Plugins;
-using Engine.ModuleHost.CommandHandling;
-using Widget.CardGame.Attributes;
+using CardGame.Enums;
+using CardGame.MatchEntities;
+using CardGame.Commands;
+using CardGame.PersistentEntities;
+using CardGame.DataStructures;
+using CardGame.Exceptions;
+using CardGame.Attributes;
 using FChatApi.Attributes;
+using FChatApi.Tokenizer;
+using FChatApi.EventArguments;
+using FChatApi;
+using ModularPlugins;
 
-namespace Widget.CardGame;
+namespace CardGame;
 
-public partial class FChatTournamentOrganiser : FChatPlugin
+public partial class FChatTournamentOrganiser<TModuleType> : FChatPlugin<TModuleType>, IFChatPlugin
 {
-	internal Dictionary<string,(RegisteredUser FChatUser,PlayerCharacter ModuleCharacter)> RegisteredCharacters { get; }
+	internal Dictionary<string,(User FChatUser,PlayerCharacter ModuleCharacter)> RegisteredCharacters { get; }
 
 	internal Dictionary<string,MatchChallenge> IncomingChallenges { get; }
 	internal Dictionary<string,MatchChallenge> OutgoingChallenges => IncomingChallenges.ToOutgoing();
@@ -28,12 +30,9 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 	internal FChatMessageBuilder MostRecentMessage = null!; 
 #endif
 
-	public FChatTournamentOrganiser(TimeSpan? updateInterval = null) : this(null!,updateInterval)
-	{ }
-
-	public FChatTournamentOrganiser(ApiConnection api,TimeSpan? updateInterval = null) : base(api,updateInterval)
+	public FChatTournamentOrganiser(ApiConnection api,TModuleType moduleType,TimeSpan updateInterval) : base(api,moduleType,updateInterval)
 	{
-		ModuleType              = BotModule.XCG;
+		ModuleType              = default!;
 		RegisteredCharacters    = [];
 		IncomingChallenges      = [];
 		OngoingMatches          = [];
@@ -43,7 +42,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 	{
 		AttributeEnumExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(CharacterStat));
 		AttributeEnumExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(CharacterStatGroup));
-		AttributeEnumExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(Command));
+		AttributeEnumExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(CardGameCommand));
 
 		AttributeEnumExtensions.ProcessEnumForAttribute<StatAliasAttribute  >(typeof(CharacterStat));
 		
@@ -54,8 +53,8 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 	{
 		FChatMessageBuilder messageBuilder = new FChatMessageBuilder()
 			.WithAuthor(ApiConnection.CharacterName)
-			.WithRecipient(command.User!.Name)
-			.WithMention(command.User!.Mention.Name.WithPronouns)
+			.WithRecipient(command.User.Name)
+			.WithMention(command.User.Mention)
 			.WithChannel(command.Channel);
 		
 		string message = ValidateCommandUse(command);
@@ -82,7 +81,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 		{
 			// User may not be null
 			if (command.User == null)
-				throw new ArgumentNullException(nameof(command),$"The (BotCommand) User property may not be null when handling a {command.Command} command.");
+				throw new ArgumentNullException(nameof(command),$"The (BotCommand) User property may not be null when handling a {command.ModuleCommand} command.");
 
 			return string.Empty;
 		}
@@ -90,29 +89,31 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 		{
 			return disallowedCommand.Reason switch
 			{
-				CommandPermission.InsufficientPermission    => "You don't have permission to do that!",
-				CommandPermission.ResponseRequired          => $"You need to respond to {IncomingChallenges[command.User!.Name.ToLower()].Challenger.Mention.Name.Basic}'s challenge first!",
-				_ => throw new ArgumentOutOfRangeException(command.ToString(), $"Unexpected {typeof(CommandPermission)} value: {disallowedCommand.Reason}")
+				CommandState.InsufficientPermission    => "You don't have permission to do that!",
+				CommandState.ResponseRequired          => $"You need to respond to {IncomingChallenges[command.User!.Name.ToLower()].Challenger.Mention}'s challenge first!",
+				_ => throw new ArgumentOutOfRangeException(command.ToString(), $"Unexpected {typeof(CommandState)} value: {disallowedCommand.Reason}")
 			};
 		}
 	}
 
 	public void HandleValidatedCommand(FChatMessageBuilder messageBuilder,BotCommand command)
 	{
-		if (Enum.TryParse(value: command.Parameters[0],ignoreCase: true,result: out Command ModuleCommand))
+		if (command.TryParseCommand(out CardGameCommand moduleCommand))
 		try
 		{
 			var alertTargetMessage = new FChatMessageBuilder()
 				.WithAuthor(ApiConnection.CharacterName)
-				.WithoutMention();
-			switch (ModuleCommand)
+				.WithoutMention()
+            	.WithMessageType(command.Channel is not null ? FChatMessageType.Basic : FChatMessageType.Whisper);
+
+			switch (moduleCommand)
 			{
-				case Command.Challenge:
+				case CardGameCommand.Challenge:
 					if (IssueChallenge(command,messageBuilder.WithoutMention(),alertTargetMessage))
 						FChatApi.EnqueueMessage(alertTargetMessage);
 					break;
 
-				case Command.Accept:
+				case CardGameCommand.Accept:
 					if (AcceptChallenge(command,messageBuilder.WithoutMention(),alertTargetMessage))
 						FChatApi.EnqueueMessage(alertTargetMessage);
 					break;
@@ -121,7 +122,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 					messageBuilder
 						.WithRecipient(command.User!.Name)
 						.WithMessage("That is not a valid command!")
-						.WithMention(RegisteredCharacters[command.User.Name.ToLower()].FChatUser.Mention.Name.WithPronouns);
+						.WithMention(RegisteredCharacters[command.User.Name.ToLower()].FChatUser.Mention);
 					break;
 			}
 		}
@@ -141,10 +142,10 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 			messageBuilder.WithMessage(
 				disallowedCommand.Reason switch
 				{
-					CommandPermission.InsufficientPermission    => $"{RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention.Name.WithPronouns}, you don't have permission to do that!",
-					CommandPermission.AwaitingResponse          => $"{RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention.Name.WithPronouns}, you still have a challenge!",
-					CommandPermission.ResponseRequired          => $"{RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention.Name.WithPronouns}, you need to respond to {IncomingChallenges[command.User!.Name.ToLower()].Challenger.Mention.Name.Basic}'s challenge first!",
-					_ => throw new ArgumentOutOfRangeException(nameof(disallowedCommand.Reason), $"Unexpected {typeof(CommandPermission)} value: {disallowedCommand.Reason}")
+					CommandState.InsufficientPermission    => $"{RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention}, you don't have permission to do that!",
+					CommandState.AwaitingResponse          => $"{RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention}, you still have a challenge!",
+					CommandState.ResponseRequired          => $"{RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention}, you need to respond to {IncomingChallenges[command.User!.Name.ToLower()].Challenger.Mention}'s challenge first!",
+					_ => throw new ArgumentOutOfRangeException(nameof(disallowedCommand.Reason), $"Unexpected {typeof(CommandState)} value: {disallowedCommand.Reason}")
 				}
 			);
 		}
@@ -154,18 +155,28 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 		}
 	}
 
-	public async override Task Update()
+	public override void Update()
 	{
-		Task t = base.Update();
 		foreach(string key in OutgoingChallenges.Where((kvp)=>kvp.Value.AtTerminalStage).Select((kvp)=>kvp.Key))
 			OutgoingChallenges.Remove(key);
-		await t;
+		base.Update();
 	}
 
-	public override void HandleJoinedChannel(Channel channel)
+	public override void HandleJoinedChannel(ChannelEventArgs @event)
 	{
-		ActiveChannels.TryAdd(channel.Code,channel);
+		ActiveChannels.TryAdd(@event.Channel.Code,@event.Channel);
 	}
+
+
+    void IFChatPlugin.HandleRecievedMessage(BotCommand command)
+    {
+        HandleRecievedMessage(command);
+    }
+
+    void IFChatPlugin.HandleJoinedChannel(ChannelEventArgs @event)
+    {
+        HandleJoinedChannel(@event);
+    }
 
 	static FChatTournamentOrganiser()
 	{

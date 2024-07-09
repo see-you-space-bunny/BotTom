@@ -1,37 +1,28 @@
 ﻿using System;
 using FChatApi.Enums;
+using FChatApi.Objects;
 
 namespace FChatApi.EventArguments;
 
 public class ChannelEventArgs : EventArgs
 {
 	/// <summary>
-	/// what is our status with the channel
+	/// the channel where the event happened
 	/// </summary>
-	public ChannelStatus status;
+	public Channel Channel;
 
 	/// <summary>
-	/// public or private
+	/// user that triggered the event channel
 	/// </summary>
-	public ChannelType type;
-
-	/// <summary>
-	/// the channel
-	/// </summary>
-	public string name;
-
-	/// <summary>
-	/// sending user
-	/// </summary>
-	public string code;
+	public User User;
 
 	/// <summary>
 	/// number of current users
 	/// </summary>
-	public int usercount;
-
+	/// 
+	public int UserCount;
 	/// <summary>
-	/// user that joined channel
+	/// what kind of event has happened
 	/// </summary>
-	public string userJoining;
+	public ChannelStatus ChannelStatus;
 }

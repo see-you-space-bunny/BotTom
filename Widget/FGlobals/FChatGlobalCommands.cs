@@ -3,196 +3,214 @@ using System.ComponentModel;
 using FChatApi.Core;
 using FChatApi.Objects;
 using FChatApi.Attributes;
-using Engine.ModuleHost;
-using Engine.ModuleHost.Plugins;
-using Engine.ModuleHost.CommandHandling;
-using Widget.FGlobals.Enums;
 using FChatApi.Enums;
+using FChatApi.Tokenizer;
+using FChatApi.EventArguments;
+using ModularPlugins;
+using Widget.FGlobals.Enums;
 
-namespace Widget.FGlobals;
+namespace FGlobals;
 
-public partial class FChatGlobalCommands : FChatPlugin
+public partial class FChatGlobalCommands<TBotModule> : FChatPlugin<TBotModule>
 {
 
 
 #if DEBUG
-	internal FChatMessageBuilder MostRecentMessage = null!; 
+    internal FChatMessageBuilder MostRecentMessage = null!;
 #endif
 
-	public FChatGlobalCommands(TimeSpan? updateInterval = null) : this(null!,updateInterval)
-	{ }
+    public FChatGlobalCommands(ApiConnection api, TBotModule moduleType, TimeSpan updateInterval) : base(api, moduleType, updateInterval)
+    { }
 
-	public FChatGlobalCommands(ApiConnection api,TimeSpan? updateInterval = null) : base(api,updateInterval)
-	{
-		ModuleType = BotModule.System;
-	}
+    private static void PreProcessEnumAttributes()
+    {
+        AttributeEnumExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(GlobalCommand));
 
-	private static void PreProcessEnumAttributes()
-	{
-		AttributeEnumExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(GlobalCommand));
+        AttributeEnumExtensions.ProcessEnumForAttribute<MinimumPrivilegeAttribute>(typeof(GlobalCommand));
 
-		AttributeEnumExtensions.ProcessEnumForAttribute<MinimumPrivilegeAttribute>(typeof(GlobalCommand));
+        AttributeEnumExtensions.ProcessEnumForAttribute<SuccessResponseAttribute>(typeof(GlobalCommand));
+        AttributeEnumExtensions.ProcessEnumForAttribute<FailureResponseAttribute>(typeof(GlobalCommand));
+        AttributeEnumExtensions.ProcessEnumForAttribute<AccessDeniedResponseAttribute>(typeof(GlobalCommand));
+    }
 
-		AttributeEnumExtensions.ProcessEnumForAttribute<SuccessResponseAttribute>(typeof(GlobalCommand));
-		AttributeEnumExtensions.ProcessEnumForAttribute<FailureResponseAttribute>(typeof(GlobalCommand));
-		AttributeEnumExtensions.ProcessEnumForAttribute<AccessDeniedResponseAttribute>(typeof(GlobalCommand));
-	}
+    public override void HandleRecievedMessage(BotCommand command)
+    {
+        if (!command.TryParseCommand(out GlobalCommand moduleCommand))
+            return;
 
-	public override void HandleRecievedMessage(BotCommand command)
-	{
-		FChatMessageBuilder messageBuilder = new FChatMessageBuilder()
-			.WithAuthor(ApiConnection.CharacterName)
-			.WithRecipient(command.UserName)
-			.WithChannel(command.Channel);
+        bool respondWithMessage = true;
+        
+        FChatMessageBuilder messageBuilder = new FChatMessageBuilder()
+            .WithAuthor(ApiConnection.CharacterName)
+            .WithRecipient(command.User.Name)
+            .WithChannel(command.Channel)
+            .WithMessageType(command.Channel is not null ? FChatMessageType.Basic : FChatMessageType.Whisper);
 
-		////// DO STUFF HERE
-		
-		if (Enum.TryParse(command.Command,true,out GlobalCommand botCommand))
-		{
-			var commandPrivilege = AttributeEnumExtensions.GetEnumAttribute<GlobalCommand,MinimumPrivilegeAttribute>(botCommand).Privilege;
-			var tempUser = command.UserName.ToRegisteredUser();
-			switch (botCommand)
-			{
-#region Register
-				case GlobalCommand.Register:
-					if (!(command.User! ?? new RegisteredUser()).IsLinked)
-					{
-						if (GlobalOperators.TryGetValue(command.UserName, out Privilege globalPrivilege))
-						{
-							tempUser.PrivilegeLevel = globalPrivilege;
-						}
-						else if (Operators.TryGetValue(command.UserName, out Privilege opPrivilege))
-						{
-							tempUser.PrivilegeLevel = opPrivilege;
-						}
-						else
-						{
-							tempUser.PrivilegeLevel = Privilege.RegisteredUser;
-						}
-						tempUser.WhenRegistered = DateTime.Now;
-						if (ChatBot.Users.TryAdd(command.UserName.ToLower(),tempUser))
-						{
-							messageBuilder
-								.WithMessage(
-									!string.IsNullOrWhiteSpace(botCommand.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>().Message)
-									?	botCommand.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>().Message
-									:	FailureResponseAttribute.Generic);
-						}
-						else
-						{
-							messageBuilder
-								.WithMessage(
-									!string.IsNullOrWhiteSpace(GlobalCommand.Whoami.GetEnumAttribute<GlobalCommand,FailureResponseAttribute>().Message)
-									?	GlobalCommand.Whoami.GetEnumAttribute<GlobalCommand,FailureResponseAttribute>().Message
-									:	FailureResponseAttribute.Generic);
-						}
-					}
-					else
-					{
-						messageBuilder
-							.WithMessage(
-								!string.IsNullOrWhiteSpace(botCommand.GetEnumAttribute<GlobalCommand,AccessDeniedResponseAttribute>().Message)
-								?	botCommand.GetEnumAttribute<GlobalCommand,AccessDeniedResponseAttribute>().Message
-								:	AccessDeniedResponseAttribute.Generic);
-					}
-					break;
-#endregion
 
-#region UnRegister
-				case GlobalCommand.UnRegister:
-					if (command.PrivilegeLevel >= commandPrivilege && (command.User! ?? new RegisteredUser()).IsLinked)
-					{
-						ChatBot.Users.Remove(command.UserName.ToLower());
-						messageBuilder
-							.WithMessage(
-								!string.IsNullOrWhiteSpace(botCommand.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>().Message)
-								?	botCommand.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>().Message
-								:	FailureResponseAttribute.Generic);
-					}
-					else
-					{
-						messageBuilder
-							.WithMessage(
-								!string.IsNullOrWhiteSpace(botCommand.GetEnumAttribute<GlobalCommand,AccessDeniedResponseAttribute>().Message)
-								?	botCommand.GetEnumAttribute<GlobalCommand,AccessDeniedResponseAttribute>().Message
-								:	AccessDeniedResponseAttribute.Generic);
-					}
-					break;
-#endregion
+        var requiredPrivilege = moduleCommand
+            .GetEnumAttribute<GlobalCommand, MinimumPrivilegeAttribute>()
+            .Privilege;
 
-#region Whoami
-				case GlobalCommand.Whoami:
-					if (command.PrivilegeLevel >= commandPrivilege && (command.User! ?? new RegisteredUser()).IsLinked)
-					{
-						var sb = new StringBuilder();
-						sb.Append(!string.IsNullOrWhiteSpace(botCommand.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>().Message)
-								?	botCommand.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>().Message
-								:	FailureResponseAttribute.Generic);
-						sb.Append($"You are {command.User!.Mention.NameAndNickname.Basic}. ");
-						sb.Append($"You are a {command.PrivilegeLevel}. ");
-						sb.Append($"You are registered since {command.User.WhenRegistered.ToShortDateString()}.");
-						messageBuilder.WithMessage(sb.ToString());
-					}
-					else
-					{
-						messageBuilder
-							.WithMessage(
-								!string.IsNullOrWhiteSpace(GlobalCommand.Whoami.GetEnumAttribute<GlobalCommand,FailureResponseAttribute>().Message)
-								?	GlobalCommand.Whoami.GetEnumAttribute<GlobalCommand,FailureResponseAttribute>().Message
-								:	FailureResponseAttribute.Generic);
-					}
-					break;
-#endregion
+        ////////////// DO STUFF HERE
+        
+        switch (Enum.GetValues<GlobalCommand>().FirstOrDefault(e => e.GetHashCode().Equals(command.ModuleCommand)))
+        {
+            #region Register
+            case GlobalCommand.Register:
+                if (command.User is not null)
+                {
+                    if (GlobalOperators.TryGetValue(command.User.Name, out Privilege globalPrivilege))
+                    {
+                        command.User.PrivilegeLevel = globalPrivilege;
+                    }
+                    else if (Operators.TryGetValue(command.User.Name, out Privilege opPrivilege))
+                    {
+                        command.User.PrivilegeLevel = opPrivilege;
+                    }
+                    else
+                    {
+                        command.User.PrivilegeLevel = Privilege.RegisteredUser;
+                    }
+                    command.User.WhenRegistered = DateTime.Now;
+                    // if (ChatBot.RegisteredUsers.TryAdd(command.User.Name.ToLower(), command.User))
+                    // {
+                    //     messageBuilder
+                    //         .WithMessage(
+                    //             !string.IsNullOrWhiteSpace(command.ModuleCommand.GetEnumAttribute<GlobalCommand, SuccessResponseAttribute>().Message)
+                    //             ? command.ModuleCommand.GetEnumAttribute<GlobalCommand, SuccessResponseAttribute>().Message
+                    //             : FailureResponseAttribute.Generic);
+                    // }
+                    // else
+                    // {
+                    //     messageBuilder
+                    //         .WithMessage(
+                    //             !string.IsNullOrWhiteSpace(GlobalCommand.Whoami.GetEnumAttribute<GlobalCommand, FailureResponseAttribute>().Message)
+                    //             ? GlobalCommand.Whoami.GetEnumAttribute<GlobalCommand, FailureResponseAttribute>().Message
+                    //             : FailureResponseAttribute.Generic);
+                    // }
+                }
+                else
+                {
+                    messageBuilder
+                        .WithMessage(
+                            !string.IsNullOrWhiteSpace(moduleCommand.GetEnumAttribute<GlobalCommand, AccessDeniedResponseAttribute>().Message)
+                            ? moduleCommand.GetEnumAttribute<GlobalCommand, AccessDeniedResponseAttribute>().Message
+                            : AccessDeniedResponseAttribute.Generic);
+                }
+                break;
+            #endregion
 
-#region Shutdown
-				case GlobalCommand.Shutdown:
-					if (command.PrivilegeLevel >= commandPrivilege && (command.User! ?? new RegisteredUser()).IsLinked)
-					{
-						ChatBot.SetShutdownFlag();
-						messageBuilder
-							.WithMessage(
-								!string.IsNullOrWhiteSpace(botCommand.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>().Message)
-								?	botCommand.GetEnumAttribute<GlobalCommand,SuccessResponseAttribute>().Message
-								:	FailureResponseAttribute.Generic);
-					}
-					else
-					{
-						messageBuilder
-							.WithMessage(
-								!string.IsNullOrWhiteSpace(botCommand.GetEnumAttribute<GlobalCommand,AccessDeniedResponseAttribute>().Message)
-								?	botCommand.GetEnumAttribute<GlobalCommand,AccessDeniedResponseAttribute>().Message
-								:	AccessDeniedResponseAttribute.Generic);
-					}
-					break;
-#endregion
+            #region UnRegister
+            case GlobalCommand.UnRegister:
+                if (command.User.PrivilegeLevel >= requiredPrivilege)
+                {
+                    //ChatBot.RegisteredUsers.Remove(command.User.Name.ToLower());
+                    messageBuilder
+                        .WithMessage(
+                            !string.IsNullOrWhiteSpace(moduleCommand.GetEnumAttribute<GlobalCommand, SuccessResponseAttribute>().Message)
+                            ? moduleCommand.GetEnumAttribute<GlobalCommand, SuccessResponseAttribute>().Message
+                            : FailureResponseAttribute.Generic);
+                }
+                else
+                {
+                    messageBuilder
+                        .WithMessage(
+                            !string.IsNullOrWhiteSpace(moduleCommand.GetEnumAttribute<GlobalCommand, AccessDeniedResponseAttribute>().Message)
+                            ? moduleCommand.GetEnumAttribute<GlobalCommand, AccessDeniedResponseAttribute>().Message
+                            : AccessDeniedResponseAttribute.Generic);
+                }
+                break;
+            #endregion
 
-				default:
-					break;
-			}
-		}
+            #region Whoami
+            case GlobalCommand.Whoami:
+                if (command.User.PrivilegeLevel >= requiredPrivilege)
+                {
+                    var sb = new StringBuilder();
+                    sb.Append(moduleCommand.GetEnumAttribute<GlobalCommand, SuccessResponseAttribute>().Message);
+                    sb.Append($"You are {command.User!.Mention}. ");
+                    sb.Append($"You are a {command.User.PrivilegeLevel}. ");
+                    sb.Append($"You are registered since {command.User.WhenRegistered.ToShortDateString()}.");
+                    messageBuilder.WithMessage(sb.ToString());
+                }
+                else
+                {
+                    messageBuilder
+                        .WithMessage(
+                            !string.IsNullOrWhiteSpace(GlobalCommand.Whoami.GetEnumAttribute<GlobalCommand, FailureResponseAttribute>().Message)
+                            ? GlobalCommand.Whoami.GetEnumAttribute<GlobalCommand, FailureResponseAttribute>().Message
+                            : FailureResponseAttribute.Generic);
+                }
+                break;
+            #endregion
 
-		////////////////////
+            #region ChInvite
+            case GlobalCommand.ChInvite:
+                ApiConnection.Mod_ChannelInviteUser(
+                    ApiConnection.GetChannelListByType(ChannelType.Private)
+                        .FirstOrDefault(c => c.CreatedByApi),
+                    command.Parameters[0]);
+                respondWithMessage = false;
+                break;
+            #endregion
 
+            #region ChCreate
+            case GlobalCommand.ChCreate:
+                ApiConnection.User_CreateChannel(command.Parameters[0]);
+                respondWithMessage = false;
+                break;
+            #endregion
+
+            #region Shutdown
+            case GlobalCommand.Shutdown:
+                if (command.User.PrivilegeLevel >= requiredPrivilege)
+                {
+                    //ChatBot.SetShutdownFlag();
+                    messageBuilder
+                        .WithMessage(
+                            !string.IsNullOrWhiteSpace(moduleCommand.GetEnumAttribute<GlobalCommand, SuccessResponseAttribute>().Message)
+                            ? moduleCommand.GetEnumAttribute<GlobalCommand, SuccessResponseAttribute>().Message
+                            : FailureResponseAttribute.Generic);
+                }
+                else
+                {
+                    messageBuilder
+                        .WithMessage(
+                            !string.IsNullOrWhiteSpace(moduleCommand.GetEnumAttribute<GlobalCommand, AccessDeniedResponseAttribute>().Message)
+                            ? moduleCommand.GetEnumAttribute<GlobalCommand, AccessDeniedResponseAttribute>().Message
+                            : AccessDeniedResponseAttribute.Generic);
+                }
+                break;
+            #endregion
+
+            default:
+                break;
+        }
+
+
+        ////////////////////////////
+
+        if (respondWithMessage)
+        {
 #if DEBUG
-		MostRecentMessage = messageBuilder;
+            MostRecentMessage = messageBuilder;
 #endif
-		FChatApi.EnqueueMessage(messageBuilder);
-	}
+            FChatApi.EnqueueMessage(messageBuilder);
+        }
+    }
 
-	public override async Task Update()
-	{
-		Task t = base.Update();
-		//tempUser.Update(command.User);
-		await t;
-	}
+    public override void Update()
+    {
+        base.Update();
+    }
 
-	public override void HandleJoinedChannel(Channel channel)
-	{
-		ActiveChannels.TryAdd(channel.Code,channel);
-	}
+    public override void HandleJoinedChannel(ChannelEventArgs @event)
+    {
+        ActiveChannels.TryAdd(@event.Channel.Code, @event.Channel);
+    }
 
-	static FChatGlobalCommands()
-	{
-		PreProcessEnumAttributes();
-	}
+    static FChatGlobalCommands()
+    {
+        PreProcessEnumAttributes();
+    }
 }

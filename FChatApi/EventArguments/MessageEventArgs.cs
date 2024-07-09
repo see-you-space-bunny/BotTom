@@ -1,5 +1,6 @@
 ﻿using System;
 using FChatApi.Enums;
+using FChatApi.Objects;
 
 namespace FChatApi.EventArguments;
 
@@ -10,27 +11,22 @@ namespace FChatApi.EventArguments;
 public class MessageEventArgs : EventArgs
 {
 	/// <summary>
-	/// the clean
+	/// the message body
 	/// </summary>
-	public string message;
-
-	/// <summary>
-	/// DEPRECATED if it's a whisper
-	/// </summary>
-	public bool iswhisper;
+	public string Message;
 
 	/// <summary>
 	/// the channel
 	/// </summary>
-	public string channel;
+	public Channel Channel;
 
 	/// <summary>
 	/// sending user
 	/// </summary>
-	public string user;
+	public User User;
 
 	/// <summary>
 	/// advanced message type
 	/// </summary>
-	public FChatMessageType messagetype;
+	public FChatMessageType MessageType;
 }

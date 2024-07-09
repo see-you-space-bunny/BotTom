@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace Widget.CardGame.Commands;
+namespace CardGame.Commands;
 
 internal partial class CommandStringInterpreter
 {

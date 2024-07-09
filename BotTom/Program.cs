@@ -19,7 +19,7 @@ partial class Program
 			if (discordToken is not null)
 				await InitializeDiscord(discordToken);
 		}
-
+		
 		if (bool.TryParse(Environment.GetEnvironmentVariable("USE_FCHAT"),out bool useFchat) && useFchat)
 		{
 			string?[] fArgs = [

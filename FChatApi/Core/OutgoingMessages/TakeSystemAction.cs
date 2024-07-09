@@ -32,9 +32,9 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="statusMessage">the status message to set</param>
 	/// <param name="status">the status type to set</param>
-	public static Task User_SetStatus(string statusMessage, ChatStatus status)
+	public static Task User_SetStatus(ChatStatus status,string statusMessage)
 	{
-		string toSend = string.Format(MessageCode.STA.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,statusMessage,status.ToString());
+		string toSend = string.Format(MessageCode.STA.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,status.ToString(),statusMessage);
 		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | New status: {status} -- {statusMessage}");
 #if DEBUG
 		return DebugSendAsync(toSend);

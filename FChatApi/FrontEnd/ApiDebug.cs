@@ -23,5 +23,8 @@ public partial class ApiConnection
 			Console.WriteLine(GenericBanner);
 		}
 	}
+
+	public static void DebugSetCharacterName(string value) =>
+		CharacterName = value;
 #endif
 }

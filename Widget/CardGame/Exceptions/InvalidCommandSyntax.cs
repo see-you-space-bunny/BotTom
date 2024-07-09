@@ -1,4 +1,4 @@
-namespace Widget.CardGame.Exceptions;
+namespace CardGame.Exceptions;
 
 [Serializable]
 internal class InvalidCommandSyntaxException : Exception

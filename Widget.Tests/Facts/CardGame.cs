@@ -1,6 +1,7 @@
 using Xunit.Abstractions;
-using Widget.CardGame.Attributes;
-using Widget.CardGame.Enums;
+using FChatApi.Attributes;
+using CardGame.Attributes;
+using CardGame.Enums;
 
 namespace Widget.Tests.Facts;
 

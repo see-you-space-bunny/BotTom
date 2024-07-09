@@ -12,17 +12,17 @@ internal class ChannelTracker
 {
 
 	/// <summary>all known channels</summary>
-	internal Dictionary<string,Channel> AllAvailableChannels;
+	private Dictionary<string,Channel> AllAvailableChannels;
 
 	/// <summary>
 	/// 
 	/// </summary>
-	internal IDictionary<string,Channel> AvailablePublicChannels => AllAvailableChannels.Where((ch)=>ch.Value.Type == ChannelType.Public).ToDictionary();
+	private Dictionary<string,Channel> AvailablePublicChannels => AllAvailableChannels.Where((ch)=>ch.Value.Type == ChannelType.Public).ToDictionary();
 
 	/// <summary>
 	/// 
 	/// </summary>
-	internal IDictionary<string,Channel> AvailablePrivateChannels => AllAvailableChannels.Where((ch)=>ch.Value.Type == ChannelType.Private).ToDictionary();
+	private Dictionary<string,Channel> AvailablePrivateChannels => AllAvailableChannels.Where((ch)=>ch.Value.Type == ChannelType.Private).ToDictionary();
 
 	/// <summary>
 	/// 
@@ -44,13 +44,13 @@ internal class ChannelTracker
 
 	internal Channel AddManualChannel(string channelname, ChannelStatus status, string channelcode)
 	{
-		if (AllAvailableChannels.ContainsKey(channelname) && !AllAvailableChannels.Values.Any(ch => ch.Name.Equals(channelname)))
+		if (AllAvailableChannels.ContainsKey(channelname.ToLowerInvariant()) && !AllAvailableChannels.Values.Any(ch => ch.Name.Equals(channelname)))
 		{
-			Channel ch = new(channelname, channelcode, ChannelType.Private)
+			Channel ch = new (channelname, channelcode, ChannelType.Private)
 			{
 				Status = status
 			};
-			AllAvailableChannels.Add(channelcode,ch);
+			AllAvailableChannels.Add(channelcode.ToLowerInvariant(),ch);
 			return ch;
 		}
 
@@ -100,10 +100,11 @@ internal class ChannelTracker
 			ChannelBeingCreated.CreatedByApi	= true;
 			ChannelBeingCreated.Owner			= owner;
 
-			AllAvailableChannels.Add(code,ChannelBeingCreated);
+			AllAvailableChannels.Add(code.ToLowerInvariant(),ChannelBeingCreated);
+			JoinedChannels.Add(code.ToLowerInvariant(),ChannelBeingCreated);
 
 			ChannelBeingCreated					= null;
-			return AllAvailableChannels[code];
+			return AllAvailableChannels[code.ToLowerInvariant()];
 		}
 		throw new InvalidOperationException($"Could not create \"{name}\" (code: {code}, owner: {owner.Name}). No channel matching that name was pending creation.");
 	}
@@ -117,12 +118,11 @@ internal class ChannelTracker
 	/// <returns>the channel that matches our <c>value</c></returns>
 	internal Channel GetChannelByNameOrCode(string value)
 	{
-		if (AllAvailableChannels.TryGetValue(value, out Channel channel))
-			return channel;
-
-		channel = AllAvailableChannels.Values.FirstOrDefault(ch => ch.Name.Equals(value, StringComparison.InvariantCultureIgnoreCase));
+		if (!JoinedChannels.TryGetValue(value.ToLowerInvariant(), out Channel channel))
+			if (!AllAvailableChannels.TryGetValue(value.ToLowerInvariant(), out channel))
+				channel = AllAvailableChannels.Values.FirstOrDefault(ch => ch.Name.Equals(value, StringComparison.InvariantCultureIgnoreCase));
 		
-		return channel ?? throw new ArgumentException($"No matching channel found for \"{value}\".",nameof(value));
+		return channel;
 	}
 #endregion
 

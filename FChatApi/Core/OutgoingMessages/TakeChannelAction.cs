@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using FChatApi.Objects;
 using FChatApi.Enums;
 using FChatApi.Attributes;
+using System.Text.Encodings.Web;
 
 namespace FChatApi.Core;
 
@@ -76,7 +77,10 @@ public partial class ApiConnection
 	public static Task User_CreateChannel(string channelname)
 	{
 		ConnectionCheck();
-		string toSend = string.Format(MessageCode.CCR.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,channelname);
+		string toSend = string.Format(
+			MessageCode.CCR.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,
+			System.Web.HttpUtility.JavaScriptStringEncode(channelname)
+		);
 		Console.WriteLine($"Attempting to create channel: {channelname}");
 		ChannelTracker.StartChannelCreation(channelname);
 #if DEBUG
@@ -275,13 +279,13 @@ public partial class ApiConnection
 ///
 
 #region (+) ChBanUser
-	public static Task Mod_ChannelBanUser(Channel channel, string username, UserRoomStatus status) =>
+	public static Task Mod_ChannelBanUser(Channel channel, string username) =>
 		Mod_SetChannelUserStatus(channel.Code,username,UserRoomStatus.Banned,channelname:channel.Name);
 
-	public static Task Mod_ChannelBanUser(string channelcode, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelBanUser(string channelcode, User user) =>
 		Mod_SetChannelUserStatus(channelcode,user.Name,UserRoomStatus.Banned);
 
-	public static Task Mod_ChannelBanUser(Channel channel, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelBanUser(Channel channel, User user) =>
 		Mod_SetChannelUserStatus(channel.Code,user.Name,UserRoomStatus.Banned,channelname:channel.Name);
 #endregion
 
@@ -297,96 +301,96 @@ public partial class ApiConnection
 #endregion
 
 #region (+) ChKickUser
-	public static Task Mod_ChannelKickUser(Channel channel, string username, UserRoomStatus status) =>
+	public static Task Mod_ChannelKickUser(Channel channel, string username) =>
 		Mod_SetChannelUserStatus(channel.Code,username,UserRoomStatus.Kicked,channelname:channel.Name);
 
-	public static Task Mod_ChannelKickUser(string channelcode, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelKickUser(string channelcode, User user) =>
 		Mod_SetChannelUserStatus(channelcode,user.Name,UserRoomStatus.Kicked);
 
-	public static Task Mod_ChannelKickUser(Channel channel, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelKickUser(Channel channel, User user) =>
 		Mod_SetChannelUserStatus(channel.Code,user.Name,UserRoomStatus.Kicked,channelname:channel.Name);
 #endregion
 
 #region (+) ChDemoteUser
-	public static Task Mod_ChannelDemoteUser(Channel channel, string username, UserRoomStatus status) =>
+	public static Task Mod_ChannelDemoteUser(Channel channel, string username) =>
 		Mod_SetChannelUserStatus(channel.Code,username,UserRoomStatus.Demoted,channelname:channel.Name);
 
-	public static Task Mod_ChannelDemoteUser(string channelcode, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelDemoteUser(string channelcode, User user) =>
 		Mod_SetChannelUserStatus(channelcode,user.Name,UserRoomStatus.Demoted);
 
-	public static Task Mod_ChannelDemoteUser(Channel channel, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelDemoteUser(Channel channel, User user) =>
 		Mod_SetChannelUserStatus(channel.Code,user.Name,UserRoomStatus.Demoted,channelname:channel.Name);
 #endregion
 
 
 #region (+) ChUnbanUser
-	public static Task Mod_ChannelUnbanUser(Channel channel, string username, UserRoomStatus status) =>
+	public static Task Mod_ChannelUnbanUser(Channel channel, string username) =>
 		Mod_SetChannelUserStatus(channel.Code,username,UserRoomStatus.UnBanned,channelname:channel.Name);
 
-	public static Task Mod_ChannelUnbanUser(string channelcode, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelUnbanUser(string channelcode, User user) =>
 		Mod_SetChannelUserStatus(channelcode,user.Name,UserRoomStatus.UnBanned);
 
-	public static Task Mod_ChannelUnbanUser(Channel channel, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelUnbanUser(Channel channel, User user) =>
 		Mod_SetChannelUserStatus(channel.Code,user.Name,UserRoomStatus.UnBanned,channelname:channel.Name);
 #endregion
 
 
 #region (+) ChInviteUser
-	public static Task Mod_ChannelInviteUser(Channel channel, string username, UserRoomStatus status) =>
+	public static Task Mod_ChannelInviteUser(Channel channel, string username) =>
 		Mod_SetChannelUserStatus(channel.Code,username,UserRoomStatus.Invited,channelname:channel.Name);
 
-	public static Task Mod_ChannelInviteUser(string channelcode, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelInviteUser(string channelcode, User user) =>
 		Mod_SetChannelUserStatus(channelcode,user.Name,UserRoomStatus.Invited);
 
-	public static Task Mod_ChannelInviteUser(Channel channel, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelInviteUser(Channel channel, User user) =>
 		Mod_SetChannelUserStatus(channel.Code,user.Name,UserRoomStatus.Invited,channelname:channel.Name);
 #endregion
 
 
 #region (+) ChResetUser
-	public static Task Mod_ChannelResetUser(Channel channel, string username, UserRoomStatus status) =>
+	public static Task Mod_ChannelResetUser(Channel channel, string username) =>
 		Mod_SetChannelUserStatus(channel.Code,username,UserRoomStatus.User,channelname:channel.Name);
 
-	public static Task Mod_ChannelResetUser(string channelcode, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelResetUser(string channelcode, User user) =>
 		Mod_SetChannelUserStatus(channelcode,user.Name,UserRoomStatus.User);
 
-	public static Task Mod_ChannelResetUser(Channel channel, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelResetUser(Channel channel, User user) =>
 		Mod_SetChannelUserStatus(channel.Code,user.Name,UserRoomStatus.User,channelname:channel.Name);
 #endregion
 
 
 #region (+) ChTrustUser
-	public static Task Mod_ChannelTrustUser(Channel channel, string username, UserRoomStatus status) =>
+	public static Task Mod_ChannelTrustUser(Channel channel, string username) =>
 		Mod_SetChannelUserStatus(channel.Code,username,UserRoomStatus.TrustedUser,channelname:channel.Name);
 
-	public static Task Mod_ChannelTrustUser(string channelcode, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelTrustUser(string channelcode, User user) =>
 		Mod_SetChannelUserStatus(channelcode,user.Name,UserRoomStatus.TrustedUser);
 
-	public static Task Mod_ChannelTrustUser(Channel channel, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelTrustUser(Channel channel, User user) =>
 		Mod_SetChannelUserStatus(channel.Code,user.Name,UserRoomStatus.TrustedUser,channelname:channel.Name);
 #endregion
 
 
 #region (+) ChPromoteUser
-	public static Task Mod_ChannelPromoteUser(Channel channel, string username, UserRoomStatus status) =>
+	public static Task Mod_ChannelPromoteUser(Channel channel, string username) =>
 		Mod_SetChannelUserStatus(channel.Code,username,UserRoomStatus.Moderator,channelname:channel.Name);
 
-	public static Task Mod_ChannelPromoteUser(string channelcode, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelPromoteUser(string channelcode, User user) =>
 		Mod_SetChannelUserStatus(channelcode,user.Name,UserRoomStatus.Moderator);
 
-	public static Task Mod_ChannelPromoteUser(Channel channel, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelPromoteUser(Channel channel, User user) =>
 		Mod_SetChannelUserStatus(channel.Code,user.Name,UserRoomStatus.Moderator,channelname:channel.Name);
 #endregion
 
 
 #region (+) ChTransferOwner
-	public static Task Mod_ChannelTransferOwner(Channel channel, string username, UserRoomStatus status) =>
+	public static Task Mod_ChannelTransferOwner(Channel channel, string username) =>
 		Mod_SetChannelUserStatus(channel.Code,username,UserRoomStatus.Owner,channelname:channel.Name);
 
-	public static Task Mod_ChannelTransferOwner(string channelcode, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelTransferOwner(string channelcode, User user) =>
 		Mod_SetChannelUserStatus(channelcode,user.Name,UserRoomStatus.Owner);
 
-	public static Task Mod_ChannelTransferOwner(Channel channel, User user, UserRoomStatus status) =>
+	public static Task Mod_ChannelTransferOwner(Channel channel, User user) =>
 		Mod_SetChannelUserStatus(channel.Code,user.Name,UserRoomStatus.Owner,channelname:channel.Name);
 #endregion
 }

@@ -1,14 +1,14 @@
 using System.Text;
 using FChatApi.Objects;
-using Widget.CardGame.Enums;
-using Widget.CardGame.Commands;
-using Widget.CardGame.PersistentEntities;
-using Engine.ModuleHost.Plugins;
-using Engine.ModuleHost.CommandHandling;
+using CardGame.Enums;
+using CardGame.Commands;
+using CardGame.PersistentEntities;
+using FChatApi.Tokenizer;
+using ModularPlugins;
 
-namespace Widget.CardGame;
+namespace CardGame;
 
-public partial class FChatTournamentOrganiser : FChatPlugin
+public partial class FChatTournamentOrganiser<TModuleType> : FChatPlugin<TModuleType>
 {
 	private bool IssueChallenge(BotCommand command,FChatMessageBuilder commandResponse,FChatMessageBuilder targetAlertResponse)
 	{
@@ -22,20 +22,20 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 				.WithMessage("You need to specify at least one stat with which to build your deck.");
 			return false;
 		}
-		else if (!Enum.TryParse(command.Parameters[1],true,out stat1))
+		else if (!Enum.TryParse(command.Parameters[0],true,out stat1))
 		{
 			commandResponse
-				.WithMessage($"{command.Parameters[1].ToUpper()} is not a recognised stat.");
+				.WithMessage($"{command.Parameters[0].ToUpper()} is not a recognised stat.");
 			return false;
 		}
 
 		CharacterStat stat2 = default;
 		if (command.Parameters.Length > 2)
 		{
-			if (!Enum.TryParse(command.Parameters[2],true,out stat2) && command.Parameters.Length > 3)
+			if (!Enum.TryParse(command.Parameters[1],true,out stat2) && command.Parameters.Length > 3)
 			{
 				commandResponse
-					.WithMessage($"{command.Parameters[2].ToUpper()} is not a recognised stat.");
+					.WithMessage($"{command.Parameters[1].ToUpper()} is not a recognised stat.");
 				return false;
 			}
 		}
@@ -74,14 +74,14 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 		//////////
 
 		responseBuilder
-			.Append(RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention.Name.WithPronouns)
+			.Append(RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention)
 			.Append(" has challenged ")
 			.Append(player.Name)
 			.Append(" to a [b]Duel[/b]! ")
 			.Append("[i]Hint:[/i] To accept this challenge, use the command \"tom!xcg accept [i]stat1[/i] [i]stat2[/i]\"");
 
 		alertBuilder
-			.Append(RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention.Name.WithPronouns)
+			.Append(RegisteredCharacters[command.User!.Name.ToLower()].FChatUser.Mention)
 			.Append(" has challenged you to a [b]Duel[/b]! ")
 			.Append("[i]Hint:[/i] To accept this challenge, use the command \"tom!xcg accept [i]stat1[/i] [i]stat2[/i]\"");
 		
@@ -108,12 +108,12 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 		return true;
 	}
 
-	private (bool exitEarly,string message,RegisteredUser target) ValidateIssueChallenge(string challenger,string target)
+	private (bool exitEarly,string message,User target) ValidateIssueChallenge(string challenger,string target)
 	{
-		RegisteredUser player;
-		if (!RegisteredCharacters.TryGetValue(target.ToLower(), out (RegisteredUser FChatUser,PlayerCharacter ModuleCharacter) userAndPlayer))
+		User player;
+		if (!RegisteredCharacters.TryGetValue(target.ToLower(), out (User FChatUser,PlayerCharacter ModuleCharacter) userAndPlayer))
 		{
-			return (true,"You can't challenge a user that is not registered.",new RegisteredUser());
+			return (true,"You can't challenge a user that is not registered.",new User());
 		}
 		else
 		{
@@ -122,25 +122,25 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 
 		if (target == challenger)
 		{
-			return (true,"You can't challenge yourself.",new RegisteredUser());
+			return (true,"You can't challenge yourself.",new User());
 		}
 		else if (OutgoingChallenges.ContainsKey(challenger.ToLower()))
 		{
-			return (true,"You can't have more than one pending challenge.",new RegisteredUser());
+			return (true,"You can't have more than one pending challenge.",new User());
 		}
 		else if (!RegisteredCharacters.ContainsKey(player.Name.ToLower()))
 		{
-			return (true,"That player is already being challenged by you.",new RegisteredUser());
+			return (true,"That player is already being challenged by you.",new User());
 		}
 		else if (IncomingChallenges.ContainsKey(player.Name.ToLower()))
 		{
 			if (IncomingChallenges[player.Name.ToLower()].Challenger.Name == challenger)
 			{
-				return (true,"That player is already being challenged by you.",new RegisteredUser());
+				return (true,"That player is already being challenged by you.",new User());
 			}
 			else
 			{
-				return (true,"That player is already being challenged by someone.",new RegisteredUser());
+				return (true,"That player is already being challenged by someone.",new User());
 			}
 		}
 		return (false,string.Empty,player);

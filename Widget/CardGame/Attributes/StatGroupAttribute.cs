@@ -1,6 +1,6 @@
-using Widget.CardGame.Enums;
+using CardGame.Enums;
 
-namespace Widget.CardGame.Attributes;
+namespace CardGame.Attributes;
 
 [AttributeUsage(AttributeTargets.All)]
 public class StatGroupAttribute : Attribute

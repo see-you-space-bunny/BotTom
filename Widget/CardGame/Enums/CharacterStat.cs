@@ -1,7 +1,7 @@
 using System.ComponentModel;
-using Widget.CardGame.Attributes;
+using CardGame.Attributes;
 
-namespace Widget.CardGame.Enums;
+namespace CardGame.Enums;
 
 public enum CharacterStat
 {

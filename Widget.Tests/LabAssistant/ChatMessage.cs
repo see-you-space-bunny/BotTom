@@ -1,4 +1,6 @@
-using Engine.ModuleHost.CommandHandling;
+using FChatApi.Enums;
+using FChatApi.Objects;
+using FChatApi.Tokenizer;
 
 namespace Widget.Tests.LabAssistant;
 
@@ -7,10 +9,10 @@ internal static class ChatMessageAssistant
 	internal static BotCommand NewDummyMessage(string user,string message)
 	{
 		if (BotInfoAssistant.CommandParser.TryConvertCommand(
-			user,
-			new RegisteredUser(){ Name = user },
+			new User(){ Name = user },
 			null,
 			message,
+			FChatMessageType.Basic,
 			out BotCommand? command
 		))
 			return command!;

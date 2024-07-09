@@ -26,7 +26,6 @@ public static class AttributeEnumExtensions
 
 		// Put known enum types here to speed things up later
 		ProcessEnumForAttribute<DescriptionAttribute			>(typeof(Privilege));
-		ProcessEnumForAttribute<DescriptionAttribute			>(typeof(BotModule));
 		
 		ProcessEnumForAttribute<DescriptionAttribute			>(typeof(IgnoreAction));
 		ProcessEnumForAttribute<MaximumLengthAttribute			>(typeof(FChatMessageType));

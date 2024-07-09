@@ -19,9 +19,6 @@ static class ControlPanel
 	#endregion
 
 	#region P(~) DUMMY FIELDS
-	internal static string FieldA { get; set; } = "test";
-	internal static long FieldB { get; set; } = 10;
-	internal static bool FieldC { get; set; } = true;
 	#endregion
 
 	#region M(~)

@@ -8,6 +8,10 @@ namespace FChatApi.Objects;
 
 public class Channel : IMessageRecipient
 {
+#region Fields (-)
+	private string _code = null;
+#endregion
+
 #region Properties (+)
 	/// <summary>does the channel permit ads to be sent</summary>
 	public bool AdEnabled { get; set; }
@@ -19,7 +23,7 @@ public class Channel : IMessageRecipient
 	public ChannelStatus Status { get; set; }
 
 	/// <summary>the channel's channel-code</summary>
-	public string Code { get; set; }
+	public string Code { get => _code; set => _code = value.ToLowerInvariant(); }
 
 	/// <summary>(accessibility) type of channel</summary>
 	public ChannelType Type { get; set; }

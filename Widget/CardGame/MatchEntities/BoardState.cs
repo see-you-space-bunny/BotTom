@@ -1,4 +1,4 @@
-namespace Widget.CardGame.MatchEntities;
+namespace CardGame.MatchEntities;
 
 public class BoardState(MatchPlayer player1,MatchPlayer player2)
 {

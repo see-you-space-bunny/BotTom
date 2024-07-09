@@ -1,38 +1,38 @@
 using System.Text;
 using FChatApi.Objects;
 using FChatApi.Enums;
-using Widget.CardGame.Enums;
-using Widget.CardGame.Commands;
-using Engine.ModuleHost.Plugins;
-using Engine.ModuleHost.CommandHandling;
+using CardGame.Enums;
+using CardGame.Commands;
+using ModularPlugins;
+using FChatApi.Tokenizer;
 
-namespace Widget.CardGame;
+namespace CardGame;
 
-public partial class FChatTournamentOrganiser : FChatPlugin
+public partial class FChatTournamentOrganiser<TModuleType> : FChatPlugin<TModuleType>
 {
 	private bool AcceptChallenge(BotCommand command,FChatMessageBuilder commandResponse,FChatMessageBuilder challengerAlertResponse)
 	{
 		CharacterStat stat1 = default;
-		if (command.Parameters.Length < 2)
+		if (command.Parameters.Length < 1)
 		{
 			commandResponse
 				.WithMessage("You need to specify at least one stat with which to build your deck.");
 			return false;
 		}
-		else if (!Enum.TryParse(command.Parameters[1],true,out stat1))
+		else if (!Enum.TryParse(command.Parameters[0],true,out stat1))
 		{
 			commandResponse
-				.WithMessage($"{command.Parameters[1].ToUpper()} is not a recognised stat.");
+				.WithMessage($"{command.Parameters[0].ToUpper()} is not a recognised stat.");
 			return false;
 		}
 
 		CharacterStat stat2 = default;
-		if (command.Parameters.Length > 2)
+		if (command.Parameters.Length > 1)
 		{
-			if (!Enum.TryParse(command.Parameters[2],true,out stat2))
+			if (!Enum.TryParse(command.Parameters[1],true,out stat2))
 			{
 				commandResponse
-					.WithMessage($"{command.Parameters[2].ToUpper()} is not a recognised stat.");
+					.WithMessage($"{command.Parameters[1].ToUpper()} is not a recognised stat.");
 				return false;
 			}
 		}
@@ -40,13 +40,13 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 		//////////
 			
 		var responseBuilder = new StringBuilder()
-			.Append(command.User!.Mention.Name.Basic)
+			.Append(command.User!.Mention)
 			.Append(" has accepted ")
-			.Append(IncomingChallenges[command.User!.Name.ToLower()].Challenger.Mention.Name.Basic)
+			.Append(IncomingChallenges[command.User!.Name.ToLower()].Challenger.Mention)
 			.Append("'s challenge!");
 
 		var alertBuilder    = new StringBuilder()
-			.Append(command.User!.Mention.Name.Basic)
+			.Append(command.User!.Mention)
 			.Append(" has accepted your challenge!");
 		
 		//////////

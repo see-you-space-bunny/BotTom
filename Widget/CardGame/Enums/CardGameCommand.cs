@@ -2,12 +2,17 @@ using System.ComponentModel;
 
 namespace CardGame.Enums;
 
-public enum CharacterStatGroup
+public enum CardGameCommand
 {
 	[Description("")]
-	Untyped,
+	Register,
+
 	[Description("")]
-	Physical,
+	Accept,
+
 	[Description("")]
-	Mental,
+	Challenge,
+
+	[Description("")]
+	Reject,
 }

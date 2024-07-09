@@ -23,6 +23,9 @@ public class User : IMessageRecipient
 ///
 
 #region Fields (-)
+	/// <summary>character's userlist key</summary>
+	private string _key;
+
 	/// <summary>character name</summary>
 	private string _name;
 #endregion
@@ -42,7 +45,7 @@ public class User : IMessageRecipient
 	public string Memo { get; set; }
 
     /// <summary>character name</summary>
-    public string Name { get=>_name; set{ _name = value; Key = value.ToLower(); } }
+    public string Name { get=>_name; set{ _name = value; _key = value.ToLowerInvariant(); } }
 	
 	/// <summary>that subscriber subtitle ?SPECULATION</summary>
 	public string Nickname { get; set; }
@@ -91,7 +94,7 @@ public class User : IMessageRecipient
 #region Custom Info (P+)
 	
 	/// <summary>key for UserTracker</summary>
-	public string Key { get; private set; }
+	public string Key { get=>_key; private set => _key = value.ToLowerInvariant(); }
 	
 	/// <summary>a memo separate from the flist memo feature</summary>
 	public string BotMemo { get; set; }

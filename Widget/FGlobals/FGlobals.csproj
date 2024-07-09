@@ -20,9 +20,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Plugins\Plugins.csproj" />
 		<ProjectReference Include="..\..\Engine\Serialization\Serialization.csproj" />
 		<ProjectReference Include="..\..\FChatApi\FChatApi.csproj" />
-		<ProjectReference Include="..\..\Engine\ModuleHost\ModuleHost.csproj" />
 	</ItemGroup>
 	
 </Project>

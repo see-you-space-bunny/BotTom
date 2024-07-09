@@ -1,203 +1,144 @@
 using System.Reactive.Concurrency;
-using Discord.WebSocket;
-using FChatApi.Core;
 using FChatApi.Objects;
 using Engine.ModuleHost.Enums;
-using Engine.ModuleHost.Plugins;
-using Engine.ModuleHost.CommandHandling;
-using FChatApi.Enums;
+using ModularPlugins;
+using System.ComponentModel;
+using FChatApi.Attributes;
+using FChatApi.Core;
 
-namespace Engine.ModuleHost
+namespace Engine.ModuleHost;
+
+/// <summary>
+/// This is our main bot interface
+/// </summary>
+public partial class ChatBot
 {
-    /// <summary>
-    /// This is our main bot interface
-    /// </summary>
-    public class ChatBot
+	public static Dictionary<string,User> RegisteredUsers { get; } = [];
+
+	/// <summary>
+	/// our list of active plugins
+	/// </summary>
+	private Dictionary<BotModule,IFChatPlugin> FChatPlugins { get; }
+
+	private AsyncLock _UsersLock = new();
+
+	/// <summary>
+	/// constructor, inits plugins
+	/// </summary>
+	public ChatBot()
 	{
-		public static Dictionary<string,RegisteredUser> Users { get; } = [];
+		FChatPlugins = [];
+		AttributeEnumExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(BotModule));
 
-		/// <summary>
-		/// our list of active plugins
-		/// </summary>
-		private Dictionary<(Platform Platform,Type Type),PluginBase> Plugins { get; }
+		DeserializeUsers();
+	}
 
-		/// <summary>
-		/// our list of active fchat plugins
-		/// </summary>
-		private IEnumerable<FChatPlugin> FChatPlugins => Plugins.Values.OfType<FChatPlugin>();
+	private static void DeserializeUsers(string? path = null)
+	{
+		path ??= Path.Combine(Environment.CurrentDirectory,"sessiondata","KnownUsers");
+		if (!File.Exists(path))
+			return;
 
-		/// <summary>
-		/// our list of active discord plugins
-		/// </summary>
-		private IEnumerable<DiscordSlashPlugin> DiscordSlashPlugins => Plugins.Values.OfType<DiscordSlashPlugin>();
-
-		private TimeSpan _userRefreshIneterval = new TimeSpan(0,0,15);
-		private DateTime _nextUserRefresh;
-
-		private AsyncLock _registeredUsersLock = new();
-
-		/// <summary>
-		/// constructor, inits plugins
-		/// </summary>
-		public ChatBot()
+		using (var stream = File.OpenRead(path))
 		{
-			Plugins = [];
-			_nextUserRefresh = DateTime.Now;
-
-			DeserializeRegisteredUsers();
-		}
-
-		private static void DeserializeRegisteredUsers(string? path = null)
-		{
-			path ??= Path.Combine(Environment.CurrentDirectory,"sessiondata","RegisterdPlayers");
-			if (!File.Exists(path))
+			var reader  = new BinaryReader(stream);
+			uint count  = reader.ReadUInt32();
+			if (count == 0)
 				return;
 
-			using (var stream = File.OpenRead(path))
+			for (uint i=0;i<count;i++)
 			{
-				var reader  = new BinaryReader(stream);
-				uint count  = reader.ReadUInt32();
-				if (count == 0)
-					return;
-
-				for (uint i=0;i<count;i++)
-				{
-					var tempRegUser = RegisteredUser.Deserialize(reader);
-					if (Users.TryAdd(tempRegUser.Name.ToLower(),tempRegUser))
-						continue;
-				}
+				var tempRegUser = User.Deserialize(reader);
+				if (RegisteredUsers.TryAdd(tempRegUser.Name.ToLower(),tempRegUser))
+					continue;
 			}
 		}
+	}
 
-		/// <summary>
-		/// Adds a plugin to the list of active plugins
-		/// </summary>
-		/// <param name="plugin"></param>
-		public ChatBot AddPlugin<TPlugin>(PluginBase plugin) where TPlugin : PluginBase
+	/// <summary>
+	/// Adds a plugin to the list of active plugins
+	/// </summary>
+	/// <param name="plugin"></param>
+	public ChatBot AddPlugin(BotModule type,IFChatPlugin plugin)
+	{
+		if (FChatPlugins.ContainsKey(type))
 		{
-			var key = (typeof(TPlugin) switch
-				{
-					Type t when t.IsSubclassOf(typeof(FChatPlugin))         => Platform.FChat,
-					Type t when t.IsSubclassOf(typeof(DiscordSlashPlugin))  => Platform.Discord,
-					_ => throw new ArgumentException(typeof(TPlugin).ToString()),
-				},
-				plugin.GetType()
-			);
-			if (Plugins.ContainsKey(key))
-			{
-				Console.WriteLine("You cannot add same plugin twice!");
-				return this;
-			}
-
-			Plugins.Add(key,plugin);
+			Console.WriteLine("You cannot add same plugin twice!");
 			return this;
 		}
 
-		/// <summary>
-		/// Returns plugin of a specific type if available
-		/// </summary>
-		/// <param name="type">type to return</param>
-		/// <returns>plugin if found, otherwise null</returns>
-		public PluginBase? GetPlugin(Platform platform, Type type)
+		FChatPlugins.Add(type,plugin);
+		return this;
+	}
+
+	/// <summary>
+	/// Returns plugin of a specific type if available
+	/// </summary>
+	/// <param name="type">type to return</param>
+	/// <returns>plugin if found, otherwise null</returns>
+	public IFChatPlugin GetPlugin<TPlugin>() where TPlugin : struct
+	{
+		return FChatPlugins.FirstOrDefault(p => p.GetType() == typeof(FChatPlugin<TPlugin>)).Value;
+	}
+
+	/// <summary>
+	/// update the bot's and its modules
+	/// </summary>
+	public async Task Update()
+	{
+		//if (_nextUserRefresh > DateTime.Now)
+		//	foreach (var regUser in Users.Keys)
+		//		if (Users.TryGetValue(regUser, out User? User) && ApiConnection.TryGetOnlineUserByName(regUser,out User user))
+		//			User.Update(user);
+
+		var tasks = new Task[FChatPlugins.Count];
+		int i = 0;
+		foreach (IFChatPlugin plugin in FChatPlugins.Values.Where(p => p.NextUpdate >= DateTime.Now))
 		{
-			if (Plugins.TryGetValue((platform,type),out PluginBase? pluginBase))
-				return pluginBase;
-			return null;
+			tasks[i] = Task.Run(() => plugin.Update());
+			++i;
 		}
+		await Task.WhenAll(tasks.Where(t => t != null).ToArray());
+		if (_shutdown)
+			await Shutdown();
+	}
 
-		/// <summary>
-		/// update the bot's and its modules
-		/// </summary>
-		public async Task Update()
+	/// <summary>
+	/// Clean up our plugins if we're closing things down
+	/// </summary>
+	public async Task Shutdown()
+	{
+		lock (_UsersLock)
 		{
-			if (_nextUserRefresh > DateTime.Now)
-				foreach (var regUser in Users.Keys)
-					if (Users.TryGetValue(regUser, out RegisteredUser? registeredUser) && ApiConnection.TryGetOnlineUserByName(regUser,out User user))
-						registeredUser.Update(user);
-
-			var tasks = new Task[Plugins.Count];
-			int i = 0;
-			foreach (var plugin in Plugins.Values.Where(p => p.NextUpdate >= DateTime.Now))
+			// TODO get list filtered by registered users
+			// TODO get method for adding registered users back into this list
+			var userlist = ApiConnection.GetUserListByStatus(FChatApi.Enums.UserStatus.Online);
+			if (userlist.Any())
+			using (var stream = File.Create(Path.Combine(Environment.CurrentDirectory, "sessiondata", "KnownUsers")))
 			{
-				tasks[i] = Task.Run(() => plugin.Update());
-				++i;
-			}
-			await Task.WhenAll(tasks.Where(t => t != null).ToArray());
-			if (_shutdown)
-				await Shutdown();
-		}
-
-		/// <summary>
-		/// Clean up our plugins if we're closing things down
-		/// </summary>
-		public async Task Shutdown()
-		{
-			lock (_registeredUsersLock)
-			{
-				using var stream = File.Create(Path.Combine(Environment.CurrentDirectory, "sessiondata", "RegisterdPlayers"));
 				var writer = new BinaryWriter(stream);
-				writer.Write((uint)Users.Count);
-				foreach (RegisteredUser regUser in Users.Values)
+				writer.Write((uint)userlist.Count());
+				foreach (User user in userlist)
 				{
-					regUser.Serialize(writer);
+					user.Serialize(writer);
 				}
 			}
-
-			var tasks = new Task[Plugins.Count];
-			int i = 0;
-			foreach (var plugin in Plugins.Values)
-			{
-				tasks[i] = Task.Run(() => plugin.Shutdown());
-				++i;
-			}
-			await Task.WhenAll(tasks.Where(t => t != null).ToArray());
 		}
 
-		/// <summary>
-		/// Handles when we receive a message from the chat server
-		/// </summary>
-		/// <param name="command">command being sent, if any</param>
-		public void HandleMessage(BotCommand command)
+		var tasks = new Task[FChatPlugins.Count];
+		int i = 0;
+		foreach (IFChatPlugin plugin in FChatPlugins.Values)
 		{
-			FChatPlugins.Single(p => p.ModuleType == command.BotModule).HandleRecievedMessage(command);
+			tasks[i] = Task.Run(() => plugin.Shutdown());
+			++i;
 		}
+		await Task.WhenAll(tasks.Where(t => t != null).ToArray());
+	}
 
-
-		/// <summary>
-		/// Handles when we receive a slash command
-		/// </summary>
-		/// <param name="command">the slash command context</param>
-		public async void HandleMessage(SocketSlashCommand command)
-		{
-			if (Enum.TryParse(command.Data.Name,true,out BotModule botModule))
-			{
-				await DiscordSlashPlugins.Single(p => p.ModuleType == botModule).HandleRecievedMessage(command);
-			}
-		}
-
-		/// <summary>
-		/// Called when a channel is joined
-		/// </summary>
-		/// <param name="channel">Channel that was joined</param>
-		public async void HandleJoinedChannel(string channelCode)
-		{
-			Channel channel = ApiConnection.GetChannelByNameOrCode(channelCode);
-			
-			var tasks = new Task[FChatPlugins.Count()];
-			int i = 0;
-			foreach (var plugin in FChatPlugins)
-			{
-				tasks[i] = Task.Run(() => plugin.HandleJoinedChannel(channel));
-				++i;
-			}
-			await Task.WhenAll(tasks.Where(t => t != null).ToArray());
-		}
-
-		private static bool _shutdown = false;
-		public bool ShutdownFlag => _shutdown;
-		public static void SetShutdownFlag()
-		{
-			_shutdown = true;
-		}
+	private static bool _shutdown = false;
+	public bool ShutdownFlag => _shutdown;
+	public static void SetShutdownFlag()
+	{
+		_shutdown = true;
 	}
 }

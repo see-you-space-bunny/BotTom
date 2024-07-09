@@ -1,14 +1,12 @@
-using FChatApi.Enums;
-
-namespace Engine.ModuleHost.Plugins;
+namespace ModularPlugins;
 
 /// <summary>
 /// Our base plugin for others to derive off of
 /// </summary>
-public abstract class PluginBase
+public abstract class PluginBase<TModuleType>
 {
 	/// <summary>the type of module this is</summary>
-	public BotModule ModuleType { get; protected set; }
+	public TModuleType ModuleType { get; protected set; }
 
 	/// <summary>how often this module runs Update()</summary>
 	public TimeSpan UpdateInterval { get; }
@@ -21,17 +19,7 @@ public abstract class PluginBase
 	/// </summary>
 	/// <param name="commandChar">the symbol that wakes the module up</param>
 	/// <param name="updateInterval">how often this module runs Update().<br/>defaults to: Never</param>
-	public PluginBase(TimeSpan? updateInterval = null) : this(default,updateInterval)
-	{
-		UpdateInterval = updateInterval ?? Timeout.InfiniteTimeSpan;
-	}
-
-	/// <summary>
-	/// construct the plugin base
-	/// </summary>
-	/// <param name="commandChar">the symbol that wakes the module up</param>
-	/// <param name="updateInterval">how often this module runs Update().<br/>defaults to: Never</param>
-	public PluginBase(BotModule moduleType,TimeSpan? updateInterval = null)
+	public PluginBase(TModuleType moduleType,TimeSpan? updateInterval = null)
 	{
 		ModuleType      = moduleType;
 		UpdateInterval  = updateInterval ?? Timeout.InfiniteTimeSpan;
@@ -43,17 +31,10 @@ public abstract class PluginBase
 	/// <remarks>
 	/// you <b><u>must</u></b> call this base method in the override
 	/// </remarks>
-	public virtual Task Update() => new(()=>NextUpdate = DateTime.Now + UpdateInterval);
+	public virtual void Update() => NextUpdate = DateTime.Now + UpdateInterval;
 
 	/// <summary>
 	/// shuts down any volatile variables
 	/// </summary>
 	public virtual void Shutdown() { }
-	
-	///////////////////////////////////
-
-	/// <summary>
-	/// hidden constructor
-	/// </summary>
-	private PluginBase() { }
 }

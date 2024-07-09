@@ -2,9 +2,10 @@
 using FChatApi.Core;
 using FChatApi.Enums;
 using Engine.ModuleHost;
-using Engine.ModuleHost.CommandHandling;
-using Widget.CardGame;
-using Widget.FGlobals;
+using FChatApi.Tokenizer;
+using FGlobals;
+using Engine.ModuleHost.Enums;
+using CardGame;
 //using Widget.TabletopAids;
 
 namespace BotTom;
@@ -14,67 +15,70 @@ partial class Program
 	// -----------------------------------------------
 	//             User Information
 	// -----------------------------------------------
-	static readonly string F_UserNameArg			= "UserName";
-	static readonly string F_PassWordArg			= "Password";
-	static readonly string F_CharacterNameArg		= "CharacterName";
-	static readonly string F_StartingChannelArg		= "StartingChannel";
-	static readonly string F_RetryAttemptsArg		= "RetryAttempts";
-	static readonly string F_CommandCharArg			= "CommandChar";
-	static readonly string F_OwnerListArg			= "OwnerList";
-	static readonly string F_GlobalOpsListArg		= "GlobalOpsList";
+	private static readonly string F_UserNameArg			= "UserName";
+	private static readonly string F_PassWordArg			= "Password";
+	private static readonly string F_CharacterNameArg		= "CharacterName";
+	private static readonly string F_StartingChannelArg		= "StartingChannel";
+	private static readonly string F_RetryAttemptsArg		= "RetryAttempts";
+	private static readonly string F_CommandCharArg			= "CommandChar";
+	private static readonly string F_OwnerListArg			= "OwnerList";
+	private static readonly string F_GlobalOpsListArg		= "GlobalOpsList";
 	// -----------------------------------------------
 
-	static string F_StartingChannel = string.Empty;
+	private static string F_StartingChannel = string.Empty;
 
 	/// <summary>
 	/// Our chat interface
 	/// </summary>
-	static ApiConnection? F_Chat;
-	
-	public static List<string> F_ActiveChannels = [];
+	private static ApiConnection? F_Chat;
 
 	/// <summary>
 	/// Our bot interface
 	/// </summary>
-	static ChatBot? F_Bot;
+	private static ChatBot? F_Bot;
 
 	/// <summary>
 	/// our main command character
 	/// </summary>
-	static string F_CommandChar = string.Empty;
+	private static string F_CommandChar = string.Empty;
 
 	/// <summary>
 	/// our command tokenizer
 	/// </summary>
-	static CommandParser F_CommandParser = new(string.Empty,[]);
+	private static CommandParser F_CommandParser = default!;
 	
 	/// <summary>
 	/// A list of global bot ops
 	/// </summary>
-	static List<string> F_GlobalOps = [];
+	private static List<string> F_GlobalOps = [];
 	
 	/// <summary>
 	/// A list of bot owners
 	/// </summary>
-	static List<string> F_Owner = [];
+	private static List<string> F_Owner = [];
 
 	/// <summary>
 	/// A collection of any failed cli args in validation check
 	/// </summary>
-	static readonly List<string> F_FailedCliArgs = [];
+	private static readonly List<string> F_FailedCliArgs = [];
 
 	/// <summary>
 	/// The bot's character name
 	/// </summary>
-	public static string F_CharacterName = string.Empty;
+	private static string F_CharacterName = string.Empty;
+
+	/// <summary>
+	/// the character testing the bot
+	/// </summary>
+	private static string FCHAT_OWNER = string.Empty;
 
 	/// <summary>
 	/// What to reset retry attempts to on reboot
 	/// </summary>
-	public static int RetryAttemptsReset = -1;
+	private static int RetryAttemptsReset = -1;
 
-	#region Main
-	static async Task InitializeFChat(string[] args)
+	#region (-) InitializeFChat
+	private static async Task InitializeFChat(string[] args)
 	{
 		// cli arg parsing and validation
 		if (args.Length == 0)
@@ -93,13 +97,13 @@ partial class Program
 				cliArgDict.Add(splitThing.First().ToLowerInvariant(), splitThing.Last().Trim());
 		}
 
-		ValidateArgument(out string F_UserName,        	F_UserNameArg, 				cliArgDict);
-		ValidateArgument(out string F_Password,        	F_PassWordArg, 				cliArgDict);
+		ValidateArgument(out string F_UserName,        	F_UserNameArg, 			cliArgDict);
+		ValidateArgument(out string F_Password,        	F_PassWordArg, 			cliArgDict);
 		ValidateArgument(out string F_CharacterName,   	F_CharacterNameArg, 	cliArgDict);
 		ValidateArgument(out string F_StartingChannel, 	F_StartingChannelArg,	cliArgDict, true);
-		ValidateArgument(out F_CommandChar,            	F_CommandCharArg,			cliArgDict);
-		ValidateArgument(out F_Owner,              			F_OwnerListArg,				cliArgDict);
-		ValidateArgument(out F_GlobalOps,           		F_GlobalOpsListArg,		cliArgDict, true);
+		ValidateArgument(out F_CommandChar,            	F_CommandCharArg,		cliArgDict);
+		ValidateArgument(out F_Owner,              		F_OwnerListArg,			cliArgDict);
+		ValidateArgument(out F_GlobalOps,           	F_GlobalOpsListArg,		cliArgDict, true);
 
 		ValidateArgument(out RetryAttemptsReset,       	F_RetryAttemptsArg, 	cliArgDict);
 
@@ -109,142 +113,34 @@ partial class Program
 		{
 				Environment.Exit(-1);
 		}
+		
+		FCHAT_OWNER = F_Owner[0];
 
-		F_CommandParser.WithBotPrefix(F_CommandChar);
+		F_CommandParser = new CommandParser(F_CommandChar);
 
 		while (RetryAttempts > 0)
 		{
-				try
-				{
-						await RunChat(F_UserName, F_Password, F_CharacterName, F_StartingChannel, F_CommandChar);
-				}
-				catch(Exception e)
-				{
-						RetryAttempts--;
-						Console.WriteLine($"Error. Attempting to reconnect to chat. Attempt {4 - RetryAttempts} out of 3 : {e}");
-				}
+			try
+			{
+				await RunChat(F_UserName, F_Password, F_CharacterName, F_StartingChannel, F_CommandChar);
+			}
+			catch(Exception e)
+			{
+				RetryAttempts--;
+				Console.WriteLine($"Error. Attempting to reconnect to chat. Attempt {4 - RetryAttempts} out of 3 : {e}");
+			}
 		}
 
 		Environment.Exit(0);
 	}
 #endregion
 
-#region Validation
-	/// <summary>
-	/// handles cli arg validation confirmation
-	/// </summary>
-	/// <returns>false if any of our arguments failed to validate</returns>
-	static bool ConfirmCliArgumentValidation()
-	{
-			if (F_FailedCliArgs.Count != 0)
-			{
-					foreach(string failedArgReply in F_FailedCliArgs)
-					{
-							Console.WriteLine($"{failedArgReply}");
-					}
-					return false;
-			}
-
-			return true;
-	}
-
-	/// <summary>
-	/// attempts to validate an argument
-	/// </summary>
-	/// <param name="argVal">value of argument to validate</param>
-	/// <param name="argName">name of the argument we're attempting to validate</param>
-	/// <param name="rawArgs">the unfiltered arg cmd to check</param>
-	/// <param name="isOptional">if the arg is optional or not</param>
-	static void ValidateArgument(out List<string> argVal, string argName, Dictionary<string, string> rawArgs, bool isOptional = false)
-	{
-			argVal = [];
-			argName = argName.ToLowerInvariant();
-
-			if (!rawArgs.TryGetValue(argName, out string? value))
-			{
-					if (!isOptional)
-							F_FailedCliArgs.Add($"Failed Validation: {argName}");
-					return;
-			}
-
-			if (string.IsNullOrWhiteSpace(value))
-			{
-					F_FailedCliArgs.Add($"Failed Validation: {argName}");
-					return;
-			}
-
-			argVal = [.. value.Split(',')];
-			Console.WriteLine($"{argName} --- {string.Join(",", argVal)}");
-	}
-
-	/// <summary>
-	/// attempts to validate an argument
-	/// </summary>
-	/// <param name="argVal">value of argument to validate</param>
-	/// <param name="argName">name of the argument we're attempting to validate</param>
-	/// <param name="rawArgs">the unfiltered arg cmd to check</param>
-	/// <param name="isOptional">if the arg is optional or not</param>
-	static void ValidateArgument(out string argVal, string argName, Dictionary<string, string> rawArgs, bool isOptional = false)
-	{
-			argVal = string.Empty;
-			argName = argName.ToLowerInvariant();
-
-			if (!rawArgs.TryGetValue(argName, out string? value))
-			{
-					if (!isOptional)
-							F_FailedCliArgs.Add($"Failed Validation: {argName}");
-					return;
-			}
-
-			if (string.IsNullOrWhiteSpace(value))
-			{
-					F_FailedCliArgs.Add($"Failed Validation: {argName}");
-					return;
-			}
-
-			argVal = value;
-			Console.WriteLine($"{argName} --- {(argName.Equals(F_PassWordArg, StringComparison.InvariantCultureIgnoreCase) ? "************" : $"{argVal}")}");
-	}
-
-	/// <summary>
-	/// attempts to validate an argument
-	/// </summary>
-	/// <param name="argVal">value of argument to validate</param>
-	/// <param name="argName">name of the argument we're attempting to validate</param>
-	/// <param name="rawArgs">the unfiltered arg cmd to check</param>
-	/// <param name="isOptional">if the arg is optional or not</param>
-	static void ValidateArgument(out int argVal, string argName, Dictionary<string, string> rawArgs, bool isOptional = false)
-	{
-			argVal = -1;
-			argName = argName.ToLowerInvariant();
-
-			if (!rawArgs.ContainsKey(argName) && !isOptional)
-			{
-					F_FailedCliArgs.Add($"Failed Validation: {argName}");
-					return;
-			}
-
-			if (string.IsNullOrWhiteSpace(rawArgs[argName]))
-			{
-					F_FailedCliArgs.Add($"Failed Validation: {argName}");
-					return;
-			}
-
-			if (!int.TryParse(rawArgs[argName], out argVal))
-			{
-					F_FailedCliArgs.Add($"Failed Validation: {argName}");
-					return;
-			}
-
-			Console.WriteLine($"{argName} --- {argVal}");
-	}
-#endregion
-
+#region (-) RunChat
 	/// <summary>
 	/// Connection loop for easier retries
 	/// </summary>
 	/// <returns>false if we lose our connection</returns>
-	static async Task<bool> RunChat(string userName, string passWord, string characterName, string startingChannel, string commandChar)
+	private static async Task<bool> RunChat(string userName, string passWord, string characterName, string startingChannel, string commandChar)
 	{
 		if (F_Chat != null)
 			F_Chat = null;
@@ -261,39 +157,38 @@ partial class Program
 			F_Chat 	= new ApiConnection();
 			F_Bot 	= new ChatBot();
 
-			// Add our plugins here ////////////////////////////////////////////////
+////////////// Add our plugins here ////////////////////////////////////////////////
 #if DEBUG
-			//F_Bot.AddPlugin(new GatchaGame(F_Chat, commandChar));
-			//BOTACTION:TODO//F_Bot.AddPlugin(new LostRPG(F_Chat, commandChar));
+			F_Bot.AddPlugin(BotModule.System,new FChatGlobalCommands<BotModule>(F_Chat,BotModule.System,TimeSpan.MaxValue)
+				.SetOperators(F_Owner,		Privilege.OwnerOperator)
+				.SetOperators(F_GlobalOps,	Privilege.GlobalOperator));
+			F_Bot.AddPlugin(BotModule.XCG,new FChatTournamentOrganiser<BotModule>(F_Chat,BotModule.XCG,new TimeSpan(15000)));
+#else
 			F_Bot.AddPlugin<FChatGlobalCommands>(new FChatGlobalCommands(F_Chat)
 				.SetOperators(F_Owner,		Privilege.OwnerOperator)
-				.SetOperators(F_GlobalOps,Privilege.GlobalOperator)
-			);
-			F_Bot.AddPlugin<FChatTournamentOrganiser>(new FChatTournamentOrganiser(F_Chat));
-#else
-			// F_Bot.AddPlugin(new FChatTournamentOrganiser(F_Chat));
+				.SetOperators(F_GlobalOps,	Privilege.GlobalOperator));
 #endif
-			// End Plugin Adding ///////////////////////////////////////////////////
+////////////// End Plugin Adding ///////////////////////////////////////////////////
 
-			F_CharacterName = characterName;
+			F_CharacterName							= characterName;
 
-			F_Chat.ConnectedToChat                = ConnectedToChat;
-			F_Chat.MessageHandler                 = HandleMessageReceived;
-			F_Chat.JoinedChannelHandler           = HandleJoinedChannel;
-			F_Chat.CreatedChannelHandler          = HandleCreatedChannel;
-			F_Chat.LeftChannelHandler             = HandleLeftChannel;
-			F_Chat.PrivateChannelsReceivedHandler = HandlePrivateChannelsReceived;
-			F_Chat.PublicChannelsReceivedHandler  = HandlePublicChannelsReceived;
+			F_Chat.ConnectedToChat					= ConnectedToChat;
+			F_Chat.MessageHandler					= HandleMessageReceived;
+			F_Chat.JoinedChannelHandler				= HandleJoinedChannel;
+			F_Chat.CreatedChannelHandler			= HandleCreatedChannel;
+			F_Chat.LeftChannelHandler				= HandleLeftChannel;
+			F_Chat.PrivateChannelsReceivedHandler	= HandlePrivateChannelsReceived;
+			F_Chat.PublicChannelsReceivedHandler	= HandlePublicChannelsReceived;
 
 			await F_Chat.ConnectToChat(userName, passWord, characterName);
-			F_StartingChannel = startingChannel;
+			F_StartingChannel						= startingChannel;
 
 			SystemController.Instance.SetApi(F_Chat);
 
 			// initiate the loop
 			while (ApiConnection.IsConnected())
 			{
-					Update();
+				Update();
 			}
 
 			return false;
@@ -305,11 +200,13 @@ partial class Program
 			return false;
 		}
 	}
+#endregion
 
+#region (-) Update
 	/// <summary>
 	/// update loop, do w/e in here
 	/// </summary>
-	static async void Update()
+	private static async void Update()
 	{
 		await F_Bot!.Update();
 
@@ -319,11 +216,11 @@ partial class Program
 			shutTask = F_Bot.Shutdown();
 		}
 
-		////////////////////
+////////////////////////////
 		
-	
 
-		////////////////////
+		
+////////////////////////////
 
 		if (shutTask != null)
 		{
@@ -335,4 +232,5 @@ partial class Program
 			Thread.Sleep(10000);
 		}
 	}
+#endregion
 }

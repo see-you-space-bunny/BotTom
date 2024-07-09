@@ -1,10 +1,11 @@
 using System.ComponentModel;
-using Widget.CardGame.Enums;
-using Widget.CardGame.Interfaces;
-using Widget.CardGame.MatchEntities;
-using Widget.CardGame.PersistentEntities;
+using FChatApi.Objects;
+using CardGame.Enums;
+using CardGame.Interfaces;
+using CardGame.MatchEntities;
+using CardGame.PersistentEntities;
 
-namespace Widget.CardGame.Commands;
+namespace CardGame.Commands;
 
 
 internal class MatchChallenge : ICommandIO<string>
@@ -39,7 +40,7 @@ internal class MatchChallenge : ICommandIO<string>
 	internal string? Passphrase;
 	internal MatchPlayer Player1;
 	internal MatchPlayer? Player2;
-	internal RegisteredUser Challenger;
+	internal User Challenger;
 	internal PlayerCharacter Target;
 	internal DateTime TimeInitiated;
 	internal DateTime ExpireTime;
@@ -55,11 +56,11 @@ internal class MatchChallenge : ICommandIO<string>
 	internal string PreviousStateInfo => GetStateInfo(PreviousState);
 	*/
 
-	internal MatchChallenge(RegisteredUser challenger,MatchPlayer player1,PlayerCharacter player2,string? passphrase=null)
+	internal MatchChallenge(User challenger,MatchPlayer player1,PlayerCharacter player2,string? passphrase=null)
 		: this(challenger,player1,player2,passphrase,new TimeSpan(hours: 0,minutes: 5,seconds: 0))
 	{ }
 
-	internal MatchChallenge(RegisteredUser challenger,MatchPlayer player1,PlayerCharacter target,string? passphrase,TimeSpan expiresIn)
+	internal MatchChallenge(User challenger,MatchPlayer player1,PlayerCharacter target,string? passphrase,TimeSpan expiresIn)
 	{
 		Challenger      = challenger;
 		Player1         = player1;

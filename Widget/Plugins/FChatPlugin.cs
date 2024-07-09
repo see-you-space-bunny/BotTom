@@ -1,9 +1,10 @@
 using FChatApi.Core;
 using FChatApi.Objects;
-using Engine.ModuleHost.CommandHandling;
 using FChatApi.Enums;
+using FChatApi.Tokenizer;
+using FChatApi.EventArguments;
 
-namespace Engine.ModuleHost.Plugins;
+namespace ModularPlugins;
 
 /// <summary>
 /// our fchat plugin for others to derive off of
@@ -14,8 +15,13 @@ namespace Engine.ModuleHost.Plugins;
 /// <param name="api"></param>
 /// <param name="commandChar">the symbol that wakes the module up</param>
 /// <param name="updateInterval">how often this module runs Update().<br/>defaults to: Never</param>
-public class FChatPlugin(ApiConnection api,TimeSpan? updateInterval = null) : PluginBase(updateInterval)
+public class FChatPlugin<TModuleType>(
+    ApiConnection api, TModuleType moduleType, TimeSpan updateInterval)
+		: PluginBase<TModuleType>(moduleType,updateInterval), IFChatPlugin
 {
+	int IFChatPlugin.ModuleType => ModuleType!.GetHashCode();
+
+
 	/// <summary>our api connection</summary>
 	public ApiConnection FChatApi { get; } = api;
 
@@ -38,13 +44,12 @@ public class FChatPlugin(ApiConnection api,TimeSpan? updateInterval = null) : Pl
 	/// how we should handle a successful channel joining
 	/// </summary>
 	/// <param name="channel">channel joined</param>
-	public virtual void HandleJoinedChannel(Channel channel) { }
-
+	public virtual void HandleJoinedChannel(ChannelEventArgs @event) { }
 
 	/// <summary>
 	/// Add Operators to the module
 	/// </summary>
-	public FChatPlugin SetOperators(IEnumerable<string> values,Privilege privilege)
+	public FChatPlugin<TModuleType> SetOperators(IEnumerable<string> values,Privilege privilege)
 	{
 		if (privilege >= Privilege.GlobalOperator)
 		{
@@ -70,4 +75,27 @@ public class FChatPlugin(ApiConnection api,TimeSpan? updateInterval = null) : Pl
 			GlobalOperators.TryAdd(user,privilege);
 		}
 	}
+
+	/// <summary>
+	/// do periodically executed update stuff here
+	/// </summary>
+	/// <remarks>
+	/// you <b><u>must</u></b> call this base method in the override
+	/// </remarks>
+	public override void Update()
+	{
+		base.Update();
+	}
+
+    public override void Shutdown() { }
+
+    void IFChatPlugin.HandleRecievedMessage(BotCommand command)
+    {
+        HandleRecievedMessage(command);
+    }
+
+    void IFChatPlugin.HandleJoinedChannel(ChannelEventArgs @event)
+    {
+        HandleJoinedChannel(@event);
+    }
 }

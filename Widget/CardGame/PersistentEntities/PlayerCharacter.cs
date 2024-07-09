@@ -1,7 +1,7 @@
-using Widget.CardGame.MatchEntities;
-using Widget.CardGame.Enums;
+using CardGame.MatchEntities;
+using CardGame.Enums;
 
-namespace Widget.CardGame.PersistentEntities
+namespace CardGame.PersistentEntities
 {
     public class PlayerCharacter
 	{

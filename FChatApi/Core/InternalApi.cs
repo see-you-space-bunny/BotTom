@@ -104,314 +104,51 @@ public partial class ApiConnection
 #region (-) ParseMessage
 	private async Task ParseMessage(MessageCode messageCode, string message)
 	{
-		JObject json;
-		try
-		{
-			json = ParseToJObject(message, messageCode);
-		}
-		catch(Exception)
-		{
-			json = null;
-		}
+		JObject json = messageCode switch {
+			MessageCode.NON => throw new ArgumentException("Invalid (NON) message code.",nameof(messageCode)),
+			MessageCode.PIN => null,
+			_ => ParseToJObject(message, messageCode),
+		};
 
-		List<Task> tasks = [];
 		switch (messageCode)
 		{
-#region STA
-			case MessageCode.STA:
-			{
-				tasks.Add(Task.Run(() =>
-					{
-						if (json["character"].ToString().Equals(CharacterName, StringComparison.InvariantCultureIgnoreCase))
-						{
-							Console.WriteLine("Status Changed");
-						}
-					}
-				));
-			}
-			break;
-#endregion
+			// keep-alive ping
+			case MessageCode.PIN: await Client.SendAsync(MessageCode.PIN.ToString());	break;
 
-#region IDN
-			case MessageCode.IDN:
-			{
-				ConnectedToChat?.Invoke(this, null);
+			// incoming messages
+			case MessageCode.MSG: await Handler_MSG(json,message);	break;
+			case MessageCode.PRI: await Handler_PRI(json,message);	break;
 
-				tasks.Add(RequestChannelListFromServer(ChannelType.Private));
-				tasks.Add(RequestChannelListFromServer(ChannelType.Public));
+			// user activity
+			case MessageCode.NLN: await Handler_NLN(json);			break;
+			case MessageCode.FLN: await Handler_FLN(json);			break;
+			case MessageCode.STA: await Handler_STA(json);			break;
 
-				Console.WriteLine("Connected to Chat");
-			}
-			break;
-#endregion
+			// channel join/leave, users/operators
+			case MessageCode.JCH: await Handler_JCH(json);			break;
+			case MessageCode.LCH: await Handler_LCH(json);			break;
+			case MessageCode.ICH: await Handler_ICH(json);			break;
+			case MessageCode.COL: await Handler_COL(json);			break;
 
-#region ORS
-			case MessageCode.ORS:
-			{
-				List<Channel> privateChannelList = [];
-				foreach (var channel in json["channels"])
-				{
-					privateChannelList.Add(new Channel(channel["title"].ToString(), channel["name"].ToString(), ChannelType.Private));
-				}
+			// info about self
+			case MessageCode.LIS: await Handler_LIS(json);			break;
+			case MessageCode.FRL: /* friends list				*/	break;
+			case MessageCode.IGN: /* ignore list				*/	break;
 
-				tasks.Add(Task.Run(() =>
-					{
-						ChannelTracker.RefreshAvailableChannels(privateChannelList, ChannelType.Private);
-						PrivateChannelsReceivedHandler?.Invoke(this, new ChannelEventArgs() { });
-						Console.WriteLine($"Private Channels Recieved... {privateChannelList.Count} total Private Channels.");
-					}
-				));
-			}
-			break;
-#endregion
+			// low frequency
+			case MessageCode.CDS: await Task.Run(() => ChannelTracker.GetChannelByNameOrCode(json["channel"].ToString()).Description = json["description"].ToString());	break;
+			case MessageCode.ORS: await Handler_ORS(json);			break;
 
-#region CHA
-			case MessageCode.CHA:
-			{
-				List<Channel> publicChannelList = [];
-				foreach (var channel in json["channels"])
-				{
-					string name = channel["name"].ToString();
-					publicChannelList.Add(new Channel(name, name, ChannelType.Public));
-				}
+			// very low frequency, mostly on login
+			case MessageCode.CHA: await Handler_CHA(json);			break;
+			case MessageCode.VAR: /* server variable			*/	break;
+			case MessageCode.CON: await Task.Run(() => Console.WriteLine($"{json["count"]} connected users sent."));	break;
+			case MessageCode.ADL: /* admin list					*/	break;
+			case MessageCode.HLO: /* server hello				*/	break;
+			case MessageCode.IDN: await Handler_IDN(json);			break;
 
-				tasks.Add(Task.Run(() =>
-					{
-						ChannelTracker.RefreshAvailableChannels(publicChannelList, ChannelType.Public);
-						PublicChannelsReceivedHandler?.Invoke(this, new ChannelEventArgs() { });
-						Console.WriteLine($"Public Channels Recieved... {publicChannelList.Count} total Public Channels.");
-					}
-				));
-			}
-			break;
-#endregion
-
-#region MSG
-			case MessageCode.MSG:
-			{
-				MessageHandler?.Invoke(MessageCode.MSG, new MessageEventArgs() { channel = json["channel"].ToString(), message = json["message"].ToString(), user = json["character"].ToString() });
-				Console.WriteLine(message);
-			}
-			break;
-#endregion
-
-#region PRI
-			case MessageCode.PRI:
-			{
-				MessageHandler?.Invoke(MessageCode.PRI, new MessageEventArgs() { user = json["character"].ToString(), message = json["message"].ToString() });
-				Console.WriteLine(message);
-			}
-			break;
-#endregion
-
-#region JCH
-			case MessageCode.JCH: tasks.Add(Handler_JCH(json)); break;
-#endregion
-
-#region LCH
-			case MessageCode.LCH: tasks.Add(Handler_LCH(json)); break;
-#endregion
-
-#region PIN
-			case MessageCode.PIN:
-			{
-				tasks.Add(Client.SendAsync(MessageCode.PIN.ToString()));
-			}
-			break;
-#endregion
-
-#region VAR
-			case MessageCode.VAR:
-			{
-
-			}
-			break;
-#endregion
-
-#region HLO
-			case MessageCode.HLO:
-			{
-
-			}
-			break;
-#endregion
-
-#region CON
-			case MessageCode.CON:
-			{
-				tasks.Add(Task.Run(() => Console.WriteLine($"{json["count"]} connected users sent.")));
-			}
-			break;
-#endregion
-
-#region FRL
-			case MessageCode.FRL:
-			{
-				// friends list
-			}
-			break;
-#endregion
-
-#region IGN
-			case MessageCode.IGN:
-			{
-				// ignore list
-			}
-			break;
-#endregion
-
-#region ADL
-			case MessageCode.ADL:
-			{
-
-			}
-			break;
-#endregion
-
-#region LIS
-			case MessageCode.LIS:
-			{
-				foreach(var userinfo in json["characters"])
-				{
-					User tempUser = new()
-					{
-						Name		= userinfo[0].ToString(),
-						Gender		= userinfo[1].ToString(),
-						ChatStatus	= (ChatStatus)Enum.Parse(typeof(ChatStatus), userinfo[2].ToString().ToLowerInvariant(), true)
-					};
-					if (!UserTracker.TryAddUser(tempUser))
-					{
-					tasks.Add(Task.Run(
-							() => UserTracker
-								.GetUserByName(tempUser.Name)
-								.Update(tempUser)));
-					}
-					//UserTracker.SetChatStatus(tempUser, tempUser.ChatStatus, false);
-				}
-#if DEBUG
-				Console.WriteLine($"Added {json["characters"].Count()} users. Total users: {UserTracker.Count()}");
-#endif
-			}
-			break;
-#endregion
-
-#region NLN
-			case MessageCode.NLN:
-			{
-				User tempUser = new()
-				{
-					Name = json["identity"].ToString(),
-					UserStatus = (UserStatus)Enum.Parse(typeof(UserStatus), json["status"].ToString().ToLowerInvariant(), true),
-					Gender = json["gender"].ToString()
-				};
-
-				tasks.Add(Task.Run(() => UserTracker.Character_SetChatStatus(tempUser, ChatStatus.Online, false)));
-			}
-			break;
-#endregion
-
-#region COL
-			case MessageCode.COL:
-			{
-				Channel channel = ChannelTracker.GetChannelByNameOrCode(json["channel"].ToString());
-
-				bool ownerAdded = false;
-				foreach (string username in json["oplist"].Select(user => user.ToString()))
-				{
-					if (string.IsNullOrWhiteSpace(username))
-					{
-						continue;
-					}
-
-					User user = UserTracker.GetUserByName(username);
-
-					if (!ownerAdded)
-					{
-						channel.Owner	= user;
-						ownerAdded		= true;
-					}
-
-					tasks.Add(Task.Run(() => channel.AddMod(user)));
-				}
-#if DEBUG
-				Console.WriteLine($"Found {channel.Mods.Count} mods for channel: {channel.Name}");
-#endif
-			}
-			break;
-#endregion
-
-#region FLN
-			case MessageCode.FLN:
-			{
-				User user = UserTracker.GetUserByName(json["character"].ToString());
-				UserTracker.Character_SetChatStatus(user, ChatStatus.Offline, false);
-
-				tasks.Add(Task.Run(() =>
-					{
-						foreach (var channel in ChannelTracker.JoinedChannels.Values)
-						{
-							bool needsRemoved = false;
-
-							if (channel.Users.ContainsKey(user.Name))
-							{
-								needsRemoved = true;
-							}
-
-							if (needsRemoved)
-							{
-								channel.RemoveUser(user);
-							}
-						}
-					}
-				));
-			}
-			break;
-#endregion
-
-#region ICH
-			case MessageCode.ICH:
-			{
-				// joining channel
-				Channel channel = ChannelTracker.ChangeChannelStatus(json["channel"].ToString(), ChannelStatus.Joined);
-
-				foreach (User user in json["users"].Select(u => UserTracker.GetUserByName(u["identity"].ToString())))
-				{
-					tasks.Add(Task.Run(() =>
-						{
-							if (null == user)
-							{
-								Console.WriteLine($"Error attempting to add user {user.Name} to {channel.Name} channel's userlist.");
-							}
-
-							channel.AddUser(user);
-							channel.AdEnabled = !json["mode"].ToString().Equals("chat");
-						}
-					));
-				}
-#if DEBUG
-				Console.WriteLine($"Adding {json["users"].Count()} users to {channel.Name} channel's userlist successful.");
-#endif
-			}
-			break;
-#endregion
-
-#region CDS
-			case MessageCode.CDS:
-			{
-				tasks.Add(Task.Run(() => ChannelTracker.GetChannelByNameOrCode(json["channel"].ToString()).Description = json["description"].ToString()));
-			}
-			break;
-#endregion
-
-#region default
-			default:
-			{
-
-			}
-			break;
-#endregion
+			default: break;
 		}
-		await Task.WhenAll([.. tasks]);
 	}
 #endregion
 }
