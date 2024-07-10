@@ -29,15 +29,15 @@ public class UnitTestDummyMessages
 		TextWriter oldOut = Console.Out;
 		try
 		{
-			ostrm	= new FileStream (Path.Combine(Environment.CurrentDirectory,$"output-{batch}"), FileMode.OpenOrCreate, FileAccess.Write);
-			writer	= new StreamWriter (ostrm);
+			ostrm	= new FileStream(Path.Combine(Environment.CurrentDirectory,$"output-{batch}"), FileMode.Append, FileAccess.Write);
+			writer	= new StreamWriter(ostrm);
 		}
-		catch (Exception e)
+		catch(Exception e)
 		{
-			Console.WriteLine (e.Message);
+			Console.WriteLine(e.Message);
 			return;
 		}
-		Console.SetOut (writer);
+		Console.SetOut(writer);
 
         ApiConnection api = new ApiConnection
         {
@@ -65,12 +65,13 @@ public class UnitTestDummyMessages
 			
 			string decodedMessage = Encoding.UTF8.GetString(@event.Data.ToArray());
 			Console.WriteLine($"Message from server: {decodedMessage}".Replace("\n",string.Empty));
-			await api.ParseMessage(Enum.Parse<MessageCode>(decodedMessage.Split(' ').First()), decodedMessage.Split(" ".ToCharArray(), 2).Last());
+			await Task.Run(() => api.ParseMessage(Enum.Parse<MessageCode>(decodedMessage.Split(' ').First()), decodedMessage.Split(" ".ToCharArray(), 2).Last()));
+			Console.WriteLine("/////     /////     /////     /////");
 		}
 		Assert.True(true);
-		Console.SetOut (oldOut);
+		Console.SetOut(oldOut);
 		writer.Close();
 		ostrm.Close();
-		Console.WriteLine ("Done");
+		Console.WriteLine("Done");
 	}
 }

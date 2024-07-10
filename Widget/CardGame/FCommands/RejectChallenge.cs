@@ -19,7 +19,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 			
 		var responseBuilder = new StringBuilder()
 			.Append("You have rejected ")
-			.Append(IncomingChallenges[command.User.Key].Challenger.Mention)
+			.Append(IncomingChallenges[command.User.Name].Challenger.Mention)
 			.Append("'s challenge!");
 
 		var alertBuilder    = new StringBuilder()
@@ -34,12 +34,12 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 
 		challengerAlertResponse
 			.WithMessage(alertBuilder.ToString())
-			.WithRecipient(IncomingChallenges[command.User.Key].Challenger.Name)
+			.WithRecipient(IncomingChallenges[command.User.Name].Challenger.Name)
 			.WithMessageType(FChatMessageType.Whisper);
 		
 		//////////
 
-		IncomingChallenges[command.User.Key].AdvanceState(MatchChallenge.Event.Cancel);
+		IncomingChallenges[command.User.Name].AdvanceState(MatchChallenge.Event.Cancel);
 		return true;
 	}
 }

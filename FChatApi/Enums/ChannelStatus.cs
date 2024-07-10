@@ -1,7 +1,7 @@
 ﻿namespace FChatApi.Enums;
 
 /// <summary>a user's relationship with a channel</summary>
-public enum ChannelStatus
+public enum UserRelationshipWithChannel
 {
 	/// <summary>empty/invalid, failthrough default</summary>
 	Invalid		= 0x00,

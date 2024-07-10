@@ -1,7 +1,7 @@
 ﻿namespace FChatApi.Enums;
 
 /// <summary>the bot's relationship with this user</summary>
-public enum UserStatus
+public enum RelationshipToApiUser
 {
 	/// <summary>empty/invalid, failthrough default</summary>
 	Invalid		= 0x00,

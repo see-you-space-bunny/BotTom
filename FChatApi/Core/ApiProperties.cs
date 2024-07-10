@@ -5,6 +5,7 @@ using System.Net.Http;
 using FChatApi.Systems;
 using FChatApi.Objects;
 using System.Collections.Generic;
+using System.IO;
 
 namespace FChatApi.Core;
 
@@ -57,6 +58,12 @@ public partial class ApiConnection
 	public static string CharacterName { get; private set; } = string.Empty;
 	
 	/// <summary>
+	/// name of the character the api-user is logging in with.<br/>
+	/// <i>Required for chat server identification (<c>IDN</c>).</i>
+	/// </summary>
+	public static User ApiUser { get; private set; }
+	
+	/// <summary>
 	/// the ticket information recieved from identification with the website<br/>
 	/// <i>
 	/// Required for chat server identification (<c>IDN</c>).<br/>
@@ -64,6 +71,15 @@ public partial class ApiConnection
 	/// </i>
 	/// </summary>
 	public static TicketInformation TicketInformation { get; private set; } = null;
+#endregion
+
+
+#region Cache P(+)
+	private static string _cacheURL					= "sessioncache";
+	private static string _allUsersURI				= "users";
+	public static string CacheRoot { get; set; }	= Environment.CurrentDirectory;
+	public static string CacheURL { get=>Path.Combine(CacheRoot,_cacheURL); set=>_cacheURL=value; }
+	public static string CacheAllKnownUsersURI { get => Path.Combine(CacheRoot,_cacheURL,_allUsersURI); set=>_allUsersURI=value; }
 #endregion
 
 
@@ -108,20 +124,12 @@ public partial class ApiConnection
 	/// <summary>
 	/// the api's user tracker</i>
 	/// </summary>
-	private static UserTracker UserTracker { get; set; } = new UserTracker();
+	public static UserTracker Users { get; set; } = new UserTracker();
 	
 	/// <summary>
 	/// the api's channel tracker</i>
 	/// </summary>
-	private static ChannelTracker ChannelTracker { get; set; } = new ChannelTracker();
-#endregion
-
-
-#region RegisteredUsers P(+)
-	/// <summary>
-	/// the api's channel tracker</i>
-	/// </summary>
-	public static Dictionary<string,User> RegisteredUsers => UserTracker.RegisteredUsers;
+	public static ChannelTracker Channels { get; set; } = new ChannelTracker();
 #endregion
 
 

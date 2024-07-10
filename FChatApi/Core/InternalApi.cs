@@ -9,6 +9,7 @@ using FChatApi.Systems;
 using FChatApi.Objects;
 using FChatApi.Enums;
 using FChatApi.EventArguments;
+using System.Net.WebSockets;
 
 namespace FChatApi.Core;
 
@@ -23,43 +24,15 @@ public partial class ApiConnection
 ///////////////////////////////////////////////////
 
 
-#region (E) MessageReceived
-	async void Client_MessageReceived(object sender, MessageReceivedEventArgs @event)
+#region (-) ConnectionCheck
+	/// <summary>
+	/// throws an exception if the api-user is not connected<br/>
+	/// </summary>
+	/// <exception cref="Exception">if the api-user is not connected</exception>
+	private static void ConnectionCheck()
 	{
-		string message = Encoding.UTF8.GetString(@event.Data.ToArray());
-		//Console.WriteLine($"Message from server: {message}");
-		await ParseMessage(Enum.Parse<MessageCode>(message.Split(' ').First()), message.Split(" ".ToCharArray(), 2).Last());
-	}
-#endregion
-
-
-#region (E) ChatDisConnected
-	void Client_ChatDisconnected(object sender, EventArgs eventArgs)
-	{
-		Console.WriteLine("Disconnected from F-Chat servers!");
-	}
-#endregion
-
-
-#region (E) ChatConnected
-	internal async void Client_ChatConnected(object sender, EventArgs eventArgs)
-	{
-		Console.WriteLine("Connected to F-Chat servers! Sending identification...");
-		await IdentifySelf(UserName, TicketInformation.Ticket, CharacterName, ClientId, ClientVersion);
-		StartReplyThread(20);
-	}
-#endregion
-
-
-///////////////////////////////////////////////////
-
-
-
-#region (-) IdentifySelf
-	private async static Task IdentifySelf(string accountName, string ticket, string botName, string botClientID, string botClientVersion)
-	{
-		string toSend = $"{MessageCode.IDN}  {{ \"method\": \"ticket\", \"account\": \"{accountName}\", \"ticket\": \"{ticket}\", \"character\": \"{botName}\", \"cname\": \"{botClientID}\", \"cversion\": \"{botClientVersion}\" }}";
-		await Client.SendAsync(toSend);
+		if (!IsConnected())
+			throw new WebSocketException("You must be connected to chat to do this.");
 	}
 #endregion
 
@@ -98,54 +71,104 @@ public partial class ApiConnection
 #endregion
 
 
-	///////////////////////////////////////////////////
+///////////////////////////////////////////////////
 
 
 #region (-) ParseMessage
-	public async Task ParseMessage(MessageCode messageCode, string message)
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="code"></param>
+	/// <param name="message"></param>
+	/// <returns></returns>
+	/// <exception cref="ArgumentException">if an invalid message code was provided</exception>
+	public async void ParseMessage(MessageCode code, string message)
 	{
-		JObject json = messageCode switch {
-			MessageCode.NON => throw new ArgumentException("Invalid (NON) message code.",nameof(messageCode)),
+		JObject json = code switch {
+			MessageCode.NON => throw new ArgumentException("Invalid (NON) message code.",nameof(code)),
 			MessageCode.PIN => null,
-			_ => ParseToJObject(message, messageCode),
+			_ => ParseToJObject(message, code),
 		};
 
-		switch (messageCode)
+		switch (code)
 		{
-			// keep-alive ping
-			case MessageCode.PIN: await Client.SendAsync(MessageCode.PIN.ToString());	break;
+#region /// ping
+			case MessageCode.PIN: await Handler_PIN();		break;
+#endregion
 
-			// incoming messages
-			case MessageCode.MSG: await Handler_MSG(json,message);	break;
-			case MessageCode.PRI: await Handler_PRI(json,message);	break;
 
-			// user activity
-			case MessageCode.NLN: await Handler_NLN(json);			break;
-			case MessageCode.FLN: await Handler_FLN(json);			break;
-			case MessageCode.STA: await Handler_STA(json);			break;
+#region /// messages
+			case MessageCode.MSG: await Handler_MSG(json);	break;
+			case MessageCode.PRI: await Handler_PRI(json);	break;
+			case MessageCode.LRP: await Handler_LRP(json);	break;
+			case MessageCode.RLL: await Handler_RLL(json);	break;
+			case MessageCode.TPN: await Handler_TPN(json);	break;
+#endregion
 
-			// channel join/leave, users/operators
-			case MessageCode.JCH: await Handler_JCH(json);			break;
-			case MessageCode.LCH: await Handler_LCH(json);			break;
-			case MessageCode.ICH: await Handler_ICH(json);			break;
-			case MessageCode.COL: await Handler_COL(json);			break;
 
-			// info about self
-			case MessageCode.LIS: await Handler_LIS(json);			break;
-			case MessageCode.FRL: /* friends list				*/	break;
-			case MessageCode.IGN: /* ignore list				*/	break;
+#region /// user activity
+			case MessageCode.NLN: await Handler_NLN(json);	break;
+			case MessageCode.FLN: await Handler_FLN(json);	break;
+			case MessageCode.STA: await Handler_STA(json);	break;
+#endregion
 
-			// low frequency
-			case MessageCode.CDS: await Task.Run(() => ChannelTracker.GetChannelByNameOrCode(json["channel"].ToString()).Description = json["description"].ToString());	break;
-			case MessageCode.ORS: await Handler_ORS(json);			break;
 
-			// very low frequency, mostly on login
-			case MessageCode.CHA: await Handler_CHA(json);			break;
-			case MessageCode.VAR: /* server variable			*/	break;
-			case MessageCode.CON: await Task.Run(() => Console.WriteLine($"{json["count"]} connected users sent."));	break;
-			case MessageCode.ADL: /* admin list					*/	break;
-			case MessageCode.HLO: /* server hello				*/	break;
-			case MessageCode.IDN: await Handler_IDN(json);			break;
+#region /// channel activity
+			case MessageCode.JCH: await Handler_JCH(json);	break;
+			case MessageCode.LCH: await Handler_LCH(json);	break;
+			case MessageCode.ICH: await Handler_ICH(json);	break;
+			case MessageCode.COL: await Handler_COL(json);	break;
+			case MessageCode.CIU: await Handler_CIU(json);	break;
+			case MessageCode.CKU: await Handler_CKU(json);	break;
+			case MessageCode.CTU: await Handler_CTU(json);	break;
+			case MessageCode.CBU: await Handler_CBU(json);	break;
+			case MessageCode.COA: await Handler_COA(json);	break;
+			case MessageCode.COR: await Handler_COR(json);	break;
+			case MessageCode.CSO: await Handler_CSO(json);	break;
+			case MessageCode.RMO: await Handler_RMO(json);	break;
+			case MessageCode.CDS: await Handler_CDS(json);	break;
+#endregion
+
+
+#region /// about api-user
+			case MessageCode.LIS: await Handler_LIS(json);	break;
+			case MessageCode.FRL: await Handler_FRL(json);	break;
+#endregion
+
+
+#region /// info / error
+			case MessageCode.KID: await Handler_KID(json);	break;
+			case MessageCode.UPT: await Handler_UPT(json);	break;
+			case MessageCode.VAR: await Handler_VAR(json);	break;
+			case MessageCode.ERR: await Handler_ERR(json);	break;
+#endregion
+
+
+#region /// global op alerts
+			case MessageCode.AOP: await Handler_AOP(json);	break;
+			case MessageCode.DOP: await Handler_DOP(json);	break;
+			case MessageCode.BRO: await Handler_BRO(json);	break;
+#endregion
+
+
+#region /// on-login events
+			case MessageCode.ORS: await Handler_ORS(json);	break;
+			case MessageCode.CHA: await Handler_CHA(json);	break;
+			case MessageCode.ADL: await Handler_ADL(json);	break;
+			case MessageCode.CON: await Handler_CON(json);	break;
+			case MessageCode.IDN: await Handler_IDN(json);	break;
+			case MessageCode.HLO: await Handler_HLO(json);	break;
+#endregion
+
+
+#region /// do-not-handle
+			// should not be handled by bot
+			// MessageCode.SFC		// staff notification
+
+			// was on the switch for incoming messages initially,
+			// but IGN seems to have no known (INC) message format
+			// MessageCode.IGN		// ignore list
+#endregion
 
 			default: break;
 		}

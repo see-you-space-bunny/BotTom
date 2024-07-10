@@ -4,30 +4,19 @@ using FChatApi.Objects;
 using FChatApi.Enums;
 using System.Threading.Tasks;
 using System;
+using FChatApi.Core;
 
 namespace FChatApi.Systems;
 
-#pragma warning disable CA1822 // Mark members as static
-internal class ChannelTracker
+public class ChannelTracker
 {
+	private readonly Dictionary<string,Channel>[] Channels;
 
 	/// <summary>all known channels</summary>
-	internal Dictionary<string,Channel> AllAvailableChannels;
+	internal Dictionary<string,Channel> All => Channels[(int)ChannelType.All];
 
-	/// <summary>
-	/// 
-	/// </summary>
-	internal Dictionary<string,Channel> AvailablePublicChannels => AllAvailableChannels.Where((ch)=>ch.Value.Type == ChannelType.Public).ToDictionary();
-
-	/// <summary>
-	/// 
-	/// </summary>
-	internal Dictionary<string,Channel> AvailablePrivateChannels => AllAvailableChannels.Where((ch)=>ch.Value.Type == ChannelType.Private).ToDictionary();
-
-	/// <summary>
-	/// 
-	/// </summary>
-	internal Dictionary<string,Channel> JoinedChannels;
+	/// <summary>all joined channels</summary>
+	internal Dictionary<string,Channel> Joined => Channels[0];
 
 	private Channel ChannelBeingCreated { get; set; }
 
@@ -38,19 +27,23 @@ internal class ChannelTracker
 	/// </summary>
 	internal ChannelTracker()
 	{
-		AllAvailableChannels	= [];
-		JoinedChannels			= [];
+		Channels = new Dictionary<string,Channel>[5];
+		Channels[0]							= new Dictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
+		Channels[(int)ChannelType.All]		= new Dictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
+		Channels[(int)ChannelType.Public]	= new Dictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
+		Channels[(int)ChannelType.Private]	= new Dictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
+		Channels[(int)ChannelType.Hidden]	= new Dictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
 	}
 
-	internal Channel AddManualChannel(string channelname, ChannelStatus status, string channelcode)
+	public Channel AddManually(string channelname, UserRelationshipWithChannel status, string channelcode)
 	{
-		if (AllAvailableChannels.ContainsKey(channelname.ToLowerInvariant()) && !AllAvailableChannels.Values.Any(ch => ch.Name.Equals(channelname)))
+		if (All.ContainsKey(channelname) && !All.Values.Any(ch => ch.Name.Equals(channelname)))
 		{
 			Channel ch = new (channelname, channelcode, ChannelType.Private)
 			{
 				Status = status
 			};
-			AllAvailableChannels.Add(channelcode.ToLowerInvariant(),ch);
+			All.Add(channelcode,ch);
 			return ch;
 		}
 
@@ -63,15 +56,19 @@ internal class ChannelTracker
 	/// </summary>
 	/// <param name="name"></param>
 	/// <param name="status"></param>
-	internal void StartChannelCreation(string name, ChannelStatus status = ChannelStatus.Creating)
+	internal void StartChannelCreation(string name)
 	{
 		if (ChannelBeingCreated is null)
 		{
-			Channel toAdd = new(name, string.Empty, ChannelType.Private)
+			Channel channel = new()
 			{
-				Status = status
+				Name		= name,
+				Code		= string.Empty,
+				Status		= UserRelationshipWithChannel.Creating,
+				Type		= ChannelType.Private,
+				AdEnabled	= false,
 			};
-			ChannelBeingCreated = toAdd;
+			ChannelBeingCreated = channel;
 		}
 		else
 		{
@@ -88,51 +85,27 @@ internal class ChannelTracker
 	/// <param name="code">channel code we recieved after requesting channel creation</param>
 	/// <param name="owner">the owner of the channel (us)</param>
 	/// <returns>the channel we just created</returns>
-	internal Channel FinalizeChannelCreation(string name, string code, User owner)
+	internal Channel FinalizeChannelCreation(string name, string code, User owner = null)
 	{
+		owner ??= ApiConnection.ApiUser;
 		if (ChannelBeingCreated is null)
 			throw new NullReferenceException($"Tried to create  \"{name}\" (code: {code}, owner: {owner.Name}), ChannelBeingCreated was null. Most likely caused by not calling StartChannelCreation first.");
 
-		if (ChannelBeingCreated.Status == ChannelStatus.Creating && ChannelBeingCreated.Name.Equals(name))
+		if (ChannelBeingCreated.Status == UserRelationshipWithChannel.Creating && ChannelBeingCreated.Name.Equals(name))
 		{
 			ChannelBeingCreated.Code			= code;
-			ChannelBeingCreated.Status			= ChannelStatus.Created;
+			ChannelBeingCreated.Status			= UserRelationshipWithChannel.Created;
 			ChannelBeingCreated.CreatedByApi	= true;
 			ChannelBeingCreated.Owner			= owner;
 
-			AllAvailableChannels.Add(code.ToLowerInvariant(),ChannelBeingCreated);
-			JoinedChannels.Add(code.ToLowerInvariant(),ChannelBeingCreated);
+			All.Add(code.ToLowerInvariant(),ChannelBeingCreated);
+			Joined.Add(code.ToLowerInvariant(),ChannelBeingCreated);
 
 			ChannelBeingCreated					= null;
-			return AllAvailableChannels[code.ToLowerInvariant()];
+			return All[code.ToLowerInvariant()];
 		}
 		throw new InvalidOperationException($"Could not create \"{name}\" (code: {code}, owner: {owner.Name}). No channel matching that name was pending creation.");
 	}
-#endregion
-
-#region (~) ChByNameOrCode
-	/// <summary>
-	/// retrieves a channel, first attempting to find it by its channel-code and then by name
-	/// </summary>
-	/// <param name="value">the name or channel-code of the channel we seek to find</param>
-	/// <returns>the channel that matches our <c>value</c></returns>
-	internal Channel GetChannelByNameOrCode(string value)
-	{
-		if (!JoinedChannels.TryGetValue(value.ToLowerInvariant(), out Channel channel))
-			if (!AllAvailableChannels.TryGetValue(value.ToLowerInvariant(), out channel))
-				channel = AllAvailableChannels.Values.FirstOrDefault(ch => ch.Name.Equals(value, StringComparison.InvariantCultureIgnoreCase));
-		
-		return channel;
-	}
-#endregion
-
-#region (~) LeaveChannel
-
-	internal void LeaveChannel(Channel value) =>
-        JoinedChannels.Remove(value.Code);
-
-	internal void LeaveChannel(string channelnameorcode) =>
-		LeaveChannel(GetChannelByNameOrCode(channelnameorcode).Code);
 #endregion
 
 #region (~) ChangeChStatus
@@ -142,8 +115,8 @@ internal class ChannelTracker
 	/// <param name="channelnameorcode">channel name or code</param>
 	/// <param name="value">the channel's new status</param>
 	/// <returns>the updated channel</returns>
-	internal Channel ChangeChannelStatus(string channelnameorcode, ChannelStatus value) =>
-        ChangeChannelStatus(GetChannelByNameOrCode(channelnameorcode), value);
+	internal Channel Channel_ChangeStatus(string channelnameorcode, UserRelationshipWithChannel value) =>
+        Channel_ChangeStatus(SingleByNameOrCode(channelnameorcode), value);
 
     /// <summary>
     /// changes the status of a channel
@@ -151,34 +124,64 @@ internal class ChannelTracker
     /// <param name="channel"></param>
     /// <param name="value">the channel's new status</param>
     /// <returns>the updated channel</returns>
-    internal Channel ChangeChannelStatus(Channel channel, ChannelStatus value)
+    internal Channel Channel_ChangeStatus(Channel channel, UserRelationshipWithChannel value)
     {
 		channel.Status = value;
 		return channel;
 	}
 #endregion
 
+#region (+) TryNameOrCode
+	/// <summary>
+	/// retrieves a channel, first attempting to find it by its channel-code and then by name
+	/// </summary>
+	/// <param name="channelcode">the name or channel-code of the channel we seek to find</param>
+	/// <returns>the channel that matches our <c>value</c></returns>
+	public bool TrySingleByNameOrCode(string channelcode, out Channel channel)
+	{
+		if (!Joined.TryGetValue(channelcode, out channel))
+			if (!All.TryGetValue(channelcode, out channel))
+				channel = All.Values.FirstOrDefault(ch => ch.Name.Equals(channelcode, StringComparison.InvariantCultureIgnoreCase));
+		return channel is not null;
+	}
+#endregion
+
+#region (+) NameOrCode
+	/// <summary>
+	/// retrieves a channel, first attempting to find it by its channel-code and then by name
+	/// </summary>
+	/// <param name="channelcode">the name or channel-code of the channel we seek to find</param>
+	/// <returns>the channel that matches our <c>value</c></returns>
+	public Channel SingleByNameOrCode(string channelcode)
+	{
+		if (!Joined.TryGetValue(channelcode, out Channel channel))
+			if (!All.TryGetValue(channelcode, out channel))
+				channel = All.Values.FirstOrDefault(ch => ch.Name.Equals(channelcode, StringComparison.InvariantCultureIgnoreCase));
+		return channel;
+	}
+#endregion
+
 #region (~) CombinedChList
 	/// <summary>
-	/// retrieves a combined list of all currently channels<br/>may optionally be filtered to a specific <c>ChannelStatus</c>
+	/// retrieves a combined list of all currently channels<br/>may optionally be filtered to a specific <c>UserRelationshipWithChannel</c>
 	/// </summary>
-	/// <param name="status">by what <c>ChannelStatus</c> we filter the return value</param>
+	/// <param name="relationship">by what <c>UserRelationshipWithChannel</c> we filter the return value</param>
 	/// <returns>a range of channels filtered to our argument</returns>
-	internal Dictionary<string,Channel> GetCombinedChannelList(ChannelStatus status = ChannelStatus.AllValid)
+	internal Dictionary<string,Channel> GetCombinedChannelList(UserRelationshipWithChannel relationship = UserRelationshipWithChannel.AllValid)
 	{
-		if (status == ChannelStatus.AllValid)
+		if (relationship == UserRelationshipWithChannel.AllValid)
 		{
-			return AllAvailableChannels.Where(ch => ch.Value.Status > ChannelStatus.AllValid).ToDictionary();
+			return All.Where(ch => ch.Value.Status > UserRelationshipWithChannel.AllValid).ToDictionary();
 		}
-		else if (status == ChannelStatus.All)
+		else if (relationship == UserRelationshipWithChannel.All)
 		{ 
-			return AllAvailableChannels;
+			return All;
 		}
-		else if (status > ChannelStatus.Invalid)
+		else if (relationship > UserRelationshipWithChannel.Invalid)
 		{
-			return AllAvailableChannels.Where(ch => ch.Value.Status == status).ToDictionary();
+			return All.Where(ch => ch.Value.Status == relationship).ToDictionary();
 		}
-		throw new ArgumentException("Attempted to filter channel list by invalid status.",nameof(status));
+		throw new ArgumentException("Attempted to filter channel list by invalid status.",nameof(relationship));
 	}
 #endregion
 
@@ -186,20 +189,16 @@ internal class ChannelTracker
 	/// <summary>
 	/// 
 	/// </summary>
-	/// <param name="value"></param>
+	/// <param name="channeltype"></param>
 	/// <returns>gets a list of channels by type</returns>
-	internal IDictionary<string,Channel> GetChannelList(ChannelType value) =>
-		value switch {
-			ChannelType.All		=> GetCombinedChannelList(ChannelStatus.All),
-			ChannelType.Private	=> AvailablePrivateChannels,
-			_ 					=> AvailablePublicChannels,
-		};
+	internal IDictionary<string,Channel> GetChannelList(ChannelType channeltype) =>
+		Channels[(int)channeltype];
 
-	internal IDictionary<string,Channel> GetChannelList(ChannelStatus value = ChannelStatus.AllValid) =>
-		value switch {
-			ChannelStatus.All		=> AllAvailableChannels,
-			ChannelStatus.AllValid	=> AllAvailableChannels.Where(ch => ch.Value.Status >= ChannelStatus.AllValid).ToDictionary(),
-			_ 						=> AllAvailableChannels.Where(ch => ch.Value.Status.Equals(value)).ToDictionary(),
+	internal IDictionary<string,Channel> GetChannelList(UserRelationshipWithChannel relationship = UserRelationshipWithChannel.AllValid) =>
+		relationship switch {
+			UserRelationshipWithChannel.All			=> All,
+			UserRelationshipWithChannel.AllValid	=> All.Where(ch => ch.Value.Status >= UserRelationshipWithChannel.AllValid).ToDictionary(),
+			_ 										=> All.Where(ch => ch.Value.Status.Equals(relationship)).ToDictionary(),
 		};
 #endregion
 
@@ -207,15 +206,17 @@ internal class ChannelTracker
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="incomingChannels">the list of channels we need to update</param>
-    /// <param name="value">the type of channel that's being put into the list</param>
-    internal void RefreshAvailableChannels(List<Channel> incomingChannels, ChannelType value)
+    /// <param name="channels">the list of channels we need to update</param>
+    /// <param name="channeltype">the type of channel that's being put into the list</param>
+    internal void RefreshAvailableChannels(List<Channel> channels, ChannelType channeltype)
     {
-        if (!(value > ChannelType.Invalid))
-			throw new ArgumentException($"Attempted to refresh channels of an invalid type: {value}",nameof(value));
-
-		AllAvailableChannels = AllAvailableChannels.Where(kv => kv.Value.Type != value).ToDictionary();
-		AllAvailableChannels = AllAvailableChannels.Concat(incomingChannels.ToDictionary(li => li.Code, li => li)).ToDictionary();
+        if (!(channeltype > ChannelType.All))
+			throw new ArgumentException($"Attempted to refresh channels of an invalid type: {channeltype}",nameof(channeltype));
+		
+		Channels[(int)channeltype] = channels.ToDictionary(c => c.Code, c => c);
+		
+		Channels[(int)ChannelType.All ] = All
+			.Where(kv => !Channels[(int)channeltype].ContainsKey(kv.Key))
+			.Concat(Channels[(int)channeltype]).ToDictionary();
     }
 }
-#pragma warning restore CA1822 // Mark members as static

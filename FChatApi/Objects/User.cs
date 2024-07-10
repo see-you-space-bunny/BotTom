@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using FChatApi.Core;
 using FChatApi.Enums;
 using FChatApi.Interfaces;
 
@@ -10,7 +11,7 @@ namespace FChatApi.Objects;
 
 public class User : IMessageRecipient
 {
-#region Constants (-)
+#region (-) Constants
 	/// <summary>user mention format</summary>
 	private const string MentionFormat = "[user]{0}[/user]";
 
@@ -20,32 +21,23 @@ public class User : IMessageRecipient
 
 
 ////////////////////////////////////////////////
-///
-
-#region Fields (-)
-	/// <summary>character's userlist key</summary>
-	private string _key;
-
-	/// <summary>character name</summary>
-	private string _name;
-#endregion
 
 
-////////////////////////////////////////////////
+#region (P+) Chat Info
+	/// <summary>the character's status in chat</summary>
+	public List<Channel> Channels { get; }
 
-
-#region Chat Info (P+)
 	/// <summary>the character's status in chat</summary>
 	public ChatStatus ChatStatus { get; set; }
 	
 	/// <summary>the character's status in chat</summary>
-	public UserStatus UserStatus { get; set; }
+	public RelationshipToApiUser UserStatus { get; set; }
 
 	/// <summary>site memo on this character</summary>
 	public string Memo { get; set; }
 
     /// <summary>character name</summary>
-    public string Name { get=>_name; set{ _name = value; _key = value.ToLowerInvariant(); } }
+    required public string Name { get; set; }
 	
 	/// <summary>that subscriber subtitle ?SPECULATION</summary>
 	public string Nickname { get; set; }
@@ -55,7 +47,7 @@ public class User : IMessageRecipient
 ////////////////////////////////////////////////
 
 
-#region Profile Info (P+)
+#region (P+) Profile Info
 	/// <summary>the character's kinks and preferences thereof</summary>
 	public Dictionary<string, KinkPreference> Kinks { get; }
 
@@ -91,11 +83,7 @@ public class User : IMessageRecipient
 ////////////////////////////////////////////////
 
 
-#region Custom Info (P+)
-	
-	/// <summary>key for UserTracker</summary>
-	public string Key { get=>_key; private set => _key = value.ToLowerInvariant(); }
-	
+#region (P+) Custom Info
 	/// <summary>a memo separate from the flist memo feature</summary>
 	public string BotMemo { get; set; }
 
@@ -125,7 +113,7 @@ public class User : IMessageRecipient
 ////////////////////////////////////////////////
 
 
-#region Message Timers (+)
+#region (+) Message Timers
 	/// <summary>the amount of miliseconds to wait before the next message may be sent</summary>
 	public TimeSpan SleepInterval { get; }
 
@@ -140,32 +128,7 @@ public class User : IMessageRecipient
 ////////////////////////////////////////////////
 
 
-#region Constructors (+)
-	/// <summary>
-	/// depreciated constructor
-	/// </summary>
-	/// <param name="kinks">kinks list by preference and kinks</param>
-	public User(Dictionary<KinkPreference, List<string>> kinks) : this()
-	{
-		Kinks = [];
-		foreach((KinkPreference preference,List<string> kinksList) in kinks)
-		{
-			foreach(string kink in kinksList)
-			{
-				Kinks.TryAdd(kink,preference);
-			}
-		}
-	}
-
-	/// <summary>
-	/// preferred constructor
-	/// </summary>
-	/// <param name="kinks">kinks list by kink and preference</param>
-	public User(Dictionary<string,KinkPreference> kinks) : this()
-	{
-		Kinks = kinks;
-	}
-
+#region (+) Constructors
 	/// <summary>
 	/// basic constructor mainly for use in deserialization
 	/// </summary>
@@ -173,14 +136,15 @@ public class User : IMessageRecipient
 	{
 		// Chat Info
 		Name        = string.Empty;
-		UserStatus  = UserStatus.None;
+		UserStatus  = RelationshipToApiUser.None;
 		ChatStatus  = ChatStatus.Invalid;
+		Channels	= [];
 
 		// Profile Info
 		Nickname    = string.Empty;
 		Memo        = string.Empty;
 		ProfileInfo	??= [];
-		Kinks		??= [];
+		Kinks		??= new Dictionary<string,KinkPreference>(StringComparer.InvariantCultureIgnoreCase);
 
 		// IMessageRecipient
 		SleepInterval	= new TimeSpan(0,0,0,0,milliseconds: 1);
@@ -198,7 +162,7 @@ public class User : IMessageRecipient
 ////////////////////////////////////////////////
 
 
-#region Get Methods (+)
+#region (+) Get Methods
 	/// <summary>
 	/// gets a list of kinks by the user's preference thereof
 	/// </summary>
@@ -206,20 +170,22 @@ public class User : IMessageRecipient
 	/// <returns>filtered list containing the kinks of the desired preference</returns>
 	public IEnumerable<string> GetKinks(KinkPreference preference) => Kinks.Where(k=>k.Value==preference).Select(k=>k.Key);
 
-	/// <remarks>
-	/// TODO:Attributes --> when moving AttributeHandler into the Api<br/>currently returns an empty dictionary 
-	/// </remarks>
-	/// <summary>
-	/// gets a specific profile info tab from the user's profile info
-	/// </summary>
-	/// <param name="tab">the tab we wish to filter for</param>
-	/// <returns>filtered dictionary containing the desired tab</returns>
-	public IDictionary<ProfileInfoField,string> GetProfileTab(ProfileInfoTab tab)
-	{
+#pragma warning disable CA1822 // Mark members as static
+    /// <remarks>
+    /// TODO:Attributes --> when moving AttributeHandler into the Api<br/>currently returns an empty dictionary 
+    /// </remarks>
+    /// <summary>
+    /// gets a specific profile info tab from the user's profile info
+    /// </summary>
+    /// <param name="tab">the tab we wish to filter for</param>
+    /// <returns>filtered dictionary containing the desired tab</returns>
+    public IDictionary<ProfileInfoField,string> GetProfileTab(ProfileInfoTab tab)
+    {
 		// TODO: filter by attribute
 		//return ProfileInfo.Where(i=>i.Key.GetEnumAttribute<ProfileInfoField,InfoTabAttribute>().Tab==tab).ToDictionary();
 		return new Dictionary<ProfileInfoField,string>();
 	}
+#pragma warning restore CA1822 // Mark members as static
 
 	/// <summary>
 	/// get a specific profile info field's value
@@ -238,7 +204,7 @@ public class User : IMessageRecipient
 ////////////////////////////////////////////////
 
 
-#region Set Methods (-)
+#region (-) SetProfileInfo
 	/// <remarks>
 	/// we should not be calling this method ourselves 99% of the time
 	/// </remarks>
@@ -258,7 +224,7 @@ public class User : IMessageRecipient
 ////////////////////////////////////////////////
 
 
-#region Update (+)
+#region (+) Update
 	public async Task Update(User value)
 	{
 		// Chat Info
@@ -271,34 +237,77 @@ public class User : IMessageRecipient
 
 		Task[] tasks =
         [
-            Task.Run(()=>
-                {
-                    Kinks.Clear();
-                    foreach ((string kink,KinkPreference preference) in value.Kinks)
-                    {
-                        Kinks.TryAdd(kink,preference);
-                    }
-                }
-            ),
-            Task.Run(()=>
-                {
-                    ProfileInfo.Clear();
-                    foreach ((ProfileInfoField field,string info) in value.ProfileInfo)
-                    {
-                        ProfileInfo.TryAdd(field,info);
-                    }
-                }
-            ),
+            Task.Run(() =>
+			{
+				Kinks.Clear();
+				foreach ((string kink,KinkPreference preference) in value.Kinks)
+				{
+					Kinks.TryAdd(kink,preference);
+				}
+			}),
+            Task.Run(() =>
+			{
+				ProfileInfo.Clear();
+				foreach ((ProfileInfoField field,string info) in value.ProfileInfo)
+				{
+					ProfileInfo.TryAdd(field,info);
+				}
+			}),
         ];
         await Task.WhenAll(tasks.Where(t => t != null).ToArray());
 	}
 
 #endregion
 
+
 ////////////////////////////////////////////////
 
 
-#region Serialization (+)
+#region (+) JoinChannel
+	internal void JoinChannel(Channel channel)
+	{
+		Channels.Add(channel);
+		channel.AddUser(this);
+	}
+#endregion
+
+
+#region (+) LeaveChannel
+	internal void LeaveChannel(Channel channel)
+	{
+		Channels.Remove(channel);
+		channel.RemoveUser(this);
+	}
+#endregion
+
+////////////////////////////////////////////////
+
+
+#region (+) Register
+	public bool Register()
+	{
+		if (!ApiConnection.Users.RegisteredUsers.TryAdd(Name,this))
+			return false;
+
+		WhenRegistered = DateTime.Now;
+		return true;
+	}
+#endregion
+
+
+#region (+) UnRegister
+	public bool UnRegister()
+	{
+		WhenRegistered = DateTime.MinValue;
+		return ApiConnection.Users.RegisteredUsers.Remove(Name);
+	}
+#endregion
+
+
+////////////////////////////////////////////////
+
+
+#region (+) Serialization
 	/// <summary>
 	/// deserializes the object to binary
 	/// </summary>

@@ -13,7 +13,7 @@ namespace Engine.ModuleHost;
 /// </summary>
 public partial class ChatBot
 {
-	public static Dictionary<string,User> RegisteredUsers { get => ApiConnection.RegisteredUsers; }
+	public static Dictionary<string,User> RegisteredUsers { get => ApiConnection.Users.RegisteredUsers; }
 
 	/// <summary>
 	/// our list of active plugins
@@ -31,7 +31,6 @@ public partial class ChatBot
 		AttributeEnumExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(BotModule));
 
 		DeserializeUsers();
-		ApiConnection.ImportRegisteredUsers();
 	}
 
 	private static void DeserializeUsers(string? path = null)
@@ -50,8 +49,7 @@ public partial class ChatBot
 			for (uint i=0;i<count;i++)
 			{
 				var user = User.Deserialize(reader);
-				if (RegisteredUsers.TryAdd(user.Name.ToLower(),user))
-					continue;
+				user.Register();
 			}
 		}
 	}
@@ -113,7 +111,7 @@ public partial class ChatBot
 		{
 			// TODO get list filtered by registered users
 			// TODO get method for adding registered users back into this list
-			var userlist = ApiConnection.GetUserListByStatus(FChatApi.Enums.UserStatus.Online);
+			var userlist = ApiConnection.Users.FilterByStatus(FChatApi.Enums.ChatStatus.Any);
 			if (userlist.Any())
 			using (var stream = File.Create(Path.Combine(Environment.CurrentDirectory, "sessiondata", "KnownUsers")))
 			{

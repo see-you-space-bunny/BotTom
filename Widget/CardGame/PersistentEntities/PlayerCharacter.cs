@@ -8,7 +8,7 @@ namespace CardGame.PersistentEntities
     public class PlayerCharacter
 	{
 		internal User User;
-		internal string Key => User.Key;
+		internal string Key => User.Name;
 		internal Dictionary<CharacterStat,int> Stats;
 
 		public PlayerCharacter(User user)
@@ -64,7 +64,7 @@ namespace CardGame.PersistentEntities
 
 		public static PlayerCharacter Deserialize(BinaryReader reader)
 		{
-			PlayerCharacter player = new PlayerCharacter(ApiConnection.GetUserByName(reader.ReadString()));
+			PlayerCharacter player = new PlayerCharacter(ApiConnection.Users.SingleByName(reader.ReadString()));
 			for(int i = 0;i < reader.ReadInt32();i++)
 			{
 				player.Stats.Add((CharacterStat)reader.ReadUInt16(),reader.ReadInt32());
