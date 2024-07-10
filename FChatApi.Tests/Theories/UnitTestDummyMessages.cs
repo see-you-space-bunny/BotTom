@@ -65,7 +65,7 @@ public class UnitTestDummyMessages
 			
 			string decodedMessage = Encoding.UTF8.GetString(@event.Data.ToArray());
 			Console.WriteLine($"Message from server: {decodedMessage}".Replace("\n",string.Empty));
-			await api.ParseMessage(Enum.Parse<MessageCode>(decodedMessage.Split(' ').First()), decodedMessage.Split(" ".ToCharArray(), 2).Last());
+			await Task.Run(() => api.ParseMessage(Enum.Parse<MessageCode>(decodedMessage.Split(' ').First()), decodedMessage.Split(" ".ToCharArray(), 2).Last()));
 			Console.WriteLine("/////     /////     /////     /////");
 		}
 		Assert.True(true);

@@ -45,7 +45,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 		var responseBuilder = new StringBuilder()
 			.Append(command.User!.Mention)
 			.Append(" has accepted ")
-			.Append(IncomingChallenges[command.User.Key].Challenger.Mention)
+			.Append(IncomingChallenges[command.User.Name].Challenger.Mention)
 			.Append("'s challenge!");
 
 		var alertBuilder    = new StringBuilder()
@@ -60,14 +60,14 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 
 		challengerAlertResponse
 			.WithMessage(alertBuilder.ToString())
-			.WithRecipient(IncomingChallenges[command.User.Key].Challenger.Name)
+			.WithRecipient(IncomingChallenges[command.User.Name].Challenger.Name)
 			.WithMessageType(FChatMessageType.Whisper);
 		
 		//////////
 
-		IncomingChallenges[command.User.Key].AdvanceState(MatchChallenge.Event.Confirm);
+		IncomingChallenges[command.User.Name].AdvanceState(MatchChallenge.Event.Confirm);
 
-		OngoingMatches.Add(IncomingChallenges[command.User.Key].AcceptWithDeckArchetype(stat1,stat2));
+		OngoingMatches.Add(IncomingChallenges[command.User.Name].AcceptWithDeckArchetype(stat1,stat2));
 		return true;
 	}
 }

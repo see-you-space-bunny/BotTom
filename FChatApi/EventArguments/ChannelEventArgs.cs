@@ -24,5 +24,5 @@ public class ChannelEventArgs : EventArgs
 	/// <summary>
 	/// what kind of event has happened
 	/// </summary>
-	public ChannelStatus ChannelStatus;
+	public UserRelationshipWithChannel ChannelStatus;
 }

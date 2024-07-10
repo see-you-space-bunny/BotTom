@@ -16,17 +16,17 @@ namespace FChatApi.Core;
 public partial class ApiConnection
 {
 #region (E) MessageReceived
-	async void Client_MessageReceived(object sender, MessageReceivedEventArgs @event)
+	private void Client_MessageReceived(object sender, MessageReceivedEventArgs @event)
 	{
 		string message = Encoding.UTF8.GetString(@event.Data.ToArray());
 		//Console.WriteLine($"Message from server: {message}");
-		await ParseMessage(Enum.Parse<MessageCode>(message.Split(' ').First()), message.Split(" ".ToCharArray(), 2).Last());
+		ParseMessage(Enum.Parse<MessageCode>(message.Split(' ').First()), message.Split(" ".ToCharArray(), 2).Last());
 	}
 #endregion
 
 
 #region (E) ChatDisConnected
-	void Client_ChatDisconnected(object sender, EventArgs eventArgs)
+	private void Client_ChatDisconnected(object sender, EventArgs eventArgs)
 	{
 		Console.WriteLine("Disconnected from F-Chat servers!");
 	}
@@ -34,7 +34,7 @@ public partial class ApiConnection
 
 
 #region (E) ChatConnected
-	internal async void Client_ChatConnected(object sender, EventArgs eventArgs)
+	private async void Client_ChatConnected(object sender, EventArgs eventArgs)
 	{
 		Console.WriteLine("Connected to F-Chat servers! Sending identification...");
 		await IdentifySelf(UserName, TicketInformation.Ticket, CharacterName, ClientId, ClientVersion);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FChatApi.Enums;
@@ -35,24 +36,26 @@ public partial class ApiConnection
 		List<Task> tasks = [];
 		foreach(var userinfo in json["characters"])
 		{
-			User user = new()
+			tasks.Add(Task.Run(() => 
 			{
-				Name		= userinfo[0].ToString(),
-				Gender		= userinfo[1].ToString(),
-				ChatStatus	= (ChatStatus)Enum.Parse(typeof(ChatStatus), userinfo[2].ToString().ToLowerInvariant(), true)
-			};
-			if (!UserTracker.TryAddUser(user))
-			{
-				tasks.Add(Task.Run(
-					() => UserTracker
-						.GetUserByName(user.Name)
-						.Update(user)
-				));
-			}
-			//UserTracker.SetChatStatus(tempUser, tempUser.ChatStatus, false);
+				if (Users.TrySingleByName(userinfo[0].ToString(), out User user))
+				{
+					user.Gender		= userinfo[1].ToString();
+					Users.Character_SetChatStatus(user,(ChatStatus)Enum.Parse(typeof(ChatStatus), userinfo[2].ToString(), true));
+				}
+				else
+				{
+					Users.TryAdd(new User()
+					{
+						Name		= userinfo[0].ToString(),
+						Gender		= userinfo[1].ToString(),
+						ChatStatus	= (ChatStatus)Enum.Parse(typeof(ChatStatus), userinfo[2].ToString(), true)
+					});
+				}
+			}));
 		}
 #if DEBUG
-		Console.WriteLine($"Added {json["characters"].Count()} users. Total users: {UserTracker.Count}");
+		Console.WriteLine($"Added {json["characters"].Count()} users. Total users: {Users.KnownUsers.Count}");
 #endif
 		return Task.Run(() => Task.WaitAll([.. tasks]));
 	}

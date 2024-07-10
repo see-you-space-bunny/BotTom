@@ -75,15 +75,22 @@ public partial class ApiConnection
 
 
 #region (-) ParseMessage
-	public async Task ParseMessage(MessageCode messageCode, string message)
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="code"></param>
+	/// <param name="message"></param>
+	/// <returns></returns>
+	/// <exception cref="ArgumentException">if an invalid message code was provided</exception>
+	public async void ParseMessage(MessageCode code, string message)
 	{
-		JObject json = messageCode switch {
-			MessageCode.NON => throw new ArgumentException("Invalid (NON) message code.",nameof(messageCode)),
+		JObject json = code switch {
+			MessageCode.NON => throw new ArgumentException("Invalid (NON) message code.",nameof(code)),
 			MessageCode.PIN => null,
-			_ => ParseToJObject(message, messageCode),
+			_ => ParseToJObject(message, code),
 		};
 
-		switch (messageCode)
+		switch (code)
 		{
 #region /// ping
 			case MessageCode.PIN: await Handler_PIN();		break;

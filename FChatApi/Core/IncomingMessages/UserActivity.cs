@@ -20,14 +20,14 @@ public partial class ApiConnection
 	/// <returns>the task we initiated</returns>
 	private Task Handler_FLN(JObject json)
 	{
-		if (TryGetUserByName(json["character"].ToString(),out User user))
+		if (TryGetUser(json["character"].ToString(),out User user))
 			return Task.CompletedTask;
 
-		UserTracker.Character_SetChatStatus(user, ChatStatus.Offline, false);
+		Users.Character_SetChatStatus(user, ChatStatus.Offline, false);
 
 		return Task.Run(() =>
 		{
-			foreach (var channel in ChannelTracker.JoinedChannels.Values)
+			foreach (var channel in Channels.Joined.Values)
 			{
 				bool needsRemoved = false;
 
@@ -65,8 +65,8 @@ public partial class ApiConnection
 				UserStatus	= Enum.Parse<RelationshipToApiUser>(json["status"].ToString(), true),
 				Gender		= json["gender"].ToString(),
 			};
-			UserTracker.AddUser(user);
-			UserTracker.Character_SetChatStatus(user, ChatStatus.Online, false);
+			Users.Add(user);
+			Users.Character_SetChatStatus(user, ChatStatus.Online, false);
 		});
 	}
 #endregion

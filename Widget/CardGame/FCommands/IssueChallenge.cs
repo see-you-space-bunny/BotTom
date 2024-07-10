@@ -66,7 +66,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 		else
 			target = remainingParameters;
 
-		var (exitEarly, errMessage, player) = ValidateIssueChallenge(command.User.Key,target);
+		var (exitEarly, errMessage, player) = ValidateIssueChallenge(command.User.Name,target);
 
 		if (exitEarly)
 		{
@@ -104,8 +104,8 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 			player.Name.ToLower(),
 			new MatchChallenge(
 				command.User,
-				PlayerCharacters[command.User.Key].CreateMatchPlayer(stat1,stat2),
-				PlayerCharacters[player.Key]
+				PlayerCharacters[command.User.Name].CreateMatchPlayer(stat1,stat2),
+				PlayerCharacters[player.Name]
 			)
 		);
 		IncomingChallenges[player.Name.ToLower()].AdvanceState(MatchChallenge.Event.Initiate);
@@ -114,15 +114,15 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 
 	private (bool exitEarly,string message,User target) ValidateIssueChallenge(string challenger,string target)
 	{
-		if (!ApiConnection.TryGetUserByName(target,out User challengeTarget))
+		if (!ApiConnection.TryGetUser(target,out User challengeTarget))
 		{
 			return (true,"You can't challenge a user that is not registered.",new User());
 		}
 		if (!PlayerCharacters.ContainsKey(challenger.ToLowerInvariant()))
-			PlayerCharacters.Add(challenger.ToLowerInvariant(),new PlayerCharacter(ApiConnection.GetUserByName(challenger)));
+			PlayerCharacters.Add(challenger.ToLowerInvariant(),new PlayerCharacter(ApiConnection.Users.SingleByName(challenger)));
 
-		if (!PlayerCharacters.ContainsKey(challengeTarget.Key))
-			PlayerCharacters.Add(challengeTarget.Key,new PlayerCharacter(challengeTarget));
+		if (!PlayerCharacters.ContainsKey(challengeTarget.Name))
+			PlayerCharacters.Add(challengeTarget.Name,new PlayerCharacter(challengeTarget));
 
 		if (target == challenger)
 		{

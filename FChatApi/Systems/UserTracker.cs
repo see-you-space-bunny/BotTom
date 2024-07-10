@@ -3,46 +3,54 @@ using System.Collections.Generic;
 using System.Linq;
 using FChatApi.Objects;
 using FChatApi.Enums;
+using FChatApi.Core;
 
 namespace FChatApi.Systems;
 
-internal class UserTracker
+public class UserTracker
 {
-#region (-) KnownUsers
-	private readonly Dictionary<string,User> KnownUsers;
+#region (-) RegisteredUsers
+	public readonly Dictionary<string,User> RegisteredUsers;
 #endregion
 
-#region (-) RegisteredUsers
-	internal readonly Dictionary<string,User> RegisteredUsers;
+
+#region (-) KnownUsers
+	internal readonly Dictionary<string,User> KnownUsers;
+#endregion
+
+
+#region (-) OnlineUsers
+	internal readonly Dictionary<string,User> OnlineUsers;
 #endregion
 
 
 #region (~) Constructor
 	internal UserTracker()
 	{
-		KnownUsers = [];
-		RegisteredUsers = [];
+		RegisteredUsers	= new Dictionary<string,User>(StringComparer.InvariantCultureIgnoreCase);
+		KnownUsers		= new Dictionary<string,User>(StringComparer.InvariantCultureIgnoreCase);
+		OnlineUsers		= new Dictionary<string,User>(StringComparer.InvariantCultureIgnoreCase);
 	}
 #endregion
 
 
-#region (~) Count
-	internal int Count => KnownUsers.Count;
-#endregion
-
-
-#region (~) IsRegistered
-	internal bool IsUserRegistered(User user) =>
-		RegisteredUsers.ContainsKey(user.Key);
-#endregion
-
-
-#region (~) Register
-	internal bool RegisterUser(User user)
+#region (~) Add
+	internal void Add(User value)
 	{
-		if (RegisteredUsers.TryAdd(user.Key,user))
+		if (!TryAdd(value))
+			KnownUsers[value.Name] = value;
+	}
+#endregion
+
+
+#region (-) TryAdd
+	internal bool TryAdd(User value)
+	{
+		if (KnownUsers.TryAdd(value.Name, value))
 		{
-			user.WhenRegistered = DateTime.Now;
+			if (value.IsRegistered)
+				if (!RegisteredUsers.TryAdd(value.Name,value))
+					RegisteredUsers[value.Name] = value;
 			return true;
 		}
 		return false;
@@ -50,52 +58,75 @@ internal class UserTracker
 #endregion
 
 
-#region (~) UnRegister
-	internal bool UnRegisterUser(User user)
+#region (~) ByStatus
+	/// <summary>
+	/// tries to get a character by that character's full name
+	/// </summary>
+	/// <param name="status">name of the requested character</param>
+	/// <param name="user">Instance of the requested character.<br/>
+	/// the method will still attempt to find the user if they are not online.</param>
+	/// <returns><c>false</c> if the character is offline</returns>
+	public Dictionary<string,User> FilterByStatus(ChatStatus status) =>
+		(status switch {
+			ChatStatus.Any			=> KnownUsers,
+			ChatStatus.AnyOnline	=> OnlineUsers,
+			_ => KnownUsers.Where(user => user.Value.ChatStatus.Equals(status)),
+		}).ToDictionary();		
+#endregion
+
+
+#region (~) ByRelationship
+	public Dictionary<string,User> FilterByRelationship(RelationshipToApiUser relationship) =>
+		KnownUsers.Where(u => u.Value.UserStatus.Equals(relationship)).ToDictionary();
+#endregion
+
+
+#region (+) TryUserByName
+	/// <summary>
+	/// tries to get a character by that character's full name
+	/// </summary>
+	/// <param name="value">name of the requested character</param>
+	/// <param name="user">instance of the requested character</param>
+	/// <returns><c>false</c> if the character was not found</returns>
+	public bool TrySingleByName(string value, out User user)
 	{
-		user.WhenRegistered = DateTime.MinValue;
-		return RegisteredUsers.Remove(user.Key);
+		value = value.ToLowerInvariant();
+		if (!OnlineUsers.TryGetValue(value, out user))
+			if (!RegisteredUsers.TryGetValue(value, out user))
+				if (!KnownUsers.TryGetValue(value, out user))
+					return false;
+		return user is not null;
 	}
 #endregion
 
 
-#region (~) AddUser
-	internal void AddUser(User value) =>
-		TryAddUser(value);
-#endregion
-
-
-#region (-) Try: AddUser
-	internal bool TryAddUser(User value) =>
-		KnownUsers.TryAdd(value.Key, value);
-#endregion
-
-
-#region (~) SetUserStatus
-	internal IEnumerable<KeyValuePair<string,User>> GetUsersByStatus(RelationshipToApiUser status)
-	{
-		return KnownUsers.Where(user => user.Value.UserStatus == status);
-	}
-#endregion
-
-
-#region (~) UserByName
-	internal User GetUserByName(string value) 
-		=> GetUserByKey(value.ToLowerInvariant());
+#region (+) ByName
+	/// <summary>
+	/// gets a character by that character's full name
+	/// </summary>
+	/// <param name="value">character name</param>
+	/// <returns>the selected character</returns>
+	public User SingleByName(string username) 
+		=> SingleByKey(username);
 #endregion
 
 
 #region (~) UserByKey
-	internal User GetUserByKey(string value) =>
-		KnownUsers.TryGetValue(value, out User user) ? user : null;
+	internal User SingleByKey(string username) =>
+		KnownUsers.TryGetValue(username, out User result) ? result : null;
 #endregion
 
 
 #region (~) SetChatStatus
 	internal void Character_SetChatStatus(User user, ChatStatus status, bool logging = true)
 	{
+		UserSanityCheck(user);
 		user.ChatStatus = status;
-		AddUser(user);
+
+		if (status > ChatStatus.AnyOnline)
+			OnlineUsers.TryAdd(user.Name,user);
+		else
+			OnlineUsers.Remove(user.Name);
 
 		if (logging)
 			Console.WriteLine($"{user.Name}'s chat status changed to: {status}");
@@ -104,18 +135,22 @@ internal class UserTracker
 
 
 #region (~) SetUserStatus
-	internal void Character_SetUserStatus(User user, RelationshipToApiUser status, bool logging = true)
+	internal void Character_SetRelationship(User user, RelationshipToApiUser status, bool logging = true)
 	{
+		UserSanityCheck(user);
 		user.UserStatus = status;
-		if (GetUserByName(user.Key) == null)
-			AddUser(user);
 
-		User thisUser = KnownUsers[user.Key];
-		if (null == thisUser)
-			throw new Exception($"Error attempting to resolve user: {user.Name}.");
+		if (logging)
+			Console.WriteLine($"{user.Name}'s user status changed to: {status}");
+	}
+#endregion
 
-		thisUser.UserStatus = status;
-		if (logging) Console.WriteLine($"{thisUser.Name}'s user status changed to: {status}");
+
+#region (-) UserSanityCheck
+	private void UserSanityCheck(User user)
+	{
+		if (!KnownUsers.ContainsKey(user.Name))
+			Add(user);
 	}
 #endregion
 }

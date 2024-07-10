@@ -31,13 +31,13 @@ public partial class ApiConnection
 	public static void DebugAddCharacters(string[] value)
 	{
 		foreach (string name in value)
-			UserTracker.AddUser(new User() { Name = name, });
+			Users.Add(new User() { Name = name, });
 	}
 
 	public static void DebugRegisterAllCharacters()
 	{
 		foreach (User user in RegisteredUsers.Values)
-			UserTracker.RegisterUser(user);
+			Users.RegisterUser(user);
 		ImportRegisteredUsers();
 	}
 #endif

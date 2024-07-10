@@ -34,7 +34,14 @@ public partial class ApiConnection
 	/// <returns>the task we initiated</returns>
 	private Task Handler_MSG(JObject json)
 	{
-		Task t = Task.Run(() => MessageHandler?.Invoke(MessageCode.MSG, new MessageEventArgs() { Channel = GetChannelByCode(json["channel"].ToString()), Message = json["message"].ToString(), User = GetUserByName(json["character"].ToString()) }));
+		var m = new FChatMessage(
+			MessageCode.MSG,
+			Users.SingleByName(json["character"].ToString()),
+			Channels.SingleByNameOrCode(json["channel"].ToString()),
+			json["message"].ToString(),
+			ChatStatus.Invalid
+		);
+		Task t = Task.Run(() => MessageHandler?.Invoke(MessageCode.MSG, new MessageEventArgs() { Channel = GetChannelByCode(json["channel"].ToString()), Message = json["message"].ToString(), User = Users.SingleByName(json["character"].ToString()) }));
 		Console.WriteLine(json["message"].ToString());
 		return t;
 	}
@@ -50,7 +57,7 @@ public partial class ApiConnection
 	/// <returns>the task we initiated</returns>
 	private Task Handler_PRI(JObject json)
 	{
-		Task t = Task.Run(() => MessageHandler?.Invoke(MessageCode.PRI, new MessageEventArgs() { User = GetUserByName(json["character"].ToString()), Message = json["message"].ToString() }));
+		Task t = Task.Run(() => MessageHandler?.Invoke(MessageCode.PRI, new MessageEventArgs() { User = Users.SingleByName(json["character"].ToString()), Message = json["message"].ToString() }));
 		Console.WriteLine(json["message"].ToString());
 		return t;
 	}

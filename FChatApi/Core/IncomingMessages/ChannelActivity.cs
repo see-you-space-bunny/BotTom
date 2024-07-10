@@ -20,11 +20,11 @@ public partial class ApiConnection
 	/// <returns>the task we initiated</returns>
 	private Task Handler_COL(JObject json)
 	{
-		while (ChannelTracker.IsChannelBeingCreated);
-		Channel channel		= GetChannelByNameOrCode(json["channel"].ToString());
+		while (Channels.IsChannelBeingCreated);
+		Channel channel		= Channels.SingleByNameOrCode(json["channel"].ToString());
 		List<Task> tasks	= [];
 		bool ownerAdded		= false;
-		foreach (User user in json["oplist"].Select(user => GetUserByName(user.ToString())))
+		foreach (User user in json["oplist"].Select(u => Users.SingleByName(u.ToString())))
 		{
 			if (user is null)
 			{
@@ -60,11 +60,11 @@ public partial class ApiConnection
 	/// <returns>the task we initiated</returns>
 	private Task Handler_ICH(JObject json)
 	{
-		while (ChannelTracker.IsChannelBeingCreated);
+		while (Channels.IsChannelBeingCreated);
 		// joining channel
-		Channel channel = ChannelTracker.ChangeChannelStatus(json["channel"].ToString(), ChannelStatus.Joined);
+		Channel channel = Channels.Channel_ChangeStatus(json["channel"].ToString(), UserRelationshipWithChannel.Joined);
 		List<Task> tasks = [];
-		foreach (User user in json["users"].Select(u => UserTracker.GetUserByName(u["identity"].ToString())))
+		foreach (User user in json["users"].Select(u => Users.SingleByName(u["identity"].ToString())))
 		{
 			tasks.Add(Task.Run(() =>
 			{
@@ -94,36 +94,27 @@ public partial class ApiConnection
 	/// <returns>the task we initiated</returns>
 	private Task Handler_JCH(JObject json)
 	{
-		if (TryGetChannelByCode(json["channel"].ToString(),out Channel channel) || ChannelTracker.IsChannelBeingCreated)
+		if (!Users.TrySingleByName(json["character"]["identity"].ToString(),out User user))
+			throw new ArgumentException($"Incoming message was malformed: {json}",nameof(json));
+		Channels.TrySingleByNameOrCode(json["channel"].ToString(),out Channel channel);
+
+		if (Channels.IsChannelBeingCreated && channel is null && user.Name.Equals(CharacterName))
 		{
-			if (TryGetUserByName(json["character"]["identity"].ToString(),out User user) &&
-				ChannelTracker.IsChannelBeingCreated &&
-				channel is null &&
-				user.Name.Equals(CharacterName))
+			return Task.Run(() =>
 			{
-				return Task.Run(() =>
-				{
-					channel = ChannelTracker.FinalizeChannelCreation(json["title"].ToString(), json["channel"].ToString(), user);
-					Console.WriteLine($"Created Channel: {json["channel"]}");
-					CreatedChannelHandler?.Invoke(this, new ChannelEventArgs() { Channel = channel, User = user, ChannelStatus = ChannelStatus.Left });
-				});
-			}
-			
-			if (user is not null)
-			{
-				return Task.Run(() =>
-				{
-					if (user.Name.Equals(CharacterName))
-					{
-						ChannelTracker.JoinedChannels.Add(channel.Code,channel);
-					}
-					JoinedChannelHandler?.Invoke(this, new ChannelEventArgs() { Channel = channel, User = user, ChannelStatus = ChannelStatus.Left });
-					channel.AddUser(user);
-					Console.WriteLine($"{user.Name} joined Channel: {channel.Name}. {channel.Users.Count} total users in channel.");
-				});
-			}
+				channel = Channels.FinalizeChannelCreation(json["title"].ToString(), json["channel"].ToString(), user);
+				Console.WriteLine($"Created Channel: {json["channel"]}");
+				user.JoinChannel(channel);
+				CreatedChannelHandler?.Invoke(this, new ChannelEventArgs() { Channel = channel, User = user, ChannelStatus = UserRelationshipWithChannel.Left });
+			});
 		}
-		throw new ArgumentException($"Incoming message was malformed: {json}",nameof(json));
+
+		return Task.Run(() =>
+		{
+			JoinedChannelHandler?.Invoke(this, new ChannelEventArgs() { Channel = channel, User = user, ChannelStatus = UserRelationshipWithChannel.Left });
+			user.JoinChannel(channel);
+			Console.WriteLine($"{user.Name} joined Channel: {channel.Name}. {channel.Users.Count} total users in channel.");
+		});
 	}
 #endregion
 
@@ -137,20 +128,13 @@ public partial class ApiConnection
 	/// <returns>the task we initiated</returns>
 	private Task Handler_LCH(JObject json)
 	{		
-		if (TryGetChannelByCode(json["channel"].ToString(),out Channel channel) &&
-			TryGetUserByName(json["character"].ToString(),out User user))
+		if (Channels.TrySingleByNameOrCode(json["channel"].ToString(),out Channel channel) &&
+			Users.TrySingleByName(json["character"].ToString(),out User user))
 		{
 			return Task.Run(() =>
 			{
-				if (user.Name.Equals(CharacterName))
-				{
-					LeaveChannel(channel);
-				}
-				else
-				{
-					channel.RemoveUser(user.Name);
-				}
-				LeftChannelHandler?.Invoke(this, new ChannelEventArgs() { Channel = channel, User = user, ChannelStatus = ChannelStatus.Left });
+				user.LeaveChannel(channel);
+				LeftChannelHandler?.Invoke(this, new ChannelEventArgs() { Channel = channel, User = user, ChannelStatus = UserRelationshipWithChannel.Left });
 				Console.WriteLine($"{user.Name} left Channel: {json["channel"]}. {channel.Users.Count} total users in channel.");
 			});
 		}

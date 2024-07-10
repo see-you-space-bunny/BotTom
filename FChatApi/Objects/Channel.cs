@@ -8,10 +8,6 @@ namespace FChatApi.Objects;
 
 public class Channel : IMessageRecipient
 {
-#region Fields (-)
-	private string _code = null;
-#endregion
-
 #region Properties (+)
 	/// <summary>does the channel permit ads to be sent</summary>
 	public bool AdEnabled { get; set; }
@@ -20,10 +16,10 @@ public class Channel : IMessageRecipient
 	public string Name { get; set; }
 
 	/// <summary>what is our status with the channel</summary>
-	public ChannelStatus Status { get; set; }
+	public UserRelationshipWithChannel Status { get; set; }
 
 	/// <summary>the channel's channel-code</summary>
-	public string Code { get => _code; set => _code = value.ToLowerInvariant(); }
+	public string Code { get; set; }
 
 	/// <summary>(accessibility) type of channel</summary>
 	public ChannelType Type { get; set; }
@@ -65,11 +61,11 @@ public class Channel : IMessageRecipient
 
 #region Constructor (-)
 	/// <summary>assigns default/empty values to <c>Status</c>,<c>Mods</c>,<c>Users</c>,<c>CreatedByApi</c> and <c>Description</c></summary>
-	private Channel()
+	internal Channel()
 	{
-		Status			= ChannelStatus.Available;
-		Mods			= [];
-		Users			= [];
+		Status			= UserRelationshipWithChannel.Available;
+		Mods			= new Dictionary<string,User>(StringComparer.InvariantCultureIgnoreCase);
+		Users			= new Dictionary<string,User>(StringComparer.InvariantCultureIgnoreCase);
 		CreatedByApi	= false;
 		Description		= string.Empty;
 		SleepInterval	= new TimeSpan(0,0,0,0,milliseconds: 1001);
@@ -119,46 +115,27 @@ public class Channel : IMessageRecipient
 	/// <summary>
 	/// adds the user to the channel's user list<br/> this does invite/add the actual user form the channel
 	/// </summary>
-	/// <param name="value">the user we want to add</param>
+	/// <param name="user">the user we want to add</param>
 	/// <returns>this channel</returns>
-	public Channel AddUser(string value)
+	internal Channel AddUser(User user)
 	{
-		if (!Users.TryAdd(value, ApiConnection.GetUserByName(value)))
-			Console.WriteLine($"Skipping duplicate entry: {value}");
-		return this;
-	}
-
-	/// <summary>
-	/// adds the user to the channel's user list<br/> this does invite/add the actual user form the channel
-	/// </summary>
-	/// <param name="value">the user we want to add</param>
-	/// <returns>this channel</returns>
-	public Channel AddUser(User value)
-	{
-		if (!Users.TryAdd(value.Name, value))
-			Console.WriteLine($"Skipping duplicate entry: {value.Name}");
+		if (!Users.TryAdd(user.Name, user))
+			Console.WriteLine($"Skipping duplicate entry: {user.Name}");
+		else if (user == ApiConnection.ApiUser)
+			ApiConnection.Channels.Joined.TryAdd(Code,this);
 		return this;
 	}
 
 	/// <summary>
 	/// removes the user from the channel's user list<br/> this does NOT kick the actual user form the channel
 	/// </summary>
-	/// <param name="value">the user we want to remove</param>
+	/// <param name="user">the user we want to remove</param>
 	/// <returns>this channel</returns>
-	public Channel RemoveUser(string value)
+	internal Channel RemoveUser(User user)
 	{
-		Users.Remove(value);
-		return this;
-	}
-
-	/// <summary>
-	/// removes the user from the channel's user list<br/> this does NOT kick the actual user form the channel
-	/// </summary>
-	/// <param name="value">the user we want to remove</param>
-	/// <returns>this channel</returns>
-	public Channel RemoveUser(User value)
-	{
-		Users.Remove(value.Name);
+		Users.Remove(user.Name);
+        if (user == ApiConnection.ApiUser)
+			ApiConnection.Channels.Joined.Remove(Code);
 		return this;
 	}
 #endregion
@@ -171,46 +148,23 @@ public class Channel : IMessageRecipient
 	/// <summary>
 	/// adds channel moderator/op status to a user<br/>this has NO effect on bot-privileges/permissions
 	/// </summary>
-	/// <param name="value">the user we wish to Op</param>
+	/// <param name="user">the user we wish to Op</param>
 	/// <returns>this channel</returns>
-	public Channel AddMod(string value)
+	internal Channel AddMod(User user)
 	{
-		if (!Users.TryAdd(value, ApiConnection.GetUserByName(value)))
-			Console.WriteLine($"Skipping duplicate mod entry: {value}");
-		return this;
-	}
-
-	/// <summary>
-	/// adds channel moderator/op status to a user<br/>this has NO effect on bot-privileges/permissions
-	/// </summary>
-	/// <param name="value">the user we wish to Op</param>
-	/// <returns>this channel</returns>
-	public Channel AddMod(User value)
-	{
-		if (!Users.TryAdd(value.Name, value))
-			Console.WriteLine($"Skipping duplicate mod entry: {value.Name}");
+		if (!Users.TryAdd(user.Name, user))
+			Console.WriteLine($"Skipping duplicate mod entry: {user.Name}");
 		return this;
 	}
 
 	/// <summary>
 	/// removes channel moderator/op status from a user<br/>this has NO effect on bot-privileges/permissions
 	/// </summary>
-	/// <param name="value">the user we wish to de-Op</param>
+	/// <param name="user">the user we wish to de-Op</param>
 	/// <returns>this channel</returns>
-	public Channel RemoveMod(string value)
+	internal Channel RemoveMod(User user)
 	{
-		Mods.Remove(value);
-		return this;
-	}
-
-	/// <summary>
-	/// removes channel moderator/op status from a user<br/>this has NO effect on bot-privileges/permissions
-	/// </summary>
-	/// <param name="value">the user we wish to de-Op</param>
-	/// <returns>this channel</returns>
-	public Channel RemoveMod(User value)
-	{
-		Mods.Remove(value.Name);
+		Mods.Remove(user.Name);
 		return this;
 	}
 #endregion

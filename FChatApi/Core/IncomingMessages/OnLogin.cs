@@ -42,7 +42,7 @@ public partial class ApiConnection
 
 		return Task.Run(() =>
 		{
-			ChannelTracker.RefreshAvailableChannels(publicChannelList, ChannelType.Public);
+			Channels.RefreshAvailableChannels(publicChannelList, ChannelType.Public);
 			PublicChannelsReceivedHandler?.Invoke(this, new ChannelEventArgs() { });
 			Console.WriteLine($"Public Channels Recieved... {publicChannelList.Count} total Public Channels.");
 		});
@@ -117,7 +117,7 @@ public partial class ApiConnection
 
 		return Task.Run(() =>
 		{
-			ChannelTracker.RefreshAvailableChannels(privateChannelList, ChannelType.Private);
+			Channels.RefreshAvailableChannels(privateChannelList, ChannelType.Private);
 			PrivateChannelsReceivedHandler?.Invoke(this, new ChannelEventArgs() { });
 			Console.WriteLine($"Private Channels Recieved... {privateChannelList.Count} total Private Channels.");
 		});
