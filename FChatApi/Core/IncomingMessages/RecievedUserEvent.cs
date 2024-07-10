@@ -101,14 +101,14 @@ public partial class ApiConnection
 #region (-) Handler_NLN
 	private Task Handler_NLN(JObject json)
 	{
-		User user = new User()
-		{
-			Name = json["identity"].ToString(),
-			UserStatus = (UserStatus)Enum.Parse(typeof(UserStatus), json["status"].ToString(), true),
-			Gender = json["gender"].ToString()
-		};
 		return Task.Run(() =>
 		{
+			User user = new ()
+			{
+				Name		= json["identity"].ToString(),
+				UserStatus	= Enum.Parse<UserStatus>(json["status"].ToString(), true),
+				Gender		= json["gender"].ToString(),
+			};
 			UserTracker.AddUser(user);
 			UserTracker.Character_SetChatStatus(user, ChatStatus.Online, false);
 		});

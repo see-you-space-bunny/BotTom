@@ -22,27 +22,25 @@ public partial class ApiConnection
 				user.Name.Equals(CharacterName))
 			{
 				return Task.Run(() =>
-					{
-						channel = ChannelTracker.FinalizeChannelCreation(json["title"].ToString(), json["channel"].ToString(), user);
-						Console.WriteLine($"Created Channel: {json["channel"]}");
-						CreatedChannelHandler?.Invoke(this, new ChannelEventArgs() { Channel = channel, User = user, ChannelStatus = ChannelStatus.Left });
-					}
-				);
+				{
+					channel = ChannelTracker.FinalizeChannelCreation(json["title"].ToString(), json["channel"].ToString(), user);
+					Console.WriteLine($"Created Channel: {json["channel"]}");
+					CreatedChannelHandler?.Invoke(this, new ChannelEventArgs() { Channel = channel, User = user, ChannelStatus = ChannelStatus.Left });
+				});
 			}
 			
 			if (user is not null)
 			{
 				return Task.Run(() =>
+				{
+					if (user.Name.Equals(CharacterName))
 					{
-						if (user.Name.Equals(CharacterName))
-						{
-							ChannelTracker.JoinedChannels.Add(channel.Code,channel);
-						}
-						JoinedChannelHandler?.Invoke(this, new ChannelEventArgs() { Channel = channel, User = user, ChannelStatus = ChannelStatus.Left });
-						channel.AddUser(user);
-						Console.WriteLine($"{user.Name} joined Channel: {channel.Name}. {channel.Users.Count} total users in channel.");
+						ChannelTracker.JoinedChannels.Add(channel.Code,channel);
 					}
-				);
+					JoinedChannelHandler?.Invoke(this, new ChannelEventArgs() { Channel = channel, User = user, ChannelStatus = ChannelStatus.Left });
+					channel.AddUser(user);
+					Console.WriteLine($"{user.Name} joined Channel: {channel.Name}. {channel.Users.Count} total users in channel.");
+				});
 			}
 		}
 		throw new ArgumentException($"Incoming message was malformed: {json}",nameof(json));
@@ -56,19 +54,18 @@ public partial class ApiConnection
 			TryGetUserByName(json["character"].ToString(),out User user))
 		{
 			return Task.Run(() =>
+			{
+				if (user.Name.Equals(CharacterName))
 				{
-					if (user.Name.Equals(CharacterName))
-					{
-						LeaveChannel(channel);
-					}
-					else
-					{
-						channel.RemoveUser(user.Name);
-					}
-					LeftChannelHandler?.Invoke(this, new ChannelEventArgs() { Channel = channel, User = user, ChannelStatus = ChannelStatus.Left });
-					Console.WriteLine($"{user.Name} left Channel: {json["channel"]}. {channel.Users.Count} total users in channel.");
+					LeaveChannel(channel);
 				}
-			);
+				else
+				{
+					channel.RemoveUser(user.Name);
+				}
+				LeftChannelHandler?.Invoke(this, new ChannelEventArgs() { Channel = channel, User = user, ChannelStatus = ChannelStatus.Left });
+				Console.WriteLine($"{user.Name} left Channel: {json["channel"]}. {channel.Users.Count} total users in channel.");
+			});
 		}
 		throw new ArgumentException($"Incoming message was malformed: {json}",nameof(json));
 	}
@@ -115,16 +112,15 @@ public partial class ApiConnection
 		foreach (User user in json["users"].Select(u => UserTracker.GetUserByName(u["identity"].ToString())))
 		{
 			tasks.Add(Task.Run(() =>
+			{
+				if (user is null)
 				{
-					if (user is null)
-					{
-						Console.WriteLine($"Error attempting to add user {user.Name} to {channel.Name} channel's userlist.");
-					}
-
-					channel.AddUser(user);
-					channel.AdEnabled = !json["mode"].ToString().Equals("chat");
+					Console.WriteLine($"Error attempting to add user {user.Name} to {channel.Name} channel's userlist.");
 				}
-			));
+
+				channel.AddUser(user);
+				channel.AdEnabled = !json["mode"].ToString().Equals("chat");
+			}));
 		}
 #if DEBUG
 		Console.WriteLine($"Adding {json["users"].Count()} users to {channel.Name} channel's userlist successful.");
