@@ -1,3 +1,4 @@
+using FChatApi.Core;
 using FChatApi.Enums;
 
 namespace FChatApi.Objects;
@@ -10,21 +11,25 @@ namespace FChatApi.Objects;
 /// <param name="recipient">the user that recieved the message (api-user)</param>
 /// <param name="channel">the channel (if any) that contains the message</param>
 /// <param name="message">the message itself</param>
-public class FChatMessage(FChatMessageType messageType, User author, User recipient, Channel channel, string message)
+public class FChatMessage(FChatMessageType messageType, User author, User recipient, Channel channel, string message,ChatStatus status)
 {
 	public readonly FChatMessageType MessageType = messageType;
 	public readonly User Author = author;
 	public readonly User Recipient = recipient;
 	public readonly Channel Channel = channel;
 	public readonly string Message = message;
+	public readonly ChatStatus Status = status;
 
-	public FChatMessage(MessageCode messageCode, User author, User recipient, Channel channel, string message) :
+	/// <summary>
+	/// constructor for an incoming chat message
+	/// </summary>
+	public FChatMessage(MessageCode messageCode, User author, Channel channel, string message,ChatStatus status) :
 		this( messageCode switch {
 			MessageCode.MSG	=>	FChatMessageType.Basic,
 			MessageCode.LRP	=>	FChatMessageType.Advertisement,
 			MessageCode.PRI	=>	FChatMessageType.Whisper,
 			MessageCode.STA	=>	FChatMessageType.Status,
 			_				=>	FChatMessageType.Invalid
-		}, author, recipient, channel, message)
+		}, author, ApiConnection.ApiUser, channel, message, status)
 	{ }
 }

@@ -8,8 +8,12 @@ using FChatApi.Interfaces;
 
 namespace FChatApi.Objects;
 
-public class FChatMessageBuilder
+public class FChatMessageBuilder(bool isSystemMessage = false)
 {
+#region sysmessage
+	private bool _sysmessage = isSystemMessage;
+#endregion
+
 #region MessageRecipient
 	/// <summary>
 	/// The message's Recipient as an object that can host a message Queue.<br/>
@@ -40,7 +44,7 @@ public class FChatMessageBuilder
 	}
 	public FChatMessageBuilder WithAuthor(string value)
 	{
-		if (!ApiConnection.TryGetOnlineUserByName(value, out User result))
+		if (!ApiConnection.Users.TrySingleByName(value, out User result))
 			throw new KeyNotFoundException();
 		Author = result;
 		return this;
@@ -60,7 +64,7 @@ public class FChatMessageBuilder
 	}
 	public FChatMessageBuilder WithRecipient(string value)
 	{
-		if (!ApiConnection.TryGetOnlineUserByName(value, out User result))
+		if (!ApiConnection.Users.TrySingleByName(value, out User result))
 			throw new KeyNotFoundException();
 		Recipient = result;
 		return this;
@@ -80,7 +84,7 @@ public class FChatMessageBuilder
 	}
 	public FChatMessageBuilder WithChannel(string value)
 	{
-		Channel = ApiConnection.GetChannelByNameOrCode(value);
+		Channel = ApiConnection.Channels.SingleByNameOrCode(value);
 		return this;
 	}
 #endregion
@@ -90,7 +94,7 @@ public class FChatMessageBuilder
 
 
 #region MessageType
-	FChatMessageType MessageType;
+	FChatMessageType MessageType = FChatMessageType.Invalid;
 	public FChatMessageBuilder WithMessageType(FChatMessageType value)
 	{
 		MessageType = value;
@@ -115,16 +119,27 @@ public class FChatMessageBuilder
 ////////////////////////////////////////////////
 
 
+#region Message
+	ChatStatus Status = ChatStatus.Invalid;
+	public FChatMessageBuilder WithStatus(ChatStatus value)
+	{
+		Status = value;
+		return this;
+	}
+#endregion
+
+
+////////////////////////////////////////////////
+
+
 #region Build Method
 	public FChatMessage Build()
 	{
-		ValidateAuthor();
+		if (!_sysmessage)
+			ValidateAuthor();
 
-		if (!HasRecipient)
-			throw new InvalidOperationException("The message you are trying to build has no valid MessageRecipient.");
-		
 		ValidateMessageType();
-
+		
 		StringBuilder messageStringBuilder = new();
 
 		ValidateMessageBody();
@@ -140,7 +155,7 @@ public class FChatMessageBuilder
 		if (Channel is not null)
 			(Channel as IMessageRecipient).MessageSent();
 
-		return new FChatMessage(MessageType,Author,Recipient,Channel,messageStringBuilder.ToString());
+		return new FChatMessage(MessageType,Author,Recipient,Channel,messageStringBuilder.ToString(),Status);
 	}
 #endregion
 
@@ -155,7 +170,7 @@ public class FChatMessageBuilder
 	private void ValidateAuthor()
 	{
 		if (Author is null || string.IsNullOrWhiteSpace(Author.Name))
-			throw new InvalidOperationException("Attempting to build an unsigned (no Author) message. An outgoing should always have an Author!");
+			throw new InvalidOperationException("Attempting to build an unsigned (no Author) message. A message should always have an Author!");
 	}
 
 	/// <summary>
@@ -164,22 +179,25 @@ public class FChatMessageBuilder
 	/// </summary>
 	private void ValidateMessageType()
 	{
-		if (Channel is null)
+		if (Status != ChatStatus.Invalid)
+		{
+			MessageType = FChatMessageType.Status;
+		}
+		else if (Channel is not null)
+		{
+			if (!Channel.AdEnabled && MessageType == FChatMessageType.Advertisement)
+				throw new InvalidOperationException($"Attempting to post an ad in {Channel.Name} ({Channel.Code}), but that channel doesn't support it.");
+
+			MessageType = FChatMessageType.Basic;
+		}
+		else if (Recipient is not null)
 		{
 			MessageType = FChatMessageType.Whisper;
 		}
-		else if (!Channel.AdEnabled && MessageType == FChatMessageType.Advertisement)
-		{
-			throw new InvalidOperationException($"Attempting to post an ad in {Channel.Name} ({Channel.Code}), but that channel doesn't support it.");
-		}
-		else if (Recipient is null)
-		{
-			MessageType = FChatMessageType.Basic;
-		}
+		else if (!HasRecipient)
+			throw new InvalidOperationException("The message you are trying to build has no valid MessageRecipient.");
 		else if (MessageType == FChatMessageType.Invalid)
-		{
-			throw new InvalidOperationException($"Cannot send a message with unspecified type.");
-		}
+			throw new InvalidOperationException($"Attempted to send a message with an invalid message type or failed to provide data required to build a {MessageType}-type message.");
 	}
 	
 	/// <remarks>

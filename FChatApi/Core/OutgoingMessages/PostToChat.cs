@@ -44,12 +44,12 @@ public partial class ApiConnection
 	/// <b>Chat Post</b><br/>
 	/// posts a chat message to the selected channel
 	/// </summary>
-	/// <param name="channel">channel code</param>
+	/// <param name="channel">channel</param>
 	/// <param name="message">message as <c>JavaScript</c> Encoded String</param>
-	private static Task User_SendChannelMessage(string channel, string message)
+	private static Task User_SendChannelMessage(Channel channel, string message)
 	{
 		ConnectionCheck();
-		string toSend = string.Format(MessageCode.MSG.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,channel,message);
+		string toSend = string.Format(MessageCode.MSG.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,channel.Code,message);
 		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {channel}: {message}");
 #if DEBUG
 		return DebugSendAsync(toSend);
@@ -64,7 +64,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="value">message being sent</param>
 	private static Task User_SendChannelMessage(FChatMessage value) =>
-		User_SendChannelMessage(value.Channel.Code, value.Message);
+		User_SendChannelMessage(value.Channel, value.Message);
 #endregion
 
 
@@ -76,13 +76,13 @@ public partial class ApiConnection
 	/// <b>Chat Post</b><br/>
 	/// posts an ad to the selected channel
 	/// </summary>
-	/// <param name="channel">channel code</param>
+	/// <param name="channel">channel</param>
 	/// <param name="message">message as <c>JavaScript</c> Encoded String</param>
-	private static Task User_SendChannelAd(string channel, string message)
+	private static Task User_SendChannelAd(Channel channel, string message)
 	{
 		ConnectionCheck();
 		string toSend = string.Format(MessageCode.LRP.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,channel,message);
-		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {channel}: {message}");
+		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {channel.Code}: {message}");
 #if DEBUG
 		return DebugSendAsync(toSend);
 #else
@@ -96,6 +96,6 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="value">message being sent</param>
 	private static Task User_SendChannelAd(FChatMessage value) =>
-		User_SendChannelAd(value.Channel.Code, value.Message);
+		User_SendChannelAd(value.Channel, value.Message);
 #endregion
 }
