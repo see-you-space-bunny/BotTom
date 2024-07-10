@@ -197,7 +197,7 @@ public enum MessageCode
 	[OutgoingMessageFormat("CRC {{\"channel\": \"{1}\"}}")]
 	CRC,
 
-	/// <summary><b>Channel Set Owner</b><br/>CSO {"character": "Kira", "channel": "Development"}
+	/// <summary><b>Channel Set Owner</b><br/>
 	/// incoming when a character was promoted to channel owner<br/>
 	/// (INC) &lt;&lt; CSO {"character": "CharacterName", "channel": "ChannelCode"}<br/><br/>
 	/// 
@@ -212,7 +212,7 @@ public enum MessageCode
 	/// <summary><b>Channel Timeout</b><br/>
 	/// incoming when a character was timed out from a channel<br/>
 	/// (INC) &lt;&lt; CTU {"character": "CharacterName", "channel": "ChannelCode", "operator": "OperatorName", "length": 1234}<br/>
-	/// <i>length is measured in seconds ?</i><br/><br/>
+	/// <i>length is measured in seconds</i><br/><br/>
 	/// 
 	/// send to time out a character from a channel<br/>
 	/// (OUT) &gt;&gt; CTU {"character": "CharacterName", "channel": "ChannelCode", "length": 1234}<br/>
@@ -355,6 +355,7 @@ public enum MessageCode
 	/// (OUT) &gt;&gt; KIK {"character": "CharacterName"}<br/>
 	/// <i>"CharacterName" is case sensitive!<br/>
 	/// api-user must be channel owner to do this</i>
+	/// </summary>
 	[OutgoingMessageFormat("KIK {{\"character\": \"{0}\"}}")]
 	KIK,
 
@@ -369,7 +370,7 @@ public enum MessageCode
 	LCH,
 
 	/// <summary><b>Character List</b><br/>
-	/// api-user's character list and online status ?
+	/// incoming with api-user's character list and online status ?
 	/// </summary>
 	[OutgoingMessageFormat("LIS")]
 	LIS,
@@ -411,7 +412,7 @@ public enum MessageCode
 	[OutgoingMessageFormat("ORS")]
 	ORS,
 
-	/// <summary>a ping</summary>
+	/// <summary>The keep-alive ping that maintains the api's connection.</summary>
 	[OutgoingMessageFormat("PIN")]
 	PIN,
 
@@ -429,7 +430,7 @@ public enum MessageCode
 	PRI,
 
 	/// <summary><b>Reload Serzer State</b><br/>
-	/// ??? <br/>
+	/// ??? Server state?? <br/>
 	/// (OUT) &gt;&gt; RLD {"save": "A String"}
 	/// </summary>
 	[OutgoingMessageFormat("RLD {{\"save\": \"{0}\"}}")]
@@ -456,7 +457,7 @@ public enum MessageCode
 	RMO,
 
 	/// <summary><b>Channel Visibility</b><br/>
-	/// send to ??<br/>
+	/// send to ?? make private channel discoverable ?<br/>
 	/// (OUT) &gt;&gt; RST {"channel": "ChannelCode", "mode": "VisibilityMode"}
 	/// </summary>
 	[OutgoingMessageFormat("RST {{\"channel\": \"{0}\", \"mode\": \"{1}\"}}")]
@@ -481,10 +482,10 @@ public enum MessageCode
 	SFC,
 
 	/// <summary><b>Status Update</b><br/>
-	/// incoming with a staff alert ?<br/>
+	/// incoming with a status update alert<br/>
 	/// (INC) &lt;&lt; STA {"character": "CharacterName", "status": "UserStatusType", "statusmsg": "A String"}<br/><br/>
 	/// 
-	/// when outgoing requests status set<br/>
+	/// when outgoing requests api-user status to be set<br/>
 	/// (OUT) &lt;&lt; STA {"status": "UserStatusType", "statusmsg": "A String"}
 	/// </summary>
 	[OutgoingMessageFormat("STA {{\"status\": \"{0}\", \"statusmsg\": \"{1}\"}}")]

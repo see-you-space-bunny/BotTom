@@ -72,7 +72,7 @@ internal class UserTracker
 
 
 #region (~) SetUserStatus
-	internal IEnumerable<KeyValuePair<string,User>> GetUsersByStatus(UserStatus status)
+	internal IEnumerable<KeyValuePair<string,User>> GetUsersByStatus(RelationshipToApiUser status)
 	{
 		return KnownUsers.Where(user => user.Value.UserStatus == status);
 	}
@@ -104,7 +104,7 @@ internal class UserTracker
 
 
 #region (~) SetUserStatus
-	internal void Character_SetUserStatus(User user, UserStatus status, bool logging = true)
+	internal void Character_SetUserStatus(User user, RelationshipToApiUser status, bool logging = true)
 	{
 		user.UserStatus = status;
 		if (GetUserByName(user.Key) == null)

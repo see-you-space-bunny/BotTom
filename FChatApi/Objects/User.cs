@@ -39,7 +39,7 @@ public class User : IMessageRecipient
 	public ChatStatus ChatStatus { get; set; }
 	
 	/// <summary>the character's status in chat</summary>
-	public UserStatus UserStatus { get; set; }
+	public RelationshipToApiUser UserStatus { get; set; }
 
 	/// <summary>site memo on this character</summary>
 	public string Memo { get; set; }
@@ -173,7 +173,7 @@ public class User : IMessageRecipient
 	{
 		// Chat Info
 		Name        = string.Empty;
-		UserStatus  = UserStatus.None;
+		UserStatus  = RelationshipToApiUser.None;
 		ChatStatus  = ChatStatus.Invalid;
 
 		// Profile Info

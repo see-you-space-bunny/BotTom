@@ -42,7 +42,7 @@ internal class ChannelTracker
 		JoinedChannels			= [];
 	}
 
-	internal Channel AddManualChannel(string channelname, ChannelStatus status, string channelcode)
+	internal Channel AddChannelManually(string channelname, ChannelStatus status, string channelcode)
 	{
 		if (AllAvailableChannels.ContainsKey(channelname.ToLowerInvariant()) && !AllAvailableChannels.Values.Any(ch => ch.Name.Equals(channelname)))
 		{
@@ -110,22 +110,6 @@ internal class ChannelTracker
 	}
 #endregion
 
-#region (~) ChByNameOrCode
-	/// <summary>
-	/// retrieves a channel, first attempting to find it by its channel-code and then by name
-	/// </summary>
-	/// <param name="value">the name or channel-code of the channel we seek to find</param>
-	/// <returns>the channel that matches our <c>value</c></returns>
-	internal Channel GetChannelByNameOrCode(string value)
-	{
-		if (!JoinedChannels.TryGetValue(value.ToLowerInvariant(), out Channel channel))
-			if (!AllAvailableChannels.TryGetValue(value.ToLowerInvariant(), out channel))
-				channel = AllAvailableChannels.Values.FirstOrDefault(ch => ch.Name.Equals(value, StringComparison.InvariantCultureIgnoreCase));
-		
-		return channel;
-	}
-#endregion
-
 #region (~) LeaveChannel
 
 	internal void LeaveChannel(Channel value) =>
@@ -154,6 +138,22 @@ internal class ChannelTracker
     internal Channel ChangeChannelStatus(Channel channel, ChannelStatus value)
     {
 		channel.Status = value;
+		return channel;
+	}
+#endregion
+
+#region (~) ChByNameOrCode
+	/// <summary>
+	/// retrieves a channel, first attempting to find it by its channel-code and then by name
+	/// </summary>
+	/// <param name="value">the name or channel-code of the channel we seek to find</param>
+	/// <returns>the channel that matches our <c>value</c></returns>
+	internal Channel GetChannelByNameOrCode(string value)
+	{
+		if (!JoinedChannels.TryGetValue(value.ToLowerInvariant(), out Channel channel))
+			if (!AllAvailableChannels.TryGetValue(value.ToLowerInvariant(), out channel))
+				channel = AllAvailableChannels.Values.FirstOrDefault(ch => ch.Name.Equals(value, StringComparison.InvariantCultureIgnoreCase));
+		
 		return channel;
 	}
 #endregion

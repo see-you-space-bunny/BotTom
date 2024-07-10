@@ -34,6 +34,8 @@ public partial class ApiConnection
 	private static Task User_SendWhisper(FChatMessage value) =>
 		User_SendWhisper(value.Recipient.Name, value.Message);
 #endregion
+
+
 ////////////////////////////////////////////////
 
 

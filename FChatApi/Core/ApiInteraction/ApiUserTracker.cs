@@ -13,7 +13,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="value">the status we are filtering for</param>
 	/// <returns>enumerable of users with matching status</returns>
-	public static IEnumerable<User> GetUserListByStatus(UserStatus value) =>
+	public static IEnumerable<User> GetUserListByStatus(RelationshipToApiUser value) =>
 		UserTracker.GetUsersByStatus(value).Select(u=>u.Value);
 #endregion
 

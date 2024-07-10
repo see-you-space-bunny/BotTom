@@ -8,43 +8,6 @@ namespace FChatApi.Core;
 
 public partial class ApiConnection
 {
-#region (-) ConnectionCheck
-	/// <summary>
-	/// <b>System Action</b><br/>
-	/// throws an exception if the api-user is not connected<br/>
-	/// </summary>
-	/// <exception cref="Exception">if the api-user is not connected</exception>
-	private static void ConnectionCheck()
-	{
-		if (!IsConnected())
-			throw new Exception("You must be connected to chat to do this.");
-	}
-#endregion
-
-
-////////////////////////////////////////////////
-
-
-#region (+) SetStatus
-	/// <summary>
-	/// <b>System Action</b><br/>
-	/// sets the api-user's status and status message
-	/// </summary>
-	/// <param name="statusMessage">the status message to set</param>
-	/// <param name="status">the status type to set</param>
-	public static Task User_SetStatus(ChatStatus status,string statusMessage)
-	{
-		string toSend = string.Format(MessageCode.STA.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,status.ToString(),statusMessage);
-		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | New status: {status} -- {statusMessage}");
-#if DEBUG
-		return DebugSendAsync(toSend);
-#else
-		return Client.SendAsync(toSend);
-#endif
-	}
-#endregion
-
-
 #region (-) PerformIgnoreAction
 	/// <summary>
 	/// <b>System Action</b><br/>

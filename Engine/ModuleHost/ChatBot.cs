@@ -113,7 +113,7 @@ public partial class ChatBot
 		{
 			// TODO get list filtered by registered users
 			// TODO get method for adding registered users back into this list
-			var userlist = ApiConnection.GetUserListByStatus(FChatApi.Enums.UserStatus.Online);
+			var userlist = ApiConnection.GetUserListByStatus(FChatApi.Enums.RelationshipToApiUser.Online);
 			if (userlist.Any())
 			using (var stream = File.Create(Path.Combine(Environment.CurrentDirectory, "sessiondata", "KnownUsers")))
 			{
