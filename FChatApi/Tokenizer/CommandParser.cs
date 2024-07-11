@@ -28,21 +28,18 @@ public class CommandParser
 		BotPrefix = value + (value.EndsWith('!') ? string.Empty : '!');
 		return this;
 	}
-
-	public bool TryConvertCommand(MessageEventArgs e,out BotCommand command)
-		=> TryConvertCommand(e.User,e.Channel,e.Message,e.MessageType,out command);
-
-	public bool TryConvertCommand(User user,Channel channel,string message,FChatMessageType type,out BotCommand command)
+	
+	public bool TryConvertCommand(FChatMessage fChatMessage,out BotCommand command)
 	{
 		// Not a command
-		if (!message.StartsWith(BotPrefix))
+		if (!fChatMessage.Message.StartsWith(BotPrefix))
 		{
 			command = null;
 			return false;
 		}
 
 		// parse the command; starts after the comand prefix
-		string[] parsedTokens = Parse(message[ModuleStartIndex..]).ToArray();
+		string[] parsedTokens = Parse(fChatMessage.Message[ModuleStartIndex..]).ToArray();
 		if (parsedTokens.Length < 2)
 		{
 #if DEBUG
@@ -67,7 +64,7 @@ public class CommandParser
 		}
 
 		// Command cannot be issued by a non-user
-		if (user == null)
+		if (fChatMessage.Author == null)
 		{
 			// Some operations may still trigger, but they will be exceptions
 #if DEBUG
@@ -79,7 +76,7 @@ public class CommandParser
 		}
 
 		Privilege privilege = Privilege.None;
-		if (user.PrivilegeLevel == Privilege.None)
+		if (fChatMessage.Author.PrivilegeLevel == Privilege.None)
 		{
 #if DEBUG
 			Task.Run(()=>Console.WriteLine("Defaulting 'Privilege.None user to 'Privilege.UnregisteredUser"));
@@ -88,10 +85,10 @@ public class CommandParser
 		}
 		else
 		{
-			privilege = user!.PrivilegeLevel;
+			privilege = fChatMessage.Author.PrivilegeLevel;
 		}
 		
-		command = new BotCommand(user, channel, botModule, moduleCommand, parsedTokens.Skip(2).ToArray());
+		command = new BotCommand(fChatMessage, botModule, moduleCommand, parsedTokens.Skip(2).ToArray());
 		return true;
 	}
 

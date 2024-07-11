@@ -20,7 +20,7 @@ public partial class ApiConnection
 	/// <returns>the task we initiated</returns>
 	private Task Handler_FLN(JObject json)
 	{
-		if (TryGetUser(json["character"].ToString(),out User user))
+		if (Users.TrySingleByName(json["character"].ToString(),out User user))
 			return Task.CompletedTask;
 
 		Users.Character_SetChatStatus(user, ChatStatus.Offline, false);

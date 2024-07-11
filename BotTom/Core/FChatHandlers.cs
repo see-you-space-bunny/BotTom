@@ -1,5 +1,6 @@
 using FChatApi.Core;
 using FChatApi.Enums;
+using FChatApi.Objects;
 using FChatApi.EventArguments;
 using FChatApi.Tokenizer;
 using Engine.ModuleHost.Enums;
@@ -13,7 +14,7 @@ public partial class Program
 	/// </summary>
 	/// <param name="sender">our sending object</param>
 	/// <param name="e">our event args</param>
-	static void HandleMessageReceived(object sender, MessageEventArgs @event)
+	static void HandleMessageReceived(object sender, FChatMessage @event)
 	{
 		if (F_CommandParser.TryConvertCommand(@event,out BotCommand command))
 		{
@@ -42,14 +43,14 @@ public partial class Program
 #if DEBUG
 		else if (@event.User.Name.Equals(FCHAT_OWNER,StringComparison.InvariantCultureIgnoreCase))
 		{
-			ApiConnection.Mod_ChannelPromoteUser(@event.Channel,FCHAT_OWNER);
+			ApiConnection.Mod_SetChannelUserStatus(@event.Channel,ApiConnection.Users.SingleByName(FCHAT_OWNER),UserRoomStatus.Moderator);
 		}
 #endif
 	}
 	
 	static void HandleCreatedChannel(object sender, ChannelEventArgs @event)
 	{
-		ApiConnection.Mod_ChannelInviteUser(@event.Channel,FCHAT_OWNER);
+		ApiConnection.Mod_SetChannelUserStatus(@event.Channel,ApiConnection.Users.SingleByName(FCHAT_OWNER),UserRoomStatus.Invited);
 #if DEBUG
 		ApiConnection.User_SetStatus(ChatStatus.DND,$"[session={@event.Channel.Name}]{@event.Channel.Code}[/session]");
 #endif
@@ -72,16 +73,16 @@ public partial class Program
 	/// <param name="event">our event args</param>
 	static async void HandlePrivateChannelsReceived(object sender, ChannelEventArgs @event)
 	{
-		var privateChannels = ApiConnection.GetChannelListByType(ChannelType.Private);
+		var privateChannels = ApiConnection.Channels.GetList(ChannelType.Private);
 
 		// check and join starting channel here
-		if (privateChannels.Any(x => x.Code.Equals(F_StartingChannel, StringComparison.InvariantCultureIgnoreCase)))
+		if (privateChannels.Values.Any(ch => ch.Code.Equals(F_StartingChannel, StringComparison.InvariantCultureIgnoreCase)))
 		{
-			await ApiConnection.User_JoinChannel(F_StartingChannel);
+			await ApiConnection.User_JoinChannel(ApiConnection.Channels.SingleByNameOrCode(F_StartingChannel));
 		}
-		else if (privateChannels.Any(x => x.Name.Equals(F_StartingChannel, StringComparison.InvariantCultureIgnoreCase)))
+		else if (privateChannels.Values.Any(ch => ch.Name.Equals(F_StartingChannel, StringComparison.InvariantCultureIgnoreCase)))
 		{
-			await ApiConnection.User_JoinChannel(privateChannels.First(x => x.Name.Equals(F_StartingChannel, StringComparison.InvariantCultureIgnoreCase)).Code);
+			await ApiConnection.User_JoinChannel(privateChannels.Values.First(ch => ch.Name.Equals(F_StartingChannel, StringComparison.InvariantCultureIgnoreCase)));
 		}
 
 #if DEBUG

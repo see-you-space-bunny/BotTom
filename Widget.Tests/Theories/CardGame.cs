@@ -19,7 +19,6 @@ public class @CardGame(ITestOutputHelper output)
 	{
 		ApiConnection.DebugSetCharacterName(BotInfoAssistant.BotName);
 		ApiConnection.DebugAddCharacters([BotInfoAssistant.BotName,player1,player2]);
-		ApiConnection.DebugRegisterAllCharacters();
 
 		var tournamentOrganiser = new FChatTournamentOrganiser(new ApiConnection(),TimeSpan.MaxValue);
 
@@ -46,7 +45,6 @@ public class @CardGame(ITestOutputHelper output)
 	{
 		ApiConnection.DebugSetCharacterName(BotInfoAssistant.BotName);
 		ApiConnection.DebugAddCharacters([BotInfoAssistant.BotName,player1,player2]);
-		ApiConnection.DebugRegisterAllCharacters();
 
 		var tournamentOrganiser = new FChatTournamentOrganiser(new ApiConnection(),TimeSpan.MaxValue);
 

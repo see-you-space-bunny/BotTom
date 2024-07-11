@@ -5,11 +5,9 @@ using System;
 
 namespace FChatApi.Tokenizer;
 
-public class BotCommand(User user, Channel channel, string botModule,
-    string moduleCommand, string[] parameters)
+public class BotCommand(FChatMessage fChatMessage, string botModule, string moduleCommand, string[] parameters)
 {
-	public User User { get; } = user;
-	public Channel Channel { get; } = channel;
+	public FChatMessage Message { get; } = fChatMessage;
 	public string BotModule { get; } = botModule;
 	public string ModuleCommand { get; } = moduleCommand;
 	public string[] Parameters { get; } = parameters;

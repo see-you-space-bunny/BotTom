@@ -20,7 +20,17 @@ public partial class ApiConnection
 	/// <returns>the task we initiated</returns>
 	private Task Handler_LRP(JObject json)
 	{
-		return Task.CompletedTask;
+		Task t = Task.Run(() => MessageHandler?.Invoke(
+			MessageCode.LRP,
+			new FChatMessageBuilder()
+				.WithRecipient(ApiUser)
+				.WithAuthor(Users.SingleByName(json["character"].ToString()))
+				.WithChannel(Channels.SingleByNameOrCode(json["channel"].ToString()))
+				.WithMessage(json["message"].ToString())
+				.Build()
+		));
+		Console.WriteLine(json["message"].ToString());
+		return t;
 	}
 #endregion
 
@@ -34,14 +44,15 @@ public partial class ApiConnection
 	/// <returns>the task we initiated</returns>
 	private Task Handler_MSG(JObject json)
 	{
-		var m = new FChatMessage(
+		Task t = Task.Run(() => MessageHandler?.Invoke(
 			MessageCode.MSG,
-			Users.SingleByName(json["character"].ToString()),
-			Channels.SingleByNameOrCode(json["channel"].ToString()),
-			json["message"].ToString(),
-			ChatStatus.Invalid
-		);
-		Task t = Task.Run(() => MessageHandler?.Invoke(MessageCode.MSG, new MessageEventArgs() { Channel = GetChannelByCode(json["channel"].ToString()), Message = json["message"].ToString(), User = Users.SingleByName(json["character"].ToString()) }));
+			new FChatMessageBuilder()
+				.WithRecipient(ApiUser)
+				.WithAuthor(Users.SingleByName(json["character"].ToString()))
+				.WithChannel(Channels.SingleByNameOrCode(json["channel"].ToString()))
+				.WithMessage(json["message"].ToString())
+				.Build()
+		));
 		Console.WriteLine(json["message"].ToString());
 		return t;
 	}
@@ -57,7 +68,14 @@ public partial class ApiConnection
 	/// <returns>the task we initiated</returns>
 	private Task Handler_PRI(JObject json)
 	{
-		Task t = Task.Run(() => MessageHandler?.Invoke(MessageCode.PRI, new MessageEventArgs() { User = Users.SingleByName(json["character"].ToString()), Message = json["message"].ToString() }));
+		Task t = Task.Run(() => MessageHandler?.Invoke(
+			MessageCode.PRI,
+			new FChatMessageBuilder()
+				.WithRecipient(ApiUser)
+				.WithAuthor(Users.SingleByName(json["character"].ToString()))
+				.WithMessage(json["message"].ToString())
+				.Build()
+		));
 		Console.WriteLine(json["message"].ToString());
 		return t;
 	}

@@ -9,10 +9,10 @@ internal static class ChatMessageAssistant
 	internal static BotCommand NewDummyMessage(string user,string message)
 	{
 		if (BotInfoAssistant.CommandParser.TryConvertCommand(
-			new User(){ Name = user },
-			null,
-			message,
-			FChatMessageType.Basic,
+			new FChatMessageBuilder()
+				.WithAuthor(new User() { Name = user })
+				.WithMessage(message)
+				.Build(),
 			out BotCommand? command
 		))
 			return command!;

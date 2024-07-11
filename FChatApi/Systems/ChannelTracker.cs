@@ -191,10 +191,10 @@ public class ChannelTracker
 	/// </summary>
 	/// <param name="channeltype"></param>
 	/// <returns>gets a list of channels by type</returns>
-	internal IDictionary<string,Channel> GetChannelList(ChannelType channeltype) =>
+	public IDictionary<string,Channel> GetList(ChannelType channeltype) =>
 		Channels[(int)channeltype];
 
-	internal IDictionary<string,Channel> GetChannelList(UserRelationshipWithChannel relationship = UserRelationshipWithChannel.AllValid) =>
+	public IDictionary<string,Channel> GetList(UserRelationshipWithChannel relationship = UserRelationshipWithChannel.AllValid) =>
 		relationship switch {
 			UserRelationshipWithChannel.All			=> All,
 			UserRelationshipWithChannel.AllValid	=> All.Where(ch => ch.Value.Status >= UserRelationshipWithChannel.AllValid).ToDictionary(),
