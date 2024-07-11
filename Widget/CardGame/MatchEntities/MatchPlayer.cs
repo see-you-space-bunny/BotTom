@@ -1,5 +1,9 @@
+using CardGame.Attributes;
 using CardGame.Enums;
 using CardGame.PersistentEntities;
+using FChatApi.Attributes;
+using FChatApi.Enums;
+using FChatApi.Objects;
 
 namespace CardGame.MatchEntities;
 
@@ -10,7 +14,7 @@ public class MatchPlayer
 	private const char MetaPointSymbol = '❚';
 
 
-	internal string Key => PlayerCharacter.Key;
+	internal User User;
 	internal PlayerCharacter PlayerCharacter;
 	internal (CharacterStat First,CharacterStat Second) DeckArchetype;
 	internal short Health;
@@ -28,26 +32,64 @@ public class MatchPlayer
 
 	internal PlaySlot[] PlaySlots = new PlaySlot[3];
 
-	private MatchPlayer(PlayerCharacter playerCharacter,short health = 25,short deckSize = 5,short metaPoints = 3)
+	private MatchPlayer(User user,PlayerCharacter playerCharacter,short health = 25,short deckSize = 5,short metaPoints = 3)
 	{
-			PlayerCharacter = playerCharacter;
-			Health = health;
-			DeckSize = deckSize;
-			MetaPoints = metaPoints;
+		User = user;
+		PlayerCharacter = playerCharacter;
+		Health = health;
+		DeckSize = deckSize;
+		MetaPoints = metaPoints;
 	}
 
-	public MatchPlayer(PlayerCharacter playerCharacter,CharacterStat deckArchetype1,short health = 25,short deckSize = 5,short metaPoints = 3)
-		: this(playerCharacter,health,deckSize,metaPoints)
+	public MatchPlayer(User user,PlayerCharacter playerCharacter,CharacterStat deckArchetype1,short health = 25,short deckSize = 5,short metaPoints = 3)
+		: this(user,playerCharacter,health,deckSize,metaPoints)
 	{
 		DeckArchetype = (deckArchetype1,CharacterStat.NON);
 	}
-	public MatchPlayer(PlayerCharacter playerCharacter,CharacterStat deckArchetype1,CharacterStat deckArchetype2,short health = 25,short deckSize = 5,short metaPoints = 3)
-		: this(playerCharacter,health,deckSize,metaPoints)
+	public MatchPlayer(User user,PlayerCharacter playerCharacter,CharacterStat deckArchetype1,CharacterStat deckArchetype2,short health = 25,short deckSize = 5,short metaPoints = 3)
+		: this(user,playerCharacter,health,deckSize,metaPoints)
 	{
 		DeckArchetype = (deckArchetype1,deckArchetype2);
 	}
 
-	private static string EncloseWithColor(string value, string color) => string.Format(ColorTags,value,color);
+	private static string EncloseWithColor(string value, BBCodeColor color) => string.Format(ColorTags,value,color);
+
+	internal (string Result,SummonCard Card) DrawCard(CharacterStat stat)
+	{
+		int dieRoll			= new Random().Next(1,101);
+		int statModifier	= PlayerCharacter.Stats[stat]/10;
+		short rollSum		= (short)((dieRoll+statModifier)/10);
+		--DeckSize;
+		return (
+			string.Format("1d100 ({0}) + {1} = {2}",
+				dieRoll,
+				EncloseWithColor(statModifier.ToString(),stat.GetEnumAttribute<CharacterStat,StatColorAttribute>().Color),
+				dieRoll+statModifier
+			),
+			new SummonCard(rollSum,rollSum,stat)
+		);
+	}
+
+	internal void PlayCard(SummonCard card)
+	{
+		if (!IsCardInSlot1)
+		{
+			Slot1.Card = card;
+			return;
+		}
+		else if (!IsCardInSlot2)
+		{
+			Slot2.Card = card;
+			return;
+		}
+		else if (!IsCardInSlot3)
+		{
+			Slot3.Card = card;
+			return;
+		}
+		else
+			throw new InvalidOperationException("Cant't play a card while all slots are full!!");
+	}
 
 	public override string ToString()
 	{
@@ -65,7 +107,7 @@ public class MatchPlayer
 	public string ToString(bool activePlayer)
 	{
 		return string.Format(OutputFormat,
-			activePlayer ? EncloseWithColor(PlayerCharacter.User.Mention,"green") : PlayerCharacter.User.Mention,
+			activePlayer ? EncloseWithColor(PlayerCharacter.User.Mention,BBCodeColor.green) : PlayerCharacter.User.Mention,
 			Health,
 			DeckSize,
 			Slot1.ToString(),

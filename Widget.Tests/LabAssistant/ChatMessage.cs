@@ -10,6 +10,7 @@ internal static class ChatMessageAssistant
 	{
 		if (BotInfoAssistant.CommandParser.TryConvertCommand(
 			new FChatMessageBuilder()
+				.WithRecipient(new User() { Name = BotInfoAssistant.BotName })
 				.WithAuthor(new User() { Name = user })
 				.WithMessage(message)
 				.Build(),

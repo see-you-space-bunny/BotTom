@@ -66,7 +66,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 		else
 			target = remainingParameters;
 
-		var (exitEarly, errMessage, player) = ValidateIssueChallenge(command.Message.Author.Name,target);
+		var (exitEarly, errMessage, player) = ValidateIssueChallenge(command.Message.Author,target);
 
 		if (exitEarly)
 		{
@@ -101,51 +101,44 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 		//////////
 
 		IncomingChallenges.Add(
-			player.Name.ToLower(),
+			player,
 			new MatchChallenge(
 				command.Message.Author,
-				PlayerCharacters[command.Message.Author.Name].CreateMatchPlayer(stat1,stat2),
-				PlayerCharacters[player.Name]
+				PlayerCharacters[command.Message.Author].CreateMatchPlayer(stat1,stat2),
+				player
 			)
 		);
-		IncomingChallenges[player.Name.ToLower()].AdvanceState(MatchChallenge.Event.Initiate);
+		IncomingChallenges[player].AdvanceState(MatchChallenge.Event.Initiate);
 		return true;
 	}
 
-	private (bool exitEarly,string message,User target) ValidateIssueChallenge(string challenger,string target)
+	private (bool exitEarly,string message,User target) ValidateIssueChallenge(User challenger,string target)
 	{
 		if (!ApiConnection.Users.TrySingleByName(target,out User challengeTarget))
 		{
 			return (true,"You can't challenge a user that is not registered.",null!);
 		}
-		if (!PlayerCharacters.ContainsKey(challenger.ToLowerInvariant()))
-			PlayerCharacters.Add(challenger.ToLowerInvariant(),new PlayerCharacter(ApiConnection.Users.SingleByName(challenger)));
+		if (!PlayerCharacters.ContainsKey(challenger))
+			PlayerCharacters.Add(challenger,new PlayerCharacter(challenger));
 
-		if (!PlayerCharacters.ContainsKey(challengeTarget.Name))
-			PlayerCharacters.Add(challengeTarget.Name,new PlayerCharacter(challengeTarget));
+		if (!PlayerCharacters.ContainsKey(challengeTarget))
+			PlayerCharacters.Add(challengeTarget,new PlayerCharacter(challengeTarget));
 
-		if (target == challenger)
+		if (challengeTarget == challenger)
 		{
 			return (true,"You can't challenge yourself.",challengeTarget);
 		}
-		else if (OutgoingChallenges.ContainsKey(challenger.ToLower()))
+		else if (OutgoingChallenges.ContainsKey(challenger))
 		{
 			return (true,"You can't have more than one pending challenge.",challengeTarget);
 		}
-		else if (!PlayerCharacters.ContainsKey(challengeTarget.Name.ToLower()))
+		else if (!PlayerCharacters.ContainsKey(challengeTarget))
 		{
 			return (true,"That player is already being challenged by you.",challengeTarget);
 		}
-		else if (IncomingChallenges.ContainsKey(challengeTarget.Name.ToLower()))
+		else if (IncomingChallenges.TryGetValue(challengeTarget, out MatchChallenge? value))
 		{
-			if (IncomingChallenges[challengeTarget.Name.ToLower()].Challenger.Name == challenger)
-			{
-				return (true,"That player is already being challenged by you.",challengeTarget);
-			}
-			else
-			{
-				return (true,"That player is already being challenged by someone.",challengeTarget);
-			}
+			return (true,$"That player is already being challenged by {(value.Challenger == challenger ? "you" : "someone")}.",challengeTarget);
 		}
 		return (false,string.Empty,challengeTarget);
 	}
