@@ -1,3 +1,4 @@
+using System.Text;
 using FChatApi.Interfaces;
 using FChatApi.Objects;
 
@@ -6,6 +7,8 @@ namespace CardGame.MatchEntities;
 public class BoardState(MatchPlayer player1,MatchPlayer player2)
 {
 	private const string OutputFormat = "{0} It is now turn {1} and the state of the game is as follows: [spoiler]\n{2}\n{3}[/spoiler]";
+
+	internal bool AwaitingChannel => Channel == null || Channel == default;
 
 	public Channel? Channel { get; set; }
 

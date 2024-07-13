@@ -290,6 +290,7 @@ public class User : IMessageRecipient
 			return false;
 
 		WhenRegistered = DateTime.Now;
+		PrivilegeLevel = Privilege.RegisteredUser;
 		return true;
 	}
 #endregion
@@ -324,10 +325,10 @@ public class User : IMessageRecipient
 		};
 		if (reader.ReadBoolean())
 		{
-			user.WhenRegistered	=   new DateTime(
-				year: reader.ReadInt32(),
-				month: reader.ReadInt32(), 
-				day: reader.ReadInt32()
+			user.WhenRegistered	=	new DateTime(
+				year:	reader.ReadInt32(),
+				month:	reader.ReadInt32(),
+				day:	reader.ReadInt32()
 			);
 		}
 		user.Pronouns		=   (string)		reader.ReadString();
@@ -344,12 +345,12 @@ public class User : IMessageRecipient
 		writer.Write((string)	BotMemo);
 		writer.Write((ushort)	NickColor);
 		writer.Write((ushort)	PrivilegeLevel);
+		writer.Write((bool)		IsRegistered);
 		if (IsRegistered)
 		{
-			writer.Write(true);
-			writer.Write((int)		WhenRegistered.Year);
-			writer.Write((int)		WhenRegistered.Month);
-			writer.Write((int)		WhenRegistered.Day);
+			writer.Write((int)	WhenRegistered.Year);
+			writer.Write((int)	WhenRegistered.Month);
+			writer.Write((int)	WhenRegistered.Day);
 		}
 		writer.Write((string)	Pronouns);
 	}

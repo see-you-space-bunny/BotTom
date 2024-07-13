@@ -17,15 +17,27 @@ public partial class ChatBot
 	/// <summary>
 	/// Called when a channel is joined
 	/// </summary>
-	/// <param name="channel">Channel that was joined</param>
+	/// <param name="@event">Channel that was joined</param>
 	public async void HandleJoinedChannel(ChannelEventArgs @event)
 	{
-		Channel channel = ApiConnection.Channels.SingleByNameOrCode(@event.Channel.Code);
-		
 		List<Task> tasks = [];
 		foreach (var plugin in FChatPlugins.Values)
 		{
 			tasks.Add(Task.Run(() => plugin.HandleJoinedChannel(@event)));
+		}
+		await Task.WhenAll([.. tasks]);
+	}
+
+	/// <summary>
+	/// Called when a channel is joined
+	/// </summary>
+	/// <param name="@event">Channel that was created</param>
+	public async void HandleCreatedChannel(ChannelEventArgs @event)
+	{
+		List<Task> tasks = [];
+		foreach (var plugin in FChatPlugins.Values)
+		{
+			tasks.Add(Task.Run(() => plugin.HandleCreatedChannel(@event)));
 		}
 		await Task.WhenAll([.. tasks]);
 	}

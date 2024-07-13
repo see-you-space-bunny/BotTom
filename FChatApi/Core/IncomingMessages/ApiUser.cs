@@ -41,7 +41,7 @@ public partial class ApiConnection
 				if (Users.TrySingleByName(userinfo[0].ToString(), out User user))
 				{
 					user.Gender		= userinfo[1].ToString();
-					Users.Character_SetChatStatus(user,(ChatStatus)Enum.Parse(typeof(ChatStatus), userinfo[2].ToString(), true));
+					Users.Character_SetChatStatus(user,(ChatStatus)Enum.Parse(typeof(ChatStatus), userinfo[2].ToString(), true),false);
 				}
 				else
 				{

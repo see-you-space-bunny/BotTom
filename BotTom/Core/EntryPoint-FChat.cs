@@ -167,7 +167,7 @@ partial class Program
 			F_Bot.AddPlugin(BotModule.System,new FChatGlobalCommands(F_Chat,TimeSpan.MaxValue)
 				.SetOperators(F_Owner,		Privilege.OwnerOperator)
 				.SetOperators(F_GlobalOps,	Privilege.GlobalOperator));
-			F_Bot.AddPlugin(BotModule.XCG,new FChatTournamentOrganiser(F_Chat,new TimeSpan(15000)));
+			F_Bot.AddPlugin(BotModule.XCG,new FChatTournamentOrganiser(F_Chat,new TimeSpan(500)));
 #else
 			F_Bot.AddPlugin<FChatGlobalCommands>(new FChatGlobalCommands(F_Chat)
 				.SetOperators(F_Owner,		Privilege.OwnerOperator)
@@ -216,7 +216,7 @@ partial class Program
 		await F_Bot!.Update();
 
 		Task shutTask = null!;
-		if (F_Bot != null && F_Bot!.ShutdownFlag)
+		if (F_Bot != null && ApiConnection.ShutdownFlag)
 		{
 			shutTask = F_Bot.Shutdown();
 		}

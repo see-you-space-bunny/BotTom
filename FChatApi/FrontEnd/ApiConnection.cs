@@ -93,6 +93,8 @@ public partial class ApiConnection
 			throw new ArgumentException("Cannot log into a character not on your character list.");
 		}
 
+		DeserializeUsers();
+		
 		if (!Users.TrySingleByName(CharacterName,out User user))
 		{
 			user = new User(){ Name = CharacterName, ChatStatus = ChatStatus.Online };

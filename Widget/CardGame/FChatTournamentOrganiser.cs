@@ -19,11 +19,14 @@ using CardGame.DataStructures;
 using CardGame.PersistentEntities;
 
 using ModularPlugins.Interfaces;
+using System.Text.RegularExpressions;
 
 namespace CardGame;
 
 public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 {
+	private const string GameChannelName = "ครtгคl ςђค๓קเ๏ภร";
+
 	public Dictionary<User,PlayerCharacter	> PlayerCharacters { get; }
 
 	public Dictionary<User,MatchChallenge	> IncomingChallenges { get; }
@@ -69,19 +72,16 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 
 		////// DO STUFF HERE
 		
-		HandleValidatedCommand(messageBuilder,command);
+		bool respondWithMessage = HandleValidatedCommand(messageBuilder,command);
 
 		////////////////////
 
-#if DEBUG
-		MostRecentMessage = messageBuilder;
-#endif
-		FChatApi.EnqueueMessage(messageBuilder);
-
-		foreach ((User key,MatchChallenge mc) in IncomingChallenges)
+		if (respondWithMessage)
 		{
-			if (mc.AtTerminalStage)
-				IncomingChallenges.Remove(key);
+#if DEBUG
+			MostRecentMessage = messageBuilder;
+#endif
+			FChatApi.EnqueueMessage(messageBuilder);
 		}
 	}
 
@@ -107,7 +107,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 		}
 	}
 
-	public void HandleValidatedCommand(FChatMessageBuilder messageBuilder,BotCommand command)
+	public bool HandleValidatedCommand(FChatMessageBuilder messageBuilder,BotCommand command)
 	{
 		if (command.TryParseCommand(out CardGameCommand moduleCommand))
 		try
@@ -122,24 +122,25 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 				case CardGameCommand.Challenge:
 					if (IssueChallenge(command,messageBuilder,alertTargetMessage))
 						FChatApi.EnqueueMessage(alertTargetMessage);
-					break;
+					return true;
 
 				case CardGameCommand.Accept:
-					if (AcceptChallenge(command,messageBuilder,alertTargetMessage))
-						FChatApi.EnqueueMessage(alertTargetMessage);
-					break;
+					if (AcceptChallenge(command,messageBuilder))
+						return false;
+					return true;
+					
 
 				case CardGameCommand.Reject:
 					if (RejectChallenge(command,messageBuilder,alertTargetMessage))
 						FChatApi.EnqueueMessage(alertTargetMessage);
-					break;
+					return true;
 				
 				default:
 					messageBuilder
 						.WithRecipient(command.Message.Author.Name)
 						.WithMention(command.Message.Author.Mention)
 						.WithMessage("--> That is not a valid command!");
-					break;
+					return true;
 			}
 		}
 		catch (InvalidOperationException e)
@@ -165,12 +166,14 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 				}
 			);
 		}
+		return false;
 	}
 
 	public override void Update()
 	{
 		foreach(User key in OutgoingChallenges.Where((kvp)=>kvp.Value.AtTerminalStage).Select((kvp)=>kvp.Key))
 			OutgoingChallenges.Remove(key);
+
 		base.Update();
 	}
 
@@ -179,16 +182,21 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 		ActiveChannels.TryAdd(@event.Channel.Code,@event.Channel);
 	}
 
+	public override void HandleCreatedChannel(ChannelEventArgs @event)
+	{
+		if (@event.Channel.Name != GameChannelName)
+			return;
 
-    void IFChatPlugin.HandleRecievedMessage(BotCommand command)
-    {
-        HandleRecievedMessage(command);
-    }
+		if (OngoingMatches.Any(m=>m.AwaitingChannel))
+			FinalizeMatchCreation(@event.Channel);
+	}
 
-    void IFChatPlugin.HandleJoinedChannel(ChannelEventArgs @event)
-    {
-        HandleJoinedChannel(@event);
-    }
+
+    void IFChatPlugin.HandleRecievedMessage(BotCommand command) => HandleRecievedMessage(command);
+
+    void IFChatPlugin.HandleJoinedChannel(ChannelEventArgs @event) => HandleJoinedChannel(@event);
+
+    void IFChatPlugin.HandleCreatedChannel(ChannelEventArgs @event) => HandleCreatedChannel(@event);
 
 	static FChatTournamentOrganiser()
 	{

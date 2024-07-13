@@ -19,16 +19,17 @@ public class ChannelTracker
 	/// <summary>all joined channels</summary>
 	internal ConcurrentDictionary<string,Channel> Joined => Channels[0];
 
-	private Channel ChannelBeingCreated { get; set; }
+	private readonly List<(Channel Channel,User[] InviteWho)> ChannelsBeingCreated;
 
-	internal bool IsChannelBeingCreated => ChannelBeingCreated is not null;
+	internal bool IsChannelBeingCreated => ChannelsBeingCreated.Count > 0;
 
 	/// <summary>
 	/// 
 	/// </summary>
 	internal ChannelTracker()
 	{
-		Channels = new ConcurrentDictionary<string,Channel>[5];
+		ChannelsBeingCreated				= [];
+		Channels							= new ConcurrentDictionary<string,Channel>[5];
 		Channels[0]							= new ConcurrentDictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
 		Channels[(int)ChannelType.All]		= new ConcurrentDictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
 		Channels[(int)ChannelType.Public]	= new ConcurrentDictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
@@ -57,24 +58,17 @@ public class ChannelTracker
 	/// </summary>
 	/// <param name="name"></param>
 	/// <param name="status"></param>
-	internal void StartChannelCreation(string name)
+	internal void StartChannelCreation(string name,User[] inviteWho = null)
 	{
-		if (ChannelBeingCreated is null)
+		Channel channel = new()
 		{
-			Channel channel = new()
-			{
-				Name		= name,
-				Code		= string.Empty,
-				Status		= UserRelationshipWithChannel.Creating,
-				Type		= ChannelType.Private,
-				AdEnabled	= false,
-			};
-			ChannelBeingCreated = channel;
-		}
-		else
-		{
-			throw new InvalidOperationException($"Cannot start creating channel \"{name}\" while another channel (\"{ChannelBeingCreated.Name}\") is still pending finalization.");
-		}
+			Name		= name,
+			Code		= string.Empty,
+			Status		= UserRelationshipWithChannel.Creating,
+			Type		= ChannelType.Private,
+			AdEnabled	= false,
+		};
+		ChannelsBeingCreated.Add((channel,inviteWho ?? []));
 	}
 #endregion
 
@@ -89,21 +83,22 @@ public class ChannelTracker
 	internal Channel FinalizeChannelCreation(string name, string code, User owner = null)
 	{
 		owner ??= ApiConnection.ApiUser;
-		if (ChannelBeingCreated is null)
+		var channel = ChannelsBeingCreated.SingleOrDefault(li => li.Channel.Name == name);
+		if (channel.Channel is null)
 			throw new NullReferenceException($"Tried to create  \"{name}\" (code: {code}, owner: {owner.Name}), ChannelBeingCreated was null. Most likely caused by not calling StartChannelCreation first.");
 
-		if (ChannelBeingCreated.Status == UserRelationshipWithChannel.Creating && ChannelBeingCreated.Name.Equals(name))
+		if (channel.Channel.Status == UserRelationshipWithChannel.Creating)
 		{
-			ChannelBeingCreated.Code			= code;
-			ChannelBeingCreated.Status			= UserRelationshipWithChannel.Created;
-			ChannelBeingCreated.CreatedByApi	= true;
-			ChannelBeingCreated.Owner			= owner;
+			channel.Channel.Code			= code;
+			channel.Channel.Status			= UserRelationshipWithChannel.Created;
+			channel.Channel.CreatedByApi	= true;
+			channel.Channel.Owner			= owner;
 
-			All.AddOrUpdate(code,(key) => ChannelBeingCreated,(key,value) => ChannelBeingCreated);
-			Joined.AddOrUpdate(code,(key) => ChannelBeingCreated,(key,value) => ChannelBeingCreated);
+			All		.AddOrUpdate(code,(key) => channel.Channel,(key,value) => channel.Channel);
+			Joined	.AddOrUpdate(code,(key) => channel.Channel,(key,value) => channel.Channel);
 
-			ChannelBeingCreated					= null;
-			return All[code.ToLowerInvariant()];
+			ChannelsBeingCreated.Remove(channel);
+			return All[code];
 		}
 		throw new InvalidOperationException($"Could not create \"{name}\" (code: {code}, owner: {owner.Name}). No channel matching that name was pending creation.");
 	}

@@ -42,6 +42,12 @@ public class FChatPlugin(ApiConnection api, TimeSpan updateInterval) : PluginBas
 	/// </summary>
 	/// <param name="channel">channel joined</param>
 	public virtual void HandleJoinedChannel(ChannelEventArgs @event) { }
+	  
+	/// <summary>
+	/// how we should handle a successful channel creation
+	/// </summary>
+	/// <param name="channel">channel created</param>
+	public virtual void HandleCreatedChannel(ChannelEventArgs @event) { }
 
 	/// <summary>
 	/// Add Operators to the module
@@ -94,5 +100,10 @@ public class FChatPlugin(ApiConnection api, TimeSpan updateInterval) : PluginBas
     void IFChatPlugin.HandleJoinedChannel(ChannelEventArgs @event)
     {
         HandleJoinedChannel(@event);
+    }
+
+    void IFChatPlugin.HandleCreatedChannel(ChannelEventArgs @event)
+    {
+        HandleCreatedChannel(@event);
     }
 }

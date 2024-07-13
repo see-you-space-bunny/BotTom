@@ -20,12 +20,29 @@ public partial class Program
 		{
 			F_Bot!.HandleMessage(command);
 		}
+#if DEBUG
+		// if( ApiConnection.Users.TrySingleByName("La Blue Boy", out User user))
+		// 	user.PrivilegeLevel = Privilege.OwnerOperator;
+		// if( ApiConnection.Users.TrySingleByName("Squeeze Me", out user))
+		// 	user.PrivilegeLevel = Privilege.OwnerOperator;
+		// if( ApiConnection.Users.TrySingleByName("Demon Lord", out user))
+		// 	user.PrivilegeLevel = Privilege.OwnerOperator;
+		// if( ApiConnection.Users.TrySingleByName("Odachi", out user))
+		// 	user.PrivilegeLevel = Privilege.OwnerOperator;
+		// if( ApiConnection.Users.TrySingleByName("Heidi", out user))
+		// 	user.PrivilegeLevel = Privilege.OwnerOperator;
+		// if( ApiConnection.Users.TrySingleByName("Conspicuous Chest", out user))
+		// 	user.PrivilegeLevel = Privilege.OwnerOperator;
+		// if( ApiConnection.Users.TrySingleByName("Xatrakiel", out user))
+		// 	user.PrivilegeLevel = Privilege.GlobalOperator;
+		// ApiConnection.SerializeUsers();
+#endif
 	}
 	
 	static void ConnectedToChat(object sender, ChannelEventArgs @event)
 	{
 #if DEBUG
-		ApiConnection.User_CreateChannel("Tom's Test Kitchen");
+		ApiConnection.User_CreateChannel("Tom's Test Kitchen",[ApiConnection.Users.SingleByName(FCHAT_OWNER)]);
 #endif
 	}
 
@@ -50,10 +67,12 @@ public partial class Program
 	
 	static void HandleCreatedChannel(object sender, ChannelEventArgs @event)
 	{
-		ApiConnection.Mod_SetChannelUserStatus(@event.Channel,ApiConnection.Users.SingleByName(FCHAT_OWNER),UserRoomStatus.Invited);
+		//ApiConnection.Mod_SetChannelUserStatus(@event.Channel,ApiConnection.Users.SingleByName(FCHAT_OWNER),UserRoomStatus.Invited);
 #if DEBUG
-		ApiConnection.User_SetStatus(ChatStatus.DND,$"[session={@event.Channel.Name}]{@event.Channel.Code}[/session]");
+		if(@event.Channel.Name.StartsWith("Tom"))
+			ApiConnection.User_SetStatus(ChatStatus.DND,$"[session={@event.Channel.Name}]{@event.Channel.Code}[/session]");
 #endif
+		F_Bot!.HandleCreatedChannel(@event);
 	}
 
 	/// <summary>

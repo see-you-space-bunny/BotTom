@@ -58,7 +58,7 @@ public partial class ApiConnection
 	/// attempts to create a private channel with the provided name
 	/// </summary>
 	/// <param name="channelname">channel name as <c>JavaScript</c> Encoded String</param>
-	public static Task User_CreateChannel(string channelname)
+	public static Task User_CreateChannel(string channelname,User[] inviteWho = null)
 	{
 		ConnectionCheck();
 		string toSend = string.Format(
@@ -66,7 +66,7 @@ public partial class ApiConnection
 			System.Web.HttpUtility.JavaScriptStringEncode(channelname)
 		);
 		Console.WriteLine($"Attempting to create channel: {channelname}");
-		Channels.StartChannelCreation(channelname);
+		Channels.StartChannelCreation(channelname,inviteWho ?? []);
 #if DEBUG
 		return DebugSendAsync(toSend);
 #else
@@ -146,7 +146,7 @@ public partial class ApiConnection
 #region Banned
 			case UserRoomStatus.Banned:
 			{
-				toSend = string.Format(MessageCode.CDS.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,user.Name,channel);
+				toSend = string.Format(MessageCode.CDS.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,user.Name,channel.Code);
 				Console.WriteLine($"Attempting to ban {user.Name} from {channel.Name}.");
 			}
 			break;
@@ -157,7 +157,7 @@ public partial class ApiConnection
 			{
 				if (duration < MinimumChannelUserTimeoutValue || duration > MaximumChannelUserTimeoutValue)
 					throw new ArgumentException($"Cannot timeout a user for {duration} seconds. Minimum is {MinimumChannelUserTimeoutValue} second{(MinimumChannelUserTimeoutValue==1?'s':string.Empty)}, maximum is {MaximumChannelUserTimeoutValue} second{(MaximumChannelUserTimeoutValue==1?'s':string.Empty)}.",nameof(duration));
-				toSend = string.Format(MessageCode.CTU.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,user.Name,channel,duration);
+				toSend = string.Format(MessageCode.CTU.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,user.Name,channel.Code,duration);
 				Console.WriteLine($"Attempting to timeout {user.Name} from {channel.Name} for {duration} second{(duration==1?'s':string.Empty)}.");
 			}
 			break;
@@ -166,7 +166,7 @@ public partial class ApiConnection
 #region Kicked
 			case UserRoomStatus.Kicked:
 			{
-				toSend = string.Format(MessageCode.CKU.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,user.Name,channel);
+				toSend = string.Format(MessageCode.CKU.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,user.Name,channel.Code);
 				Console.WriteLine($"Attempting to kick {user.Name} out of {channel.Name}.");
 			}
 			break;
@@ -175,7 +175,7 @@ public partial class ApiConnection
 #region Demoted
 			case UserRoomStatus.Demoted:
 			{
-				toSend = string.Format(MessageCode.COR.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,user.Name,channel);
+				toSend = string.Format(MessageCode.COR.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,user.Name,channel.Code);
 				Console.WriteLine($"Attempting to demote {user.Name} from Channel Operator to basic User in {channel.Name}.");
 			}
 			break;
@@ -192,7 +192,7 @@ public partial class ApiConnection
 #region Invited
 			case UserRoomStatus.Invited:
 			{
-				toSend = string.Format(MessageCode.CIU.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,user.Name,channel);
+				toSend = string.Format(MessageCode.CIU.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,user.Name,channel.Code);
 				Console.WriteLine(toSend);
 			}
 			break;
@@ -217,7 +217,7 @@ public partial class ApiConnection
 #region Moderator
 			case UserRoomStatus.Moderator:
 			{
-				toSend = string.Format(MessageCode.COA.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,user.Name,channel);
+				toSend = string.Format(MessageCode.COA.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,user.Name,channel.Code);
 				Console.WriteLine($"Attempting to promote {user.Name} to Channel Operator in {channel.Name}.");
 			}
 			break;

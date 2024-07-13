@@ -96,8 +96,6 @@ public partial class ChatBot
 			++i;
 		}
 		await Task.WhenAll(tasks.Where(t => t != null).ToArray());
-		if (_shutdown)
-			await Shutdown();
 	}
 
 	/// <summary>
@@ -105,23 +103,6 @@ public partial class ChatBot
 	/// </summary>
 	public async Task Shutdown()
 	{
-		lock (_UsersLock)
-		{
-			// TODO get list filtered by registered users
-			// TODO get method for adding registered users back into this list
-			var userlist = ApiConnection.Users.FilterByStatus(FChatApi.Enums.ChatStatus.Any);
-			if (userlist.Any())
-			using (var stream = File.Create(Path.Combine(Environment.CurrentDirectory, "sessiondata", "KnownUsers")))
-			{
-				var writer = new BinaryWriter(stream);
-				writer.Write((uint)ApiConnection.Users.RegisteredUsers.Count);
-				foreach (User user in ApiConnection.Users.RegisteredUsers.Values)
-				{
-					user.Serialize(writer);
-				}
-			}
-		}
-
 		var tasks = new Task[FChatPlugins.Count];
 		int i = 0;
 		foreach (IFChatPlugin plugin in FChatPlugins.Values)
@@ -130,12 +111,5 @@ public partial class ChatBot
 			++i;
 		}
 		await Task.WhenAll(tasks.Where(t => t != null).ToArray());
-	}
-
-	private static bool _shutdown = false;
-	public bool ShutdownFlag => _shutdown;
-	public static void SetShutdownFlag()
-	{
-		_shutdown = true;
 	}
 }

@@ -158,4 +158,11 @@ public partial class ApiConnection
 	/// </summary>
 	public const string TicketRequestFormat = TicketURI + "?account={0}&password={1}&no_friends={2}&no_bookmarks={3}";
 #endregion
+
+	private static bool _shutdown = false;
+	public static bool ShutdownFlag { get=>_shutdown; }
+	public static void SetShutdownFlag()
+	{
+		_shutdown = true;
+	}
 }

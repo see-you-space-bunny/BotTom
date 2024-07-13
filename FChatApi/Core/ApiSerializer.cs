@@ -13,7 +13,7 @@ public partial class ApiConnection
 	}
 
 
-	private static void DeserializeUsers()
+	public static void DeserializeUsers()
 	{
 		if (!File.Exists(CacheAllKnownUsersURI))
 			return;
@@ -31,9 +31,12 @@ public partial class ApiConnection
 		}
 	}
 
-	private static void SerializeUsers()
+	public static void SerializeUsers()
 	{
-		if (Users.KnownUsers.Count == 0)
+		if (!Directory.Exists(CacheURL))
+			Directory.CreateDirectory(CacheURL);
+
+		if (Users.KnownUsers.IsEmpty)
 		{
 			File.Delete(CacheAllKnownUsersURI);
 			return;

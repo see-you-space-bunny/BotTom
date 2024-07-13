@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <None Include="data/**" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="sessiondata/**" CopyToOutputDirectory="PreserveNewest" />
     <None Include=".env" CopyToOutputDirectory="PreserveNewest" />
     <None Include="settings.toml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
