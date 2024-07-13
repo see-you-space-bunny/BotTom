@@ -5,18 +5,19 @@ using FChatApi.Enums;
 using System.Threading.Tasks;
 using System;
 using FChatApi.Core;
+using System.Collections.Concurrent;
 
 namespace FChatApi.Systems;
 
 public class ChannelTracker
 {
-	private readonly Dictionary<string,Channel>[] Channels;
+	private readonly ConcurrentDictionary<string,Channel>[] Channels;
 
 	/// <summary>all known channels</summary>
-	internal Dictionary<string,Channel> All => Channels[(int)ChannelType.All];
+	internal ConcurrentDictionary<string,Channel> All => Channels[(int)ChannelType.All];
 
 	/// <summary>all joined channels</summary>
-	internal Dictionary<string,Channel> Joined => Channels[0];
+	internal ConcurrentDictionary<string,Channel> Joined => Channels[0];
 
 	private Channel ChannelBeingCreated { get; set; }
 
@@ -27,12 +28,12 @@ public class ChannelTracker
 	/// </summary>
 	internal ChannelTracker()
 	{
-		Channels = new Dictionary<string,Channel>[5];
-		Channels[0]							= new Dictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
-		Channels[(int)ChannelType.All]		= new Dictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
-		Channels[(int)ChannelType.Public]	= new Dictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
-		Channels[(int)ChannelType.Private]	= new Dictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
-		Channels[(int)ChannelType.Hidden]	= new Dictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
+		Channels = new ConcurrentDictionary<string,Channel>[5];
+		Channels[0]							= new ConcurrentDictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
+		Channels[(int)ChannelType.All]		= new ConcurrentDictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
+		Channels[(int)ChannelType.Public]	= new ConcurrentDictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
+		Channels[(int)ChannelType.Private]	= new ConcurrentDictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
+		Channels[(int)ChannelType.Hidden]	= new ConcurrentDictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
 	}
 
 	public Channel AddManually(string channelname, UserRelationshipWithChannel status, string channelcode)
@@ -43,7 +44,7 @@ public class ChannelTracker
 			{
 				Status = status
 			};
-			All.Add(channelcode,ch);
+			All.AddOrUpdate(channelcode,(key) => ch, (key,value) => ch);
 			return ch;
 		}
 
@@ -98,8 +99,8 @@ public class ChannelTracker
 			ChannelBeingCreated.CreatedByApi	= true;
 			ChannelBeingCreated.Owner			= owner;
 
-			All.Add(code.ToLowerInvariant(),ChannelBeingCreated);
-			Joined.Add(code.ToLowerInvariant(),ChannelBeingCreated);
+			All.AddOrUpdate(code,(key) => ChannelBeingCreated,(key,value) => ChannelBeingCreated);
+			Joined.AddOrUpdate(code,(key) => ChannelBeingCreated,(key,value) => ChannelBeingCreated);
 
 			ChannelBeingCreated					= null;
 			return All[code.ToLowerInvariant()];
@@ -189,10 +190,10 @@ public class ChannelTracker
         if (!(channeltype > ChannelType.All))
 			throw new ArgumentException($"Attempted to refresh channels of an invalid type: {channeltype}",nameof(channeltype));
 		
-		Channels[(int)channeltype] = channels.ToDictionary(c => c.Code, c => c);
+		Channels[(int)channeltype] = new ConcurrentDictionary<string,Channel>(channels.ToDictionary(c => c.Code, c => c));
 		
-		Channels[(int)ChannelType.All ] = All
+		Channels[(int)ChannelType.All ] = new ConcurrentDictionary<string,Channel>(All
 			.Where(kv => !Channels[(int)channeltype].ContainsKey(kv.Key))
-			.Concat(Channels[(int)channeltype]).ToDictionary();
+			.Concat(Channels[(int)channeltype]));
     }
 }

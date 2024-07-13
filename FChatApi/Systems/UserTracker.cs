@@ -4,32 +4,33 @@ using System.Linq;
 using FChatApi.Objects;
 using FChatApi.Enums;
 using FChatApi.Core;
+using System.Collections.Concurrent;
 
 namespace FChatApi.Systems;
 
 public class UserTracker
 {
 #region (-) RegisteredUsers
-	public readonly Dictionary<string,User> RegisteredUsers;
+	public readonly ConcurrentDictionary<string,User> RegisteredUsers;
 #endregion
 
 
 #region (-) KnownUsers
-	internal readonly Dictionary<string,User> KnownUsers;
+	internal readonly ConcurrentDictionary<string,User> KnownUsers;
 #endregion
 
 
 #region (-) OnlineUsers
-	internal readonly Dictionary<string,User> OnlineUsers;
+	internal readonly ConcurrentDictionary<string,User> OnlineUsers;
 #endregion
 
 
 #region (~) Constructor
 	internal UserTracker()
 	{
-		RegisteredUsers	= new Dictionary<string,User>(StringComparer.InvariantCultureIgnoreCase);
-		KnownUsers		= new Dictionary<string,User>(StringComparer.InvariantCultureIgnoreCase);
-		OnlineUsers		= new Dictionary<string,User>(StringComparer.InvariantCultureIgnoreCase);
+		RegisteredUsers	= new ConcurrentDictionary<string,User>(StringComparer.InvariantCultureIgnoreCase);
+		KnownUsers		= new ConcurrentDictionary<string,User>(StringComparer.InvariantCultureIgnoreCase);
+		OnlineUsers		= new ConcurrentDictionary<string,User>(StringComparer.InvariantCultureIgnoreCase);
 	}
 #endregion
 
@@ -126,7 +127,7 @@ public class UserTracker
 		if (status > ChatStatus.AnyOnline)
 			OnlineUsers.TryAdd(user.Name,user);
 		else
-			OnlineUsers.Remove(user.Name);
+			OnlineUsers.Remove(user.Name, out _);
 
 		if (logging)
 			Console.WriteLine($"{user.Name}'s chat status changed to: {status}");

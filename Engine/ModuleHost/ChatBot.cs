@@ -13,8 +13,6 @@ namespace Engine.ModuleHost;
 /// </summary>
 public partial class ChatBot
 {
-	public static Dictionary<string,User> RegisteredUsers { get => ApiConnection.Users.RegisteredUsers; }
-
 	/// <summary>
 	/// our list of active plugins
 	/// </summary>
@@ -116,8 +114,8 @@ public partial class ChatBot
 			using (var stream = File.Create(Path.Combine(Environment.CurrentDirectory, "sessiondata", "KnownUsers")))
 			{
 				var writer = new BinaryWriter(stream);
-				writer.Write((uint)RegisteredUsers.Count);
-				foreach (User user in RegisteredUsers.Values)
+				writer.Write((uint)ApiConnection.Users.RegisteredUsers.Count);
+				foreach (User user in ApiConnection.Users.RegisteredUsers.Values)
 				{
 					user.Serialize(writer);
 				}

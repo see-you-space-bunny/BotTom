@@ -299,7 +299,7 @@ public class User : IMessageRecipient
 	public bool UnRegister()
 	{
 		WhenRegistered = DateTime.MinValue;
-		return ApiConnection.Users.RegisteredUsers.Remove(Name);
+		return ApiConnection.Users.RegisteredUsers.Remove(Name,out _);
 	}
 #endregion
 

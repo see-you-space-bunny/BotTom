@@ -135,7 +135,7 @@ public class Channel : IMessageRecipient
 	{
 		Users.Remove(user.Name);
         if (user == ApiConnection.ApiUser)
-			ApiConnection.Channels.Joined.Remove(Code);
+			ApiConnection.Channels.Joined.Remove(Code,out _);
 		return this;
 	}
 #endregion

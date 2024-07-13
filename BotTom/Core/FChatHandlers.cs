@@ -3,7 +3,6 @@ using FChatApi.Enums;
 using FChatApi.Objects;
 using FChatApi.EventArguments;
 using FChatApi.Tokenizer;
-using FChatApi.Objects;
 using Engine.ModuleHost.Enums;
 
 namespace BotTom;
