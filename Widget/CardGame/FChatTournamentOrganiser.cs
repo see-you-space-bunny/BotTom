@@ -24,10 +24,10 @@ namespace CardGame;
 
 public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 {
-	public Dictionary<string,PlayerCharacter> PlayerCharacters { get; }
+	public Dictionary<User,PlayerCharacter	> PlayerCharacters { get; }
 
-	public Dictionary<string,MatchChallenge	> IncomingChallenges { get; }
-	public Dictionary<string,MatchChallenge	> OutgoingChallenges => IncomingChallenges.ToOutgoing();
+	public Dictionary<User,MatchChallenge	> IncomingChallenges { get; }
+	public Dictionary<User,MatchChallenge	> OutgoingChallenges => IncomingChallenges.ToOutgoing();
 
 	public List<BoardState> OngoingMatches { get; }
 
@@ -51,6 +51,8 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 		AttributeEnumExtensions.ProcessEnumForAttribute<StatAliasAttribute  >(typeof(CharacterStat));
 		
 		AttributeEnumExtensions.ProcessEnumForAttribute<StatGroupAttribute  >(typeof(CharacterStat));
+
+		AttributeEnumExtensions.ProcessEnumForAttribute<StatColorAttribute  >(typeof(CharacterStat));
 	}
 
 	public override void HandleRecievedMessage(BotCommand command)
@@ -76,7 +78,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 #endif
 		FChatApi.EnqueueMessage(messageBuilder);
 
-		foreach ((string key,MatchChallenge mc) in IncomingChallenges)
+		foreach ((User key,MatchChallenge mc) in IncomingChallenges)
 		{
 			if (mc.AtTerminalStage)
 				IncomingChallenges.Remove(key);
@@ -99,7 +101,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 			return disallowedCommand.Reason switch
 			{
 				CommandState.InsufficientPermission    => "You don't have permission to do that!",
-				CommandState.ResponseRequired          => $"You need to respond to {IncomingChallenges[command.Message.Author.Name.ToLower()].Challenger.Mention}'s challenge first!",
+				CommandState.ResponseRequired          => $"You need to respond to {IncomingChallenges[command.Message.Author].Challenger.Mention}'s challenge first!",
 				_ => throw new ArgumentOutOfRangeException(command.ToString(), $"Unexpected {typeof(CommandState)} value: {disallowedCommand.Reason}")
 			};
 		}
@@ -158,7 +160,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 				{
 					CommandState.InsufficientPermission    => $"{command.Message.Author.Mention}, you don't have permission to do that!",
 					CommandState.AwaitingResponse          => $"{command.Message.Author.Mention}, you still have a challenge!",
-					CommandState.ResponseRequired          => $"{command.Message.Author.Mention}, you need to respond to {IncomingChallenges[command.Message.Author.Name.ToLower()].Challenger.Mention}'s challenge first!",
+					CommandState.ResponseRequired          => $"{command.Message.Author.Mention}, you need to respond to {IncomingChallenges[command.Message.Author].Challenger.Mention}'s challenge first!",
 					_ => throw new ArgumentOutOfRangeException(nameof(disallowedCommand.Reason), $"Unexpected {typeof(CommandState)} value: {disallowedCommand.Reason}")
 				}
 			);
@@ -167,7 +169,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 
 	public override void Update()
 	{
-		foreach(string key in OutgoingChallenges.Where((kvp)=>kvp.Value.AtTerminalStage).Select((kvp)=>kvp.Key))
+		foreach(User key in OutgoingChallenges.Where((kvp)=>kvp.Value.AtTerminalStage).Select((kvp)=>kvp.Key))
 			OutgoingChallenges.Remove(key);
 		base.Update();
 	}

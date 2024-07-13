@@ -7,7 +7,7 @@ namespace FChatApi.Tokenizer;
 
 public class BotCommand(FChatMessage fChatMessage, string botModule, string moduleCommand, string[] parameters)
 {
-	public FChatMessage Message = fChatMessage;
+	public FChatMessage Message { get; } = fChatMessage;
 	public string BotModule { get; } = botModule;
 	public string ModuleCommand { get; } = moduleCommand;
 	public string[] Parameters { get; } = parameters;

@@ -29,17 +29,17 @@ public class CommandParser
 		return this;
 	}
 	
-	public bool TryConvertCommand(FChatMessage @event,out BotCommand command)
+	public bool TryConvertCommand(FChatMessage fChatMessage,out BotCommand command)
 	{
 		// Not a command
-		if (!@event.Message.StartsWith(BotPrefix))
+		if (!fChatMessage.Message.StartsWith(BotPrefix))
 		{
 			command = null;
 			return false;
 		}
 
 		// parse the command; starts after the comand prefix
-		string[] parsedTokens = Parse(@event.Message[ModuleStartIndex..]).ToArray();
+		string[] parsedTokens = Parse(fChatMessage.Message[ModuleStartIndex..]).ToArray();
 		if (parsedTokens.Length < 2)
 		{
 #if DEBUG
@@ -64,7 +64,7 @@ public class CommandParser
 		}
 
 		// Command cannot be issued by a non-user
-		if (@event.Author == null)
+		if (fChatMessage.Author == null)
 		{
 			// Some operations may still trigger, but they will be exceptions
 #if DEBUG
@@ -76,7 +76,7 @@ public class CommandParser
 		}
 
 		Privilege privilege = Privilege.None;
-		if (@event.Author.PrivilegeLevel == Privilege.None)
+		if (fChatMessage.Author.PrivilegeLevel == Privilege.None)
 		{
 #if DEBUG
 			Task.Run(()=>Console.WriteLine("Defaulting 'Privilege.None user to 'Privilege.UnregisteredUser"));
@@ -85,10 +85,10 @@ public class CommandParser
 		}
 		else
 		{
-			privilege = @event.Author!.PrivilegeLevel;
+			privilege = fChatMessage.Author.PrivilegeLevel;
 		}
 		
-		command = new BotCommand(@event, botModule, moduleCommand, parsedTokens.Skip(2).ToArray());
+		command = new BotCommand(fChatMessage, botModule, moduleCommand, parsedTokens.Skip(2).ToArray());
 		return true;
 	}
 

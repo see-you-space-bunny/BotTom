@@ -1,5 +1,6 @@
 using FChatApi.Core;
 using FChatApi.Enums;
+using FChatApi.Objects;
 using FChatApi.EventArguments;
 using FChatApi.Tokenizer;
 using FChatApi.Objects;
@@ -43,14 +44,14 @@ public partial class Program
 #if DEBUG
 		else if (@event.User.Name.Equals(FCHAT_OWNER,StringComparison.InvariantCultureIgnoreCase))
 		{
-			ApiConnection.Mod_SetUserChannelStatus(@event.Channel,ApiConnection.Users.SingleByName(FCHAT_OWNER),UserRoomStatus.Moderator);
+			ApiConnection.Mod_SetChannelUserStatus(@event.Channel,ApiConnection.Users.SingleByName(FCHAT_OWNER),UserRoomStatus.Moderator);
 		}
 #endif
 	}
 	
 	static void HandleCreatedChannel(object sender, ChannelEventArgs @event)
 	{
-		ApiConnection.Mod_SetUserChannelStatus(@event.Channel,ApiConnection.Users.SingleByName(FCHAT_OWNER),UserRoomStatus.Invited);
+		ApiConnection.Mod_SetChannelUserStatus(@event.Channel,ApiConnection.Users.SingleByName(FCHAT_OWNER),UserRoomStatus.Invited);
 #if DEBUG
 		ApiConnection.User_SetStatus(ChatStatus.DND,$"[session={@event.Channel.Name}]{@event.Channel.Code}[/session]");
 #endif
@@ -76,13 +77,13 @@ public partial class Program
 		var privateChannels = ApiConnection.Channels.GetList(ChannelType.Private);
 
 		// check and join starting channel here
-		if (privateChannels.Any(x => x.Value.Code.Equals(F_StartingChannel, StringComparison.InvariantCultureIgnoreCase)))
+		if (privateChannels.Values.Any(ch => ch.Code.Equals(F_StartingChannel, StringComparison.InvariantCultureIgnoreCase)))
 		{
 			await ApiConnection.User_JoinChannel(ApiConnection.Channels.SingleByNameOrCode(F_StartingChannel));
 		}
-		else if (privateChannels.Any(x => x.Value.Name.Equals(F_StartingChannel, StringComparison.InvariantCultureIgnoreCase)))
+		else if (privateChannels.Values.Any(ch => ch.Name.Equals(F_StartingChannel, StringComparison.InvariantCultureIgnoreCase)))
 		{
-			await ApiConnection.User_JoinChannel(privateChannels.First(x => x.Value.Name.Equals(F_StartingChannel, StringComparison.InvariantCultureIgnoreCase)).Value);
+			await ApiConnection.User_JoinChannel(privateChannels.Values.First(ch => ch.Name.Equals(F_StartingChannel, StringComparison.InvariantCultureIgnoreCase)));
 		}
 
 #if DEBUG

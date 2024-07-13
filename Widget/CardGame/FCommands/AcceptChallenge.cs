@@ -8,6 +8,7 @@ using ModularPlugins;
 
 using CardGame.Enums;
 using CardGame.Commands;
+using CardGame.MatchEntities;
 
 namespace CardGame;
 
@@ -45,7 +46,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 		var responseBuilder = new StringBuilder()
 			.Append(command.Message.Author.Mention)
 			.Append(" has accepted ")
-			.Append(IncomingChallenges[command.Message.Author.Name].Challenger.Mention)
+			.Append(IncomingChallenges[command.Message.Author].Challenger.Mention)
 			.Append("'s challenge!");
 
 		var alertBuilder    = new StringBuilder()
@@ -60,14 +61,18 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 
 		challengerAlertResponse
 			.WithMessage(alertBuilder.ToString())
-			.WithRecipient(IncomingChallenges[command.Message.Author.Name].Challenger.Name)
+			.WithRecipient(IncomingChallenges[command.Message.Author].Challenger.Name)
 			.WithMessageType(FChatMessageType.Whisper);
 		
 		//////////
 
-		IncomingChallenges[command.Message.Author.Name].AdvanceState(MatchChallenge.Event.Confirm);
+		IncomingChallenges[command.Message.Author].AdvanceState(MatchChallenge.Event.Confirm);
 
-		OngoingMatches.Add(IncomingChallenges[command.Message.Author.Name].AcceptWithDeckArchetype(stat1,stat2));
+		OngoingMatches.Add(
+			new BoardState(
+				IncomingChallenges[command.Message.Author].Player1,
+				PlayerCharacters[command.Message.Author].CreateMatchPlayer(stat1,stat2)
+		));
 		return true;
 	}
 }

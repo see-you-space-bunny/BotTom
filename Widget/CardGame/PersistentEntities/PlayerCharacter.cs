@@ -35,9 +35,9 @@ namespace CardGame.PersistentEntities
 		public MatchPlayer CreateMatchPlayer(CharacterStat stat1, CharacterStat? stat2 = null)
 		{
 			if (stat2 is not null)
-				return new MatchPlayer(this,deckArchetype1: stat1,deckArchetype2: (CharacterStat)stat2);
+				return new MatchPlayer(User,this,deckArchetype1: stat1,deckArchetype2: (CharacterStat)stat2);
 			else
-				return new MatchPlayer(this,deckArchetype1: stat1);
+				return new MatchPlayer(User,this,deckArchetype1: stat1);
 		}
 		public MatchPlayer CreateMatchPlayer(string stat1,string stat2)
 		{
@@ -45,7 +45,7 @@ namespace CardGame.PersistentEntities
 			{
 				if (Enum.TryParse(stat2,true, out CharacterStat deckArchetype2))
 				{
-					return new MatchPlayer(this,deckArchetype1,deckArchetype2:deckArchetype2);
+					return new MatchPlayer(User,this,deckArchetype1,deckArchetype2:deckArchetype2);
 				}
 				throw new ArgumentException($"The selected '{stat2}' is not a valid choice of stat.");
 			}
@@ -57,7 +57,7 @@ namespace CardGame.PersistentEntities
 		public MatchPlayer CreateMatchPlayer(string stat1)
 		{
 			if (Enum.TryParse(stat1,true, out CharacterStat deckArchetype1))
-				return new MatchPlayer(this,deckArchetype1);
+				return new MatchPlayer(User,this,deckArchetype1);
 
 			throw new ArgumentException($"The selected '{stat1}' is not a valid choice of stat.");
 		}

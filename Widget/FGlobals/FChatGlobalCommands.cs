@@ -46,8 +46,9 @@ public partial class FChatGlobalCommands : FChatPlugin, IFChatPlugin
         
         FChatMessageBuilder messageBuilder = new FChatMessageBuilder()
             .WithAuthor(ApiConnection.CharacterName)
-            .WithRecipient(command.Message.Author)
-            .WithChannel(command.Message.Channel);
+            .WithRecipient(command.Message.Author.Name)
+            .WithChannel(command.Message.Channel)
+            .WithMessageType(command.Message.Channel is not null ? FChatMessageType.Basic : FChatMessageType.Whisper);
 
 
         var requiredPrivilege = moduleCommand
@@ -75,7 +76,7 @@ public partial class FChatGlobalCommands : FChatPlugin, IFChatPlugin
                         command.Message.Author.PrivilegeLevel = Privilege.RegisteredUser;
                     }
                     command.Message.Author.WhenRegistered = DateTime.Now;
-                    // if (ChatBot.RegisteredUsers.TryAdd(command.User.Name.ToLower(), command.User))
+                    // if (ChatBot.RegisteredUsers.TryAdd(command.Message.Author.Name.ToLower(), command.Message.Author))
                     // {
                     //     messageBuilder
                     //         .WithMessage(
@@ -107,7 +108,7 @@ public partial class FChatGlobalCommands : FChatPlugin, IFChatPlugin
             case GlobalCommand.UnRegister:
                 if (command.Message.Author.PrivilegeLevel >= requiredPrivilege)
                 {
-                    //ChatBot.RegisteredUsers.Remove(command.User.Name.ToLower());
+                    //ChatBot.RegisteredUsers.Remove(command.Message.Author.Name.ToLower());
                     messageBuilder
                         .WithMessage(
                             !string.IsNullOrWhiteSpace(moduleCommand.GetEnumAttribute<GlobalCommand, SuccessResponseAttribute>().Message)
@@ -149,12 +150,10 @@ public partial class FChatGlobalCommands : FChatPlugin, IFChatPlugin
 
             #region ChInvite
             case GlobalCommand.ChInvite:
-                ApiConnection.Mod_SetUserChannelStatus(
-                    ApiConnection.Channels
-                        .GetList(ChannelType.Private).Values
-                            .FirstOrDefault(c => c.CreatedByApi),
-                    ApiConnection.Users
-                        .SingleByName(command.Parameters[0]),
+                ApiConnection.Mod_SetChannelUserStatus(
+                    ApiConnection.Channels.GetList(ChannelType.Private).Values
+                        .FirstOrDefault(c => c.CreatedByApi),
+                    ApiConnection.Users.SingleByName(command.Parameters[0]),
                     UserRoomStatus.Invited
                 );
                 respondWithMessage = false;

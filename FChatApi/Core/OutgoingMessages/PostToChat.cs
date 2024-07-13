@@ -15,10 +15,10 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="recipient">character name</param>
 	/// <param name="message">message as <c>JavaScript</c> Encoded String</param>
-	private static Task User_SendWhisper(string recipient, string message)
+	private static Task User_SendWhisper(User recipient, string message)
 	{
-		string toSend = string.Format(MessageCode.PRI.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,recipient,message);
-		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {recipient}: {message}");
+		string toSend = string.Format(MessageCode.PRI.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,recipient.Name,message);
+		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {recipient.Name}: {message}");
 #if DEBUG
 		return DebugSendAsync(toSend);
 #else
@@ -32,7 +32,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="value">message being sent</param>
 	private static Task User_SendWhisper(FChatMessage value) =>
-		User_SendWhisper(value.Recipient.Name, value.Message);
+		User_SendWhisper(value.Recipient, value.Message);
 #endregion
 
 

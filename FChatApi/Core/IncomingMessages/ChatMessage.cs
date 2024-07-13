@@ -20,7 +20,17 @@ public partial class ApiConnection
 	/// <returns>the task we initiated</returns>
 	private Task Handler_LRP(JObject json)
 	{
-		return Task.CompletedTask;
+		Task t = Task.Run(() => MessageHandler?.Invoke(
+			MessageCode.LRP,
+			new FChatMessageBuilder()
+				.WithRecipient(ApiUser)
+				.WithAuthor(Users.SingleByName(json["character"].ToString()))
+				.WithChannel(Channels.SingleByNameOrCode(json["channel"].ToString()))
+				.WithMessage(json["message"].ToString())
+				.Build()
+		));
+		Console.WriteLine(json["message"].ToString());
+		return t;
 	}
 #endregion
 
@@ -37,7 +47,6 @@ public partial class ApiConnection
 		Task t = Task.Run(() => MessageHandler?.Invoke(
 			MessageCode.MSG,
 			new FChatMessageBuilder()
-				.WithMessageType(MessageCode.MSG)
 				.WithRecipient(ApiUser)
 				.WithAuthor(Users.SingleByName(json["character"].ToString()))
 				.WithChannel(Channels.SingleByNameOrCode(json["channel"].ToString()))
@@ -62,7 +71,6 @@ public partial class ApiConnection
 		Task t = Task.Run(() => MessageHandler?.Invoke(
 			MessageCode.PRI,
 			new FChatMessageBuilder()
-				.WithMessageType(MessageCode.PRI)
 				.WithRecipient(ApiUser)
 				.WithAuthor(Users.SingleByName(json["character"].ToString()))
 				.WithMessage(json["message"].ToString())

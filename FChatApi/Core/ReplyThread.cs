@@ -156,7 +156,7 @@ public partial class ApiConnection
 
 		await (message.MessageType switch
 		{
-			FChatMessageType.Whisper		=> User_SendWhisper(message.Recipient.Name, message.Message),
+			FChatMessageType.Whisper		=> User_SendWhisper(message.Recipient, message.Message),
 			FChatMessageType.Basic			=> User_SendChannelMessage(message.Channel, message.Message),
 			FChatMessageType.Advertisement	=> User_SendChannelAd(message.Channel, message.Message),
 			_	=> Task.Run(() => Console.WriteLine("Bad reply: " + message.Channel + " / " + message.Recipient + " / " + message)),

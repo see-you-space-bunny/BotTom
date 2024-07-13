@@ -9,25 +9,27 @@ public class BoardState(MatchPlayer player1,MatchPlayer player2)
 
 	public Channel? Channel { get; set; }
 
-	private readonly MatchPlayer _player1 = player1;
-	private readonly MatchPlayer _player2 = player2;
+	public MatchPlayer Player1 { get; } = player1;
+	public MatchPlayer Player2 { get; } = player2;
 
 	private bool Player1Turn = true;
 	private ushort MatchTurn = 1;
 
-	private void PassTurn()
+	public void PassTurn()
 	{
 		Player1Turn = !Player1Turn;
 		++MatchTurn;
 	}
+
+	internal MatchPlayer GetActivePlayer() => Player1Turn ? Player1 : Player2;
 
 	public override string ToString()
 	{
 		return string.Format(OutputFormat,
 			"Message describing the last game action.",
 			MatchTurn,
-			_player1.ToString( Player1Turn),
-			_player2.ToString(!Player1Turn)
+			Player1.ToString( Player1Turn),
+			Player2.ToString(!Player1Turn)
 		);
 	}
 }

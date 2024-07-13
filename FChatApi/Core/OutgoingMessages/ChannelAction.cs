@@ -137,7 +137,7 @@ public partial class ApiConnection
 	/// <param name="status"></param>
 	/// <param name="duration">duration of timeout, has no effect otherwise</param>
 	/// <param name="channelname">channel name, used only for logging</param>
-	public static Task Mod_SetUserChannelStatus(Channel channel, User user, UserRoomStatus status, int duration = -1)
+	public static Task Mod_SetChannelUserStatus(Channel channel, User user, UserRoomStatus status, int duration = -1)
 	{
 		ConnectionCheck();
         string toSend;
