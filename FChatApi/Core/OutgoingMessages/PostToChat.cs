@@ -17,7 +17,7 @@ public partial class ApiConnection
 	/// <param name="message">message as <c>JavaScript</c> Encoded String</param>
 	private static Task User_SendWhisper(User recipient, string message)
 	{
-		string toSend = string.Format(MessageCode.PRI.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,recipient.Name,message);
+		string toSend = string.Format(MessageCode.PRI.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,message,recipient.Name);
 		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {recipient.Name}: {message}");
 #if DEBUG
 		return DebugSendAsync(toSend);
@@ -81,7 +81,7 @@ public partial class ApiConnection
 	private static Task User_SendChannelAd(Channel channel, string message)
 	{
 		ConnectionCheck();
-		string toSend = string.Format(MessageCode.LRP.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,channel,message);
+		string toSend = string.Format(MessageCode.LRP.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,channel.Code,message);
 		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {channel.Code}: {message}");
 #if DEBUG
 		return DebugSendAsync(toSend);
