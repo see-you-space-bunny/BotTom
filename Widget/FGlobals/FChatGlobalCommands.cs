@@ -46,9 +46,8 @@ public partial class FChatGlobalCommands : FChatPlugin, IFChatPlugin
         
         FChatMessageBuilder messageBuilder = new FChatMessageBuilder()
             .WithAuthor(ApiConnection.CharacterName)
-            .WithRecipient(command.User.Name)
-            .WithChannel(command.Channel)
-            .WithMessageType(command.Channel is not null ? FChatMessageType.Basic : FChatMessageType.Whisper);
+            .WithRecipient(command.Message.Author)
+            .WithChannel(command.Message.Channel);
 
 
         var requiredPrivilege = moduleCommand
@@ -61,21 +60,21 @@ public partial class FChatGlobalCommands : FChatPlugin, IFChatPlugin
         {
             #region Register
             case GlobalCommand.Register:
-                if (command.User is not null)
+                if (command.Message.Author is not null)
                 {
-                    if (GlobalOperators.TryGetValue(command.User.Name, out Privilege globalPrivilege))
+                    if (GlobalOperators.TryGetValue(command.Message.Author.Name, out Privilege globalPrivilege))
                     {
-                        command.User.PrivilegeLevel = globalPrivilege;
+                        command.Message.Author.PrivilegeLevel = globalPrivilege;
                     }
-                    else if (Operators.TryGetValue(command.User.Name, out Privilege opPrivilege))
+                    else if (Operators.TryGetValue(command.Message.Author.Name, out Privilege opPrivilege))
                     {
-                        command.User.PrivilegeLevel = opPrivilege;
+                        command.Message.Author.PrivilegeLevel = opPrivilege;
                     }
                     else
                     {
-                        command.User.PrivilegeLevel = Privilege.RegisteredUser;
+                        command.Message.Author.PrivilegeLevel = Privilege.RegisteredUser;
                     }
-                    command.User.WhenRegistered = DateTime.Now;
+                    command.Message.Author.WhenRegistered = DateTime.Now;
                     // if (ChatBot.RegisteredUsers.TryAdd(command.User.Name.ToLower(), command.User))
                     // {
                     //     messageBuilder
@@ -106,7 +105,7 @@ public partial class FChatGlobalCommands : FChatPlugin, IFChatPlugin
 
             #region UnRegister
             case GlobalCommand.UnRegister:
-                if (command.User.PrivilegeLevel >= requiredPrivilege)
+                if (command.Message.Author.PrivilegeLevel >= requiredPrivilege)
                 {
                     //ChatBot.RegisteredUsers.Remove(command.User.Name.ToLower());
                     messageBuilder
@@ -128,13 +127,13 @@ public partial class FChatGlobalCommands : FChatPlugin, IFChatPlugin
 
             #region Whoami
             case GlobalCommand.Whoami:
-                if (command.User.PrivilegeLevel >= requiredPrivilege)
+                if (command.Message.Author.PrivilegeLevel >= requiredPrivilege)
                 {
                     var sb = new StringBuilder();
                     sb.Append(moduleCommand.GetEnumAttribute<GlobalCommand, SuccessResponseAttribute>().Message);
-                    sb.Append($"You are {command.User!.Mention}. ");
-                    sb.Append($"You are a {command.User.PrivilegeLevel}. ");
-                    sb.Append($"You are registered since {command.User.WhenRegistered.ToShortDateString()}.");
+                    sb.Append($"You are {command.Message.Author!.Mention}. ");
+                    sb.Append($"You are a {command.Message.Author.PrivilegeLevel}. ");
+                    sb.Append($"You are registered since {command.Message.Author.WhenRegistered.ToShortDateString()}.");
                     messageBuilder.WithMessage(sb.ToString());
                 }
                 else
@@ -150,10 +149,14 @@ public partial class FChatGlobalCommands : FChatPlugin, IFChatPlugin
 
             #region ChInvite
             case GlobalCommand.ChInvite:
-                ApiConnection.Mod_ChannelInviteUser(
-                    ApiConnection.GetChannelListByType(ChannelType.Private)
-                        .FirstOrDefault(c => c.CreatedByApi),
-                    command.Parameters[0]);
+                ApiConnection.Mod_SetUserChannelStatus(
+                    ApiConnection.Channels
+                        .GetList(ChannelType.Private).Values
+                            .FirstOrDefault(c => c.CreatedByApi),
+                    ApiConnection.Users
+                        .SingleByName(command.Parameters[0]),
+                    UserRoomStatus.Invited
+                );
                 respondWithMessage = false;
                 break;
             #endregion
@@ -167,7 +170,7 @@ public partial class FChatGlobalCommands : FChatPlugin, IFChatPlugin
 
             #region Shutdown
             case GlobalCommand.Shutdown:
-                if (command.User.PrivilegeLevel >= requiredPrivilege)
+                if (command.Message.Author.PrivilegeLevel >= requiredPrivilege)
                 {
                     //ChatBot.SetShutdownFlag();
                     messageBuilder

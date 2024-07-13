@@ -57,8 +57,8 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 	{
 		FChatMessageBuilder messageBuilder = new FChatMessageBuilder()
 			.WithAuthor(ApiConnection.CharacterName)
-			.WithRecipient(command.User.Name)
-			.WithChannel(command.Channel);
+			.WithRecipient(command.Message.Author.Name)
+			.WithChannel(command.Message.Channel);
 		
 		string message = ValidateCommandUse(command);
 
@@ -89,7 +89,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 		try
 		{
 			// User may not be null
-			if (command.User == null)
+			if (command.Message.Author == null)
 				throw new ArgumentNullException(nameof(command),$"The (BotCommand) User property may not be null when handling a {command.ModuleCommand} command.");
 
 			return string.Empty;
@@ -99,7 +99,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 			return disallowedCommand.Reason switch
 			{
 				CommandState.InsufficientPermission    => "You don't have permission to do that!",
-				CommandState.ResponseRequired          => $"You need to respond to {IncomingChallenges[command.User!.Name.ToLower()].Challenger.Mention}'s challenge first!",
+				CommandState.ResponseRequired          => $"You need to respond to {IncomingChallenges[command.Message.Author.Name.ToLower()].Challenger.Mention}'s challenge first!",
 				_ => throw new ArgumentOutOfRangeException(command.ToString(), $"Unexpected {typeof(CommandState)} value: {disallowedCommand.Reason}")
 			};
 		}
@@ -113,7 +113,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 			var alertTargetMessage = new FChatMessageBuilder()
 				.WithAuthor(ApiConnection.CharacterName)
 				.WithoutMention()
-            	.WithMessageType(command.Channel is not null ? FChatMessageType.Basic : FChatMessageType.Whisper);
+            	.WithMessageType(command.Message.Channel is not null ? FChatMessageType.Basic : FChatMessageType.Whisper);
 
 			switch (moduleCommand)
 			{
@@ -134,8 +134,8 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 				
 				default:
 					messageBuilder
-						.WithRecipient(command.User.Name)
-						.WithMention(command.User.Mention)
+						.WithRecipient(command.Message.Author.Name)
+						.WithMention(command.Message.Author.Mention)
 						.WithMessage("--> That is not a valid command!");
 					break;
 			}
@@ -156,9 +156,9 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 			messageBuilder.WithMessage(
 				disallowedCommand.Reason switch
 				{
-					CommandState.InsufficientPermission    => $"{command.User.Mention}, you don't have permission to do that!",
-					CommandState.AwaitingResponse          => $"{command.User.Mention}, you still have a challenge!",
-					CommandState.ResponseRequired          => $"{command.User.Mention}, you need to respond to {IncomingChallenges[command.User!.Name.ToLower()].Challenger.Mention}'s challenge first!",
+					CommandState.InsufficientPermission    => $"{command.Message.Author.Mention}, you don't have permission to do that!",
+					CommandState.AwaitingResponse          => $"{command.Message.Author.Mention}, you still have a challenge!",
+					CommandState.ResponseRequired          => $"{command.Message.Author.Mention}, you need to respond to {IncomingChallenges[command.Message.Author.Name.ToLower()].Challenger.Mention}'s challenge first!",
 					_ => throw new ArgumentOutOfRangeException(nameof(disallowedCommand.Reason), $"Unexpected {typeof(CommandState)} value: {disallowedCommand.Reason}")
 				}
 			);

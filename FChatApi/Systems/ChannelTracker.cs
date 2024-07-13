@@ -161,40 +161,16 @@ public class ChannelTracker
 	}
 #endregion
 
-#region (~) CombinedChList
-	/// <summary>
-	/// retrieves a combined list of all currently channels<br/>may optionally be filtered to a specific <c>UserRelationshipWithChannel</c>
-	/// </summary>
-	/// <param name="relationship">by what <c>UserRelationshipWithChannel</c> we filter the return value</param>
-	/// <returns>a range of channels filtered to our argument</returns>
-	internal Dictionary<string,Channel> GetCombinedChannelList(UserRelationshipWithChannel relationship = UserRelationshipWithChannel.AllValid)
-	{
-		if (relationship == UserRelationshipWithChannel.AllValid)
-		{
-			return All.Where(ch => ch.Value.Status > UserRelationshipWithChannel.AllValid).ToDictionary();
-		}
-		else if (relationship == UserRelationshipWithChannel.All)
-		{ 
-			return All;
-		}
-		else if (relationship > UserRelationshipWithChannel.Invalid)
-		{
-			return All.Where(ch => ch.Value.Status == relationship).ToDictionary();
-		}
-		throw new ArgumentException("Attempted to filter channel list by invalid status.",nameof(relationship));
-	}
-#endregion
-
-#region (~) GetChList
+#region (~) GetList
 	/// <summary>
 	/// 
 	/// </summary>
 	/// <param name="channeltype"></param>
 	/// <returns>gets a list of channels by type</returns>
-	internal IDictionary<string,Channel> GetChannelList(ChannelType channeltype) =>
+	public IDictionary<string,Channel> GetList(ChannelType channeltype) =>
 		Channels[(int)channeltype];
 
-	internal IDictionary<string,Channel> GetChannelList(UserRelationshipWithChannel relationship = UserRelationshipWithChannel.AllValid) =>
+	public IDictionary<string,Channel> GetList(UserRelationshipWithChannel relationship = UserRelationshipWithChannel.AllValid) =>
 		relationship switch {
 			UserRelationshipWithChannel.All			=> All,
 			UserRelationshipWithChannel.AllValid	=> All.Where(ch => ch.Value.Status >= UserRelationshipWithChannel.AllValid).ToDictionary(),

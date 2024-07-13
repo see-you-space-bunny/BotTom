@@ -33,7 +33,7 @@ public partial class ApiConnection
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
 	private Task Handler_CDS(JObject json) =>
-		Task.Run(() => GetChannelByNameOrCode(json["channel"].ToString()).Description = json["description"].ToString());
+		Task.Run(() => Channels.SingleByNameOrCode(json["channel"].ToString()).Description = json["description"].ToString());
 #endregion
 
 

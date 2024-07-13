@@ -100,6 +100,18 @@ public class FChatMessageBuilder(bool isSystemMessage = false)
 		MessageType = value;
 		return this;
 	}
+
+	public FChatMessageBuilder WithMessageType(MessageCode value)
+	{
+		MessageType = value switch {
+			MessageCode.MSG	=>	FChatMessageType.Basic,
+			MessageCode.LRP	=>	FChatMessageType.Advertisement,
+			MessageCode.PRI	=>	FChatMessageType.Whisper,
+			MessageCode.STA	=>	FChatMessageType.Status,
+			_				=>	FChatMessageType.Invalid
+		};
+		return this;
+	}
 #endregion
 
 

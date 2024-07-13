@@ -66,7 +66,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 		else
 			target = remainingParameters;
 
-		var (exitEarly, errMessage, player) = ValidateIssueChallenge(command.User.Name,target);
+		var (exitEarly, errMessage, player) = ValidateIssueChallenge(command.Message.Author.Name,target);
 
 		if (exitEarly)
 		{
@@ -78,14 +78,14 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 		//////////
 
 		responseBuilder
-			.Append(command.User.Mention)
+			.Append(command.Message.Author.Mention)
 			.Append(" has challenged ")
 			.Append(player.Name)
 			.Append(" to a [b]Duel[/b]! ")
 			.Append("[i]Hint:[/i] To accept this challenge, use the command \"tom!xcg accept [i]stat1[/i] [i]stat2[/i]\"");
 
 		alertBuilder
-			.Append(command.User.Mention)
+			.Append(command.Message.Author.Mention)
 			.Append(" has challenged you to a [b]Duel[/b]! ")
 			.Append("[i]Hint:[/i] To accept this challenge, use the command \"tom!xcg accept [i]stat1[/i] [i]stat2[/i]\"");
 		
@@ -103,8 +103,8 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 		IncomingChallenges.Add(
 			player.Name.ToLower(),
 			new MatchChallenge(
-				command.User,
-				PlayerCharacters[command.User.Name].CreateMatchPlayer(stat1,stat2),
+				command.Message.Author,
+				PlayerCharacters[command.Message.Author.Name].CreateMatchPlayer(stat1,stat2),
 				PlayerCharacters[player.Name]
 			)
 		);
@@ -114,9 +114,9 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 
 	private (bool exitEarly,string message,User target) ValidateIssueChallenge(string challenger,string target)
 	{
-		if (!ApiConnection.TryGetUser(target,out User challengeTarget))
+		if (!ApiConnection.Users.TrySingleByName(target,out User challengeTarget))
 		{
-			return (true,"You can't challenge a user that is not registered.",new User());
+			return (true,"You can't challenge a user that is not registered.",null!);
 		}
 		if (!PlayerCharacters.ContainsKey(challenger.ToLowerInvariant()))
 			PlayerCharacters.Add(challenger.ToLowerInvariant(),new PlayerCharacter(ApiConnection.Users.SingleByName(challenger)));

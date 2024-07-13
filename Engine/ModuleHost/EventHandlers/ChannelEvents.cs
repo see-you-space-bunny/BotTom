@@ -20,7 +20,7 @@ public partial class ChatBot
 	/// <param name="channel">Channel that was joined</param>
 	public async void HandleJoinedChannel(ChannelEventArgs @event)
 	{
-		Channel channel = ApiConnection.GetChannelByCode(@event.Channel.Code);
+		Channel channel = ApiConnection.Channels.SingleByNameOrCode(@event.Channel.Code);
 		
 		List<Task> tasks = [];
 		foreach (var plugin in FChatPlugins.Values)

@@ -1,6 +1,7 @@
 using Newtonsoft.Json.Linq;
 
 using FChatApi.EventArguments;
+using FChatApi.Objects;
 
 namespace FChatApi.Tests.LabAssitant;
 
@@ -38,7 +39,7 @@ internal static class ChatMessageAssistant
 	public static void ConnectedToChat(object sender, ChannelEventArgs @event)
 	{ }
 	
-	public static void HandleMessageReceived(object sender, MessageEventArgs @event)
+	public static void HandleMessageReceived(object sender, FChatMessage @event)
 	{ }
 
 	public static void HandleJoinedChannel(object sender, ChannelEventArgs @event)

@@ -33,12 +33,5 @@ public partial class ApiConnection
 		foreach (string name in value)
 			Users.Add(new User() { Name = name, });
 	}
-
-	public static void DebugRegisterAllCharacters()
-	{
-		foreach (User user in RegisteredUsers.Values)
-			Users.RegisterUser(user);
-		ImportRegisteredUsers();
-	}
 #endif
 }

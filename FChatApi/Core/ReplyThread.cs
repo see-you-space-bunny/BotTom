@@ -71,7 +71,7 @@ public partial class ApiConnection
 	{
 		EnqueueMessage(new FChatMessageBuilder()
 				.WithRecipient(recipient)
-				.WithChannel(GetChannelByCode(channelcode))
+				.WithChannel(Channels.SingleByNameOrCode(channelcode))
 				.WithMessage(message)
 				.WithMessageType(type)
 		);
@@ -157,8 +157,8 @@ public partial class ApiConnection
 		await (message.MessageType switch
 		{
 			FChatMessageType.Whisper		=> User_SendWhisper(message.Recipient.Name, message.Message),
-			FChatMessageType.Basic			=> User_SendChannelMessage(message.Channel.Code, message.Message),
-			FChatMessageType.Advertisement	=> User_SendChannelAd(message.Channel.Code, message.Message),
+			FChatMessageType.Basic			=> User_SendChannelMessage(message.Channel, message.Message),
+			FChatMessageType.Advertisement	=> User_SendChannelAd(message.Channel, message.Message),
 			_	=> Task.Run(() => Console.WriteLine("Bad reply: " + message.Channel + " / " + message.Recipient + " / " + message)),
 		});
 	}
