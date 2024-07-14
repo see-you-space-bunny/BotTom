@@ -23,7 +23,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_ERR(JObject json)
+	private Task Handler_ERR(JObject json,bool logging = true)
 	{
 		return Task.Run(() => Console.WriteLine(string.Format("Server reported an error: {0}",json.ToString())));
 	}
@@ -37,7 +37,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_KID(JObject json)
+	private Task Handler_KID(JObject json,bool logging = true)
 	{
 		return Task.CompletedTask;
 	}
@@ -51,7 +51,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_UPT(JObject json)
+	private Task Handler_UPT(JObject json,bool logging = true)
 	{
 		return Task.CompletedTask;
 	}
@@ -62,7 +62,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_VAR(JObject json)
+	private Task Handler_VAR(JObject json,bool logging = true)
 	{
 		return Task.Run(() => Console.WriteLine(string.Format("Recieved server variable: {0} = {1}",json["variable"].ToString(),json["value"].ToString())));
 	}

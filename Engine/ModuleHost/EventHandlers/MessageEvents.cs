@@ -14,7 +14,9 @@ public partial class ChatBot
 	/// <param name="command">command being sent, if any</param>
 	public void HandleMessage(BotCommand command)
 	{
-		if (command.TryParseModule(out BotModule module))
-			FChatPlugins[module].HandleRecievedMessage(command);
+		if (!command.TryParseModule(out BotModule module))
+			module = BotModule.System;
+		
+		FChatPlugins[module].HandleRecievedMessage(command);
 	}
 }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System;
 using FChatApi.Core;
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace FChatApi.Systems;
 
@@ -19,13 +20,13 @@ public class ChannelTracker
 	/// <summary>all joined channels</summary>
 	internal ConcurrentDictionary<string,Channel> Joined => Channels[0];
 
-	private readonly List<(Channel Channel,User[] InviteWho)> ChannelsBeingCreated;
+	private readonly Dictionary<string,(Channel Channel,User[] InviteWho)> ChannelsBeingCreated;
 
 	internal bool IsChannelBeingCreated => ChannelsBeingCreated.Count > 0;
+	
+	internal SemaphoreSlim CreationSemaphore = new(1);
 
-	/// <summary>
-	/// 
-	/// </summary>
+	/// <summary></summary>
 	internal ChannelTracker()
 	{
 		ChannelsBeingCreated				= [];
@@ -37,9 +38,9 @@ public class ChannelTracker
 		Channels[(int)ChannelType.Hidden]	= new ConcurrentDictionary<string,Channel>(StringComparer.InvariantCultureIgnoreCase);
 	}
 
-	public Channel AddManually(string channelname, UserRelationshipWithChannel status, string channelcode)
+	public Channel AddManually(string channelname, string channelcode, UserRelationshipWithChannel status)
 	{
-		if (All.ContainsKey(channelname) && !All.Values.Any(ch => ch.Name.Equals(channelname)))
+		if (!All.ContainsKey(channelcode) && !All.Values.Any(ch => ch.Name.Equals(channelname)))
 		{
 			Channel ch = new (channelname, channelcode, ChannelType.Private)
 			{
@@ -48,7 +49,6 @@ public class ChannelTracker
 			All.AddOrUpdate(channelcode,(key) => ch, (key,value) => ch);
 			return ch;
 		}
-
 		return null;
 	}
 
@@ -68,7 +68,8 @@ public class ChannelTracker
 			Type		= ChannelType.Private,
 			AdEnabled	= false,
 		};
-		ChannelsBeingCreated.Add((channel,inviteWho ?? []));
+		if (ChannelsBeingCreated.TryAdd(name,(channel,inviteWho ?? [])))
+			CreationSemaphore.Wait();
 	}
 #endregion
 
@@ -83,21 +84,28 @@ public class ChannelTracker
 	internal Channel FinalizeChannelCreation(string name, string code, User owner = null)
 	{
 		owner ??= ApiConnection.ApiUser;
-		var channel = ChannelsBeingCreated.SingleOrDefault(li => li.Channel.Name == name);
-		if (channel.Channel is null)
+		if (ChannelsBeingCreated.TryGetValue(name,out var channel) && channel.Channel is null)
 			throw new NullReferenceException($"Tried to create  \"{name}\" (code: {code}, owner: {owner.Name}), ChannelBeingCreated was null. Most likely caused by not calling StartChannelCreation first.");
 
 		if (channel.Channel.Status == UserRelationshipWithChannel.Creating)
 		{
+
 			channel.Channel.Code			= code;
 			channel.Channel.Status			= UserRelationshipWithChannel.Created;
 			channel.Channel.CreatedByApi	= true;
 			channel.Channel.Owner			= owner;
 
-			All		.AddOrUpdate(code,(key) => channel.Channel,(key,value) => channel.Channel);
-			Joined	.AddOrUpdate(code,(key) => channel.Channel,(key,value) => channel.Channel);
+			All		.AddOrUpdate(code,(key) => channel.Channel,(key,value) => {
+				value.Code			= channel.Channel.Code;
+				value.Status		= channel.Channel.Status;
+				value.CreatedByApi	= channel.Channel.CreatedByApi;
+				value.Owner			= channel.Channel.Owner;
+				return value;
+			});
+			Joined	.AddOrUpdate(code,(key) => channel.Channel,(key,value) => value);
 
-			ChannelsBeingCreated.Remove(channel);
+			ChannelsBeingCreated.Remove(name);
+			CreationSemaphore.Release();
 			return All[code];
 		}
 		throw new InvalidOperationException($"Could not create \"{name}\" (code: {code}, owner: {owner.Name}). No channel matching that name was pending creation.");

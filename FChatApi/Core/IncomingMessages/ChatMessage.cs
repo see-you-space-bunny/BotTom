@@ -18,7 +18,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_LRP(JObject json)
+	private Task Handler_LRP(JObject json,bool logging = true)
 	{
 		Task t = Task.Run(() => MessageHandler?.Invoke(
 			MessageCode.LRP,
@@ -29,7 +29,8 @@ public partial class ApiConnection
 				.WithMessage(json["message"].ToString())
 				.Build()
 		));
-		Console.WriteLine(json["message"].ToString());
+		if (logging)
+			Task.Run(() => Console.WriteLine($"MSG ({(json["channel"].ToString())}) {(json["character"].ToString())}: {(json["message"].ToString())}"));
 		return t;
 	}
 #endregion
@@ -42,7 +43,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_MSG(JObject json)
+	private Task Handler_MSG(JObject json,bool logging = true)
 	{
 		Task t = Task.Run(() => MessageHandler?.Invoke(
 			MessageCode.MSG,
@@ -53,7 +54,8 @@ public partial class ApiConnection
 				.WithMessage(json["message"].ToString())
 				.Build()
 		));
-		Console.WriteLine(json["message"].ToString());
+		if (logging)
+			Task.Run(() => Console.WriteLine($"MSG ({(json["channel"].ToString())}) {(json["character"].ToString())}: {(json["message"].ToString())}"));
 		return t;
 	}
 #endregion
@@ -66,7 +68,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_PRI(JObject json)
+	private Task Handler_PRI(JObject json,bool logging = true)
 	{
 		Task t = Task.Run(() => MessageHandler?.Invoke(
 			MessageCode.PRI,
@@ -76,7 +78,8 @@ public partial class ApiConnection
 				.WithMessage(json["message"].ToString())
 				.Build()
 		));
-		Console.WriteLine(json["message"].ToString());
+		if (logging)
+			Task.Run(() => Console.WriteLine($"PRI {(json["character"].ToString())}: {(json["message"].ToString())}"));
 		return t;
 	}
 #endregion
@@ -89,7 +92,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_RLL(JObject json)
+	private Task Handler_RLL(JObject json,bool logging = true)
 	{
 		return Task.CompletedTask;
 	}
@@ -104,7 +107,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_TPN(JObject json)
+	private Task Handler_TPN(JObject json,bool logging = true)
 	{
 		return Task.CompletedTask;
 	}

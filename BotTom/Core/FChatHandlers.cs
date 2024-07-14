@@ -53,12 +53,9 @@ public partial class Program
 	/// <param name="event">our event args</param>
 	static void HandleJoinedChannel(object sender, ChannelEventArgs @event)
 	{
-		if (@event.User.Name.Equals(F_CharacterName))
-		{
-			F_Bot!.HandleJoinedChannel(@event);
-		}
+		F_Bot!.HandleJoinedChannel(@event);
 #if DEBUG
-		else if (@event.User.Name.Equals(FCHAT_OWNER,StringComparison.InvariantCultureIgnoreCase))
+		if (@event.User.Name.Equals(FCHAT_OWNER,StringComparison.InvariantCultureIgnoreCase))
 		{
 			ApiConnection.Mod_SetChannelUserStatus(@event.Channel,ApiConnection.Users.SingleByName(FCHAT_OWNER),UserRoomStatus.Moderator);
 		}

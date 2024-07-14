@@ -78,11 +78,9 @@ public partial class FChatTournamentOrganiser : FChatPlugin
 		//////////
 
 		responseBuilder
-			.Append(command.Message.Author.Mention)
-			.Append(" has challenged ")
+			.Append("You have challenged ")
 			.Append(player.Name)
-			.Append(" to a [b]Duel[/b]! ")
-			.Append("[i]Hint:[/i] To accept this challenge, use the command \"tom!xcg accept [i]stat1[/i] [i]stat2[/i]\"");
+			.Append(" to a [b]Duel[/b]! [sup]Awaiting response.[/sup]");
 
 		alertBuilder
 			.Append(command.Message.Author.Mention)

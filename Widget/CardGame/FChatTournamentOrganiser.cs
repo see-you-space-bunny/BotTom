@@ -20,6 +20,7 @@ using CardGame.PersistentEntities;
 
 using ModularPlugins.Interfaces;
 using System.Text.RegularExpressions;
+using System.Reflection.PortableExecutable;
 
 namespace CardGame;
 
@@ -55,7 +56,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 		
 		AttributeEnumExtensions.ProcessEnumForAttribute<StatGroupAttribute  >(typeof(CharacterStat));
 
-		AttributeEnumExtensions.ProcessEnumForAttribute<StatColorAttribute  >(typeof(CharacterStat));
+		AttributeEnumExtensions.ProcessEnumForAttribute<StatDecorationAttribute  >(typeof(CharacterStat));
 	}
 
 	public override void HandleRecievedMessage(BotCommand command)
@@ -68,7 +69,11 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 		string message = ValidateCommandUse(command);
 
 		if (!string.IsNullOrWhiteSpace(message))
-			FChatApi.EnqueueMessage(messageBuilder.WithMessage(message));
+			FChatApi
+				.EnqueueMessage(
+					messageBuilder
+						.WithMessage(message)
+				);
 
 		////// DO STUFF HERE
 		
@@ -119,6 +124,14 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 
 			switch (moduleCommand)
 			{
+				case CardGameCommand.Summon:
+				case CardGameCommand.Attack:
+				case CardGameCommand.Special:
+				case CardGameCommand.Target:
+				case CardGameCommand.EndTurn:
+					TakeGameAction(command,messageBuilder,moduleCommand);
+					return true;
+
 				case CardGameCommand.Challenge:
 					if (IssueChallenge(command,messageBuilder,alertTargetMessage))
 						FChatApi.EnqueueMessage(alertTargetMessage);
@@ -128,12 +141,14 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 					if (AcceptChallenge(command,messageBuilder))
 						return false;
 					return true;
-					
 
 				case CardGameCommand.Reject:
 					if (RejectChallenge(command,messageBuilder,alertTargetMessage))
 						FChatApi.EnqueueMessage(alertTargetMessage);
 					return true;
+
+				case CardGameCommand.Set:
+					return false;
 				
 				default:
 					messageBuilder
@@ -179,7 +194,20 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 
 	public override void HandleJoinedChannel(ChannelEventArgs @event)
 	{
+		if (@event.Channel.Name != GameChannelName)
+			return;
+
 		ActiveChannels.TryAdd(@event.Channel.Code,@event.Channel);
+
+		var match = OngoingMatches.FirstOrDefault(m => m.Channel == @event.Channel);
+		if (match != default)
+		{
+			if (@event.User == match.Player1.User || @event.User == match.Player2.User)
+				ApiConnection.Mod_SetChannelUserStatus(@event.Channel,@event.User,UserRoomStatus.Moderator);
+		
+			if (match.IsGameChannelValid() && !match.WelcomeMessageSent)
+				match.SendWelcomeMessage(FChatApi);
+		}
 	}
 
 	public override void HandleCreatedChannel(ChannelEventArgs @event)
@@ -188,7 +216,9 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 			return;
 
 		if (OngoingMatches.Any(m=>m.AwaitingChannel))
+		{
 			FinalizeMatchCreation(@event.Channel);
+		}
 	}
 
 

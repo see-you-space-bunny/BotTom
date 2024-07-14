@@ -120,6 +120,15 @@ public partial class ApiConnection
 #endregion
 
 
+#region RateLimit P(+)
+	/// <summary>the amount of time we need to wait between sending messages</summary>
+	private static TimeSpan DefaultRateLimit { get; set; } = new TimeSpan(0, 0, 1);
+
+	/// <summary>the next earliest point at which a message may be sent</summary>
+	private DateTime Next { get; set; } = DateTime.Now;
+#endregion
+
+
 #region Instance Trackers P(-)
 	/// <summary>
 	/// the api's user tracker</i>

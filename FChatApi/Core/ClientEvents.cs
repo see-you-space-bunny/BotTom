@@ -38,7 +38,7 @@ public partial class ApiConnection
 	{
 		Console.WriteLine("Connected to F-Chat servers! Sending identification...");
 		await IdentifySelf(UserName, TicketInformation.Ticket, CharacterName, ClientId, ClientVersion);
-		StartReplyThread(500);
+		StartReplyThread(20);
 	}
 #endregion
 

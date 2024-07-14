@@ -90,7 +90,7 @@ public partial class ChatBot
 
 		var tasks = new Task[FChatPlugins.Count];
 		int i = 0;
-		foreach (IFChatPlugin plugin in FChatPlugins.Values.Where(p => p.NextUpdate >= DateTime.Now))
+		foreach (IFChatPlugin plugin in FChatPlugins.Values.Where(p => DateTime.Now >= p.NextUpdate))
 		{
 			tasks[i] = Task.Run(() => plugin.Update());
 			++i;

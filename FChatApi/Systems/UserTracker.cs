@@ -5,6 +5,7 @@ using FChatApi.Objects;
 using FChatApi.Enums;
 using FChatApi.Core;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FChatApi.Systems;
 
@@ -35,26 +36,13 @@ public class UserTracker
 #endregion
 
 
-#region (~) Add
-	internal void Add(User value)
+#region (-) AddOrUpdate
+	internal void AddOrUpdate(User value)
 	{
-		if (!TryAdd(value))
-			KnownUsers[value.Name] = value;
-	}
-#endregion
-
-
-#region (-) TryAdd
-	internal bool TryAdd(User value)
-	{
-		if (KnownUsers.TryAdd(value.Name, value))
-		{
-			if (value.IsRegistered)
-				if (!RegisteredUsers.TryAdd(value.Name,value))
-					RegisteredUsers[value.Name] = value;
-			return true;
-		}
-		return false;
+		KnownUsers.AddOrUpdate(value.Name,(key)=>value,(key,val) => { _ = val.Update(value); return val;} );
+		if (value.IsRegistered)
+			if (!RegisteredUsers.TryAdd(value.Name,value))
+				RegisteredUsers[value.Name] = value;
 	}
 #endregion
 
@@ -151,7 +139,7 @@ public class UserTracker
 	private void UserSanityCheck(User user)
 	{
 		if (!KnownUsers.ContainsKey(user.Name))
-			Add(user);
+			AddOrUpdate(user);
 	}
 #endregion
 }

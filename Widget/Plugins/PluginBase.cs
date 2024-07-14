@@ -9,7 +9,7 @@ public abstract class PluginBase
 	public TimeSpan UpdateInterval { get; }
 
 	/// <summary>how often this module runs Update()</summary>
-	public DateTime NextUpdate { get; private set; }
+	public DateTime NextUpdate { get; protected set; }
 
 	/// <summary>
 	/// construct the plugin base
@@ -27,7 +27,7 @@ public abstract class PluginBase
 	/// <remarks>
 	/// you <b><u>must</u></b> call this base method in the override
 	/// </remarks>
-	public virtual void Update() => NextUpdate = DateTime.Now + UpdateInterval;
+	public virtual void Update() => NextUpdate = Timeout.InfiniteTimeSpan == UpdateInterval ? DateTime.MaxValue : DateTime.Now + UpdateInterval;
 
 	/// <summary>
 	/// shuts down any volatile variables

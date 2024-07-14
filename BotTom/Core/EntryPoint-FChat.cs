@@ -164,7 +164,7 @@ partial class Program
 
 ////////////// Add our plugins here ////////////////////////////////////////////////
 #if DEBUG
-			F_Bot.AddPlugin(BotModule.System,new FChatGlobalCommands(F_Chat,TimeSpan.MaxValue)
+			F_Bot.AddPlugin(BotModule.System,new FChatGlobalCommands(F_Chat,new TimeSpan(15000))
 				.SetOperators(F_Owner,		Privilege.OwnerOperator)
 				.SetOperators(F_GlobalOps,	Privilege.GlobalOperator));
 			F_Bot.AddPlugin(BotModule.XCG,new FChatTournamentOrganiser(F_Chat,new TimeSpan(500)));

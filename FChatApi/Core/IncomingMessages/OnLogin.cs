@@ -18,7 +18,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_ADL(JObject json)
+	private Task Handler_ADL(JObject json,bool logging = true)
 	{
 		return Task.CompletedTask;
 	}
@@ -32,7 +32,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_CHA(JObject json)
+	private Task Handler_CHA(JObject json,bool logging = true)
 	{
 		List<Channel> publicChannelList = [];
 		foreach (string channelName in json["channels"].Select(ch => ch["name"].ToString()))
@@ -57,7 +57,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_CON(JObject json) =>
+	private Task Handler_CON(JObject json,bool logging = true) =>
 		Task.Run(() => Console.WriteLine($"{json["count"]} connected users sent."));
 #endregion
 
@@ -70,7 +70,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_HLO(JObject json)
+	private Task Handler_HLO(JObject json,bool logging = true)
 	{
 		return Task.CompletedTask;
 	}
@@ -86,15 +86,13 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_IDN(JObject json)
+	private Task Handler_IDN(JObject json,bool logging = true)
 	{
 		Task[] tasks = new Task[2];
-		ConnectedToChat?.Invoke(this, null);
 #if !UNIT_TEST
 		tasks[0] = RequestChannelListFromServer(ChannelType.Private);
 		tasks[1] = RequestChannelListFromServer(ChannelType.Public);
 #endif
-		Console.WriteLine("Connected to Chat");
 		return Task.Run(() => Task.WaitAll([.. tasks]));
 	}
 #endregion
@@ -107,7 +105,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_ORS(JObject json)
+	private Task Handler_ORS(JObject json,bool logging = true)
 	{
 		List<Channel> privateChannelList = [];
 		foreach (var channel in json["channels"])

@@ -82,7 +82,7 @@ public partial class ApiConnection
 	/// <param name="message"></param>
 	/// <returns></returns>
 	/// <exception cref="ArgumentException">if an invalid message code was provided</exception>
-	public async void ParseMessage(MessageCode code, string message)
+	public void ParseMessage(MessageCode code, string message)
 	{
 		JObject json = code switch {
 			MessageCode.NON => throw new ArgumentException("Invalid (NON) message code.",nameof(code)),
@@ -93,71 +93,71 @@ public partial class ApiConnection
 		switch (code)
 		{
 #region /// ping
-			case MessageCode.PIN: await Handler_PIN();		break;
+			case MessageCode.PIN: _ = Handler_PIN();		break;
 #endregion
 
 
 #region /// messages
-			case MessageCode.MSG: await Handler_MSG(json);	break;
-			case MessageCode.PRI: await Handler_PRI(json);	break;
-			case MessageCode.LRP: await Handler_LRP(json);	break;
-			case MessageCode.RLL: await Handler_RLL(json);	break;
-			case MessageCode.TPN: await Handler_TPN(json);	break;
+			case MessageCode.MSG: Handler_MSG(json);	break;
+			case MessageCode.PRI: Handler_PRI(json);	break;
+			case MessageCode.LRP: Handler_LRP(json);	break;
+			case MessageCode.RLL: Handler_RLL(json);	break;
+			case MessageCode.TPN: Handler_TPN(json);	break;
 #endregion
 
 
 #region /// user activity
-			case MessageCode.NLN: await Handler_NLN(json);	break;
-			case MessageCode.FLN: await Handler_FLN(json);	break;
-			case MessageCode.STA: await Handler_STA(json);	break;
+			case MessageCode.NLN: Handler_NLN(json);	break;
+			case MessageCode.FLN: Handler_FLN(json);	break;
+			case MessageCode.STA: Handler_STA(json);	break;
 #endregion
 
 
 #region /// channel activity
-			case MessageCode.JCH: await Handler_JCH(json);	break;
-			case MessageCode.LCH: await Handler_LCH(json);	break;
-			case MessageCode.ICH: await Handler_ICH(json);	break;
-			case MessageCode.COL: await Handler_COL(json);	break;
-			case MessageCode.CIU: await Handler_CIU(json);	break;
-			case MessageCode.CKU: await Handler_CKU(json);	break;
-			case MessageCode.CTU: await Handler_CTU(json);	break;
-			case MessageCode.CBU: await Handler_CBU(json);	break;
-			case MessageCode.COA: await Handler_COA(json);	break;
-			case MessageCode.COR: await Handler_COR(json);	break;
-			case MessageCode.CSO: await Handler_CSO(json);	break;
-			case MessageCode.RMO: await Handler_RMO(json);	break;
-			case MessageCode.CDS: await Handler_CDS(json);	break;
+			case MessageCode.JCH: Handler_JCH(json);	break;
+			case MessageCode.LCH: Handler_LCH(json);	break;
+			case MessageCode.ICH: Handler_ICH(json);	break;
+			case MessageCode.COL: Handler_COL(json);	break;
+			case MessageCode.CIU: Handler_CIU(json);	break;
+			case MessageCode.CKU: Handler_CKU(json);	break;
+			case MessageCode.CTU: Handler_CTU(json);	break;
+			case MessageCode.CBU: Handler_CBU(json);	break;
+			case MessageCode.COA: Handler_COA(json);	break;
+			case MessageCode.COR: Handler_COR(json);	break;
+			case MessageCode.CSO: Handler_CSO(json);	break;
+			case MessageCode.RMO: Handler_RMO(json);	break;
+			case MessageCode.CDS: Handler_CDS(json);	break;
 #endregion
 
 
 #region /// about api-user
-			case MessageCode.LIS: await Handler_LIS(json);	break;
-			case MessageCode.FRL: await Handler_FRL(json);	break;
+			case MessageCode.LIS: Handler_LIS(json);	break;
+			case MessageCode.FRL: Handler_FRL(json);	break;
 #endregion
 
 
 #region /// info / error
-			case MessageCode.KID: await Handler_KID(json);	break;
-			case MessageCode.UPT: await Handler_UPT(json);	break;
-			case MessageCode.VAR: await Handler_VAR(json);	break;
-			case MessageCode.ERR: await Handler_ERR(json);	break;
+			case MessageCode.KID: Handler_KID(json);	break;
+			case MessageCode.UPT: Handler_UPT(json);	break;
+			case MessageCode.VAR: Handler_VAR(json);	break;
+			case MessageCode.ERR: Handler_ERR(json);	break;
 #endregion
 
 
 #region /// global op alerts
-			case MessageCode.AOP: await Handler_AOP(json);	break;
-			case MessageCode.DOP: await Handler_DOP(json);	break;
-			case MessageCode.BRO: await Handler_BRO(json);	break;
+			case MessageCode.AOP: Handler_AOP(json);	break;
+			case MessageCode.DOP: Handler_DOP(json);	break;
+			case MessageCode.BRO: Handler_BRO(json);	break;
 #endregion
 
 
 #region /// on-login events
-			case MessageCode.ORS: await Handler_ORS(json);	break;
-			case MessageCode.CHA: await Handler_CHA(json);	break;
-			case MessageCode.ADL: await Handler_ADL(json);	break;
-			case MessageCode.CON: await Handler_CON(json);	break;
-			case MessageCode.IDN: await Handler_IDN(json);	break;
-			case MessageCode.HLO: await Handler_HLO(json);	break;
+			case MessageCode.ORS: Handler_ORS(json);	break;
+			case MessageCode.CHA: Handler_CHA(json);	break;
+			case MessageCode.ADL: Handler_ADL(json);	break;
+			case MessageCode.CON: Handler_CON(json);	break;
+			case MessageCode.IDN: Handler_IDN(json);	break;
+			case MessageCode.HLO: Handler_HLO(json);	break;
 #endregion
 
 

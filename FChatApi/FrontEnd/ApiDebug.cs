@@ -31,7 +31,7 @@ public partial class ApiConnection
 	public static void DebugAddCharacters(string[] value)
 	{
 		foreach (string name in value)
-			Users.Add(new User() { Name = name, });
+			Users.AddOrUpdate(new User() { Name = name, });
 	}
 #endif
 }

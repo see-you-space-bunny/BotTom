@@ -18,9 +18,9 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_FLN(JObject json)
+	private Task Handler_FLN(JObject json,bool logging = true)
 	{
-		if (Users.TrySingleByName(json["character"].ToString(),out User user))
+		if (!Users.TrySingleByName(json["character"].ToString(),out User user))
 			return Task.CompletedTask;
 
 		Users.Character_SetChatStatus(user, ChatStatus.Offline, false);
@@ -55,19 +55,26 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_NLN(JObject json)
+	private Task Handler_NLN(JObject json,bool logging = true)
 	{
-		return Task.Run(() =>
+		return Task.Run((Action)(() =>
 		{
-			User user = new ()
+            User user = new ()
 			{
 				Name		= json["identity"].ToString(),
 				UserStatus	= Enum.Parse<RelationshipToApiUser>(json["status"].ToString(), true),
 				Gender		= json["gender"].ToString(),
 			};
-			Users.Add(user);
-			Users.Character_SetChatStatus(user, ChatStatus.Online, false);
-		});
+            Users.AddOrUpdate(user);
+            Users.Character_SetChatStatus(user, ChatStatus.Online, false);
+
+			if (!IsLoggedIn && user.Name == ApiUser.Name)
+			{
+                Console.WriteLine("Connected to Chat");
+                IsLoggedIn = true;
+                ConnectedToChat?.Invoke(this, null);
+			}
+		}));
 	}
 #endregion
 
@@ -79,7 +86,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_STA(JObject json) => 
+	private Task Handler_STA(JObject json,bool logging = true) => 
 		Task.Run(() =>
 		{
 			if (json["character"].ToString().Equals(CharacterName, StringComparison.InvariantCultureIgnoreCase))

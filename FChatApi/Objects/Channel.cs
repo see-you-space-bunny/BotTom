@@ -25,10 +25,10 @@ public class Channel : IMessageRecipient
 	public ChannelType Type { get; set; }
 
 	/// <summary>the channel's moderators</summary>
-	internal Dictionary<string, User> Mods { get; set; }
+	public Dictionary<string, User> Mods { get; set; }
 
 	/// <summary>the channel's users</summary>
-	internal Dictionary<string, User> Users { get; set; }
+	public Dictionary<string, User> Users { get; set; }
 
 	/// <summary>did this api create the channel</summary>
 	public bool CreatedByApi { get; set; }

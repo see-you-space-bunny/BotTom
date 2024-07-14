@@ -92,7 +92,7 @@ public partial class ApiConnection
 	{
 		ReplyThread?.Dispose();
 		ReplyThread = new Timer(ReplyTicker,new AutoResetEvent(true),0,interval);
-		Console.WriteLine($"Starting ReplyTicker with a base interval of {interval} ms.");
+		Console.WriteLine($"Starting ReplyTicker with a base interval of {interval} ms and a rate-limit of {DefaultRateLimit.TotalMilliseconds} ms.");
 	}
 #endregion
 
@@ -107,6 +107,11 @@ public partial class ApiConnection
 	/// </summary>
 	private async void ReplyTicker(object state)
 	{
+		if (DateTime.Now < Next)
+			return;
+		
+		Next = DateTime.Now + DefaultRateLimit;
+		
 		FChatMessage message;
 		try
 		{

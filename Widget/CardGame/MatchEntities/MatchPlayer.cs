@@ -9,7 +9,7 @@ namespace CardGame.MatchEntities;
 
 public class MatchPlayer
 {
-	private const string OutputFormat = "{0} | 💖 {1} - 🃏 {2} | 1 {3} | 2 {4} | 3 {5} | [color=green]{6}[/color]";
+	private const string OutputFormat = "{0} | 💖 {1} - 🃏 {2} | [color={4}]1[/color] {3} | [color={6}]2[/color] {5} | [color={8}]3[/color] {7} | [color=green]{9}[/color]";
 	private const string ColorTags = "[color={1}]{0}[/color]";
 	private const char MetaPointSymbol = '❚';
 
@@ -20,6 +20,7 @@ public class MatchPlayer
 	internal short Health;
 	internal short DeckSize;
 	internal short MetaPoints;
+	
 
 	internal PlaySlot Slot1 => PlaySlots[0];
 	internal bool IsCardInSlot1 => PlaySlots[0].Card is not null;
@@ -30,7 +31,9 @@ public class MatchPlayer
 	internal PlaySlot Slot3 => PlaySlots[2];
 	internal bool IsCardInSlot3 => PlaySlots[2].Card is not null;
 
-	internal PlaySlot[] PlaySlots = new PlaySlot[3];
+	internal PlaySlot[] PlaySlots;
+
+	internal bool HasDefender => PlaySlots.Any(s => s.Card != null && s.Card.CardArchetype == CharacterStat.VIT);
 
 	private MatchPlayer(User user,PlayerCharacter playerCharacter,short health = 25,short deckSize = 5,short metaPoints = 3)
 	{
@@ -39,6 +42,7 @@ public class MatchPlayer
 		Health = health;
 		DeckSize = deckSize;
 		MetaPoints = metaPoints;
+		PlaySlots = [new PlaySlot(),new PlaySlot(),new PlaySlot()];
 	}
 
 	public MatchPlayer(User user,PlayerCharacter playerCharacter,CharacterStat deckArchetype1,short health = 25,short deckSize = 5,short metaPoints = 3)
@@ -54,43 +58,6 @@ public class MatchPlayer
 
 	private static string EncloseWithColor(string value, BBCodeColor color) => string.Format(ColorTags,value,color);
 
-	internal (string Result,SummonCard Card) DrawCard(CharacterStat stat)
-	{
-		int dieRoll			= new Random().Next(1,101);
-		int statModifier	= PlayerCharacter.Stats[stat]/10;
-		short rollSum		= (short)((dieRoll+statModifier)/10);
-		--DeckSize;
-		return (
-			string.Format("1d100 ({0}) + {1} = {2}",
-				dieRoll,
-				EncloseWithColor(statModifier.ToString(),stat.GetEnumAttribute<CharacterStat,StatColorAttribute>().Color),
-				dieRoll+statModifier
-			),
-			new SummonCard(rollSum,rollSum,stat)
-		);
-	}
-
-	internal void PlayCard(SummonCard card)
-	{
-		if (!IsCardInSlot1)
-		{
-			Slot1.Card = card;
-			return;
-		}
-		else if (!IsCardInSlot2)
-		{
-			Slot2.Card = card;
-			return;
-		}
-		else if (!IsCardInSlot3)
-		{
-			Slot3.Card = card;
-			return;
-		}
-		else
-			throw new InvalidOperationException("Cant't play a card while all slots are full!!");
-	}
-
 	public override string ToString()
 	{
 		return string.Format(OutputFormat,
@@ -98,8 +65,11 @@ public class MatchPlayer
 			Health,
 			DeckSize,
 			Slot1.ToString(),
+			Slot1.Color,
 			Slot2.ToString(),
+			Slot2.Color,
 			Slot3.ToString(),
+			Slot3.Color,
 			new string(MetaPointSymbol,MetaPoints)
 		);
 	}
@@ -107,12 +77,15 @@ public class MatchPlayer
 	public string ToString(bool activePlayer)
 	{
 		return string.Format(OutputFormat,
-			activePlayer ? EncloseWithColor(PlayerCharacter.User.Mention,BBCodeColor.green) : PlayerCharacter.User.Mention,
+			EncloseWithColor("[b]➤[/b] ",activePlayer ? BBCodeColor.green : BBCodeColor.black) + PlayerCharacter.User.Mention,
 			Health,
 			DeckSize,
 			Slot1.ToString(),
+			Slot1.Color,
 			Slot2.ToString(),
+			Slot2.Color,
 			Slot3.ToString(),
+			Slot3.Color,
 			new string(MetaPointSymbol,MetaPoints)
 		);
 	}

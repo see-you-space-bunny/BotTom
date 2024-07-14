@@ -18,32 +18,35 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_COL(JObject json)
+	private Task Handler_COL(JObject json,bool logging = true)
 	{
-		while (Channels.IsChannelBeingCreated);
-		Channel channel		= Channels.SingleByNameOrCode(json["channel"].ToString());
 		List<Task> tasks	= [];
-		bool ownerAdded		= false;
-		foreach (User user in json["oplist"].Select(u => Users.SingleByName(u.ToString())))
-		{
-			if (user is null)
+		tasks.Add(Task.Run(() => {
+			Channels.CreationSemaphore.Wait();
+			Channels.CreationSemaphore.Release();
+			Channel channel		= Channels.SingleByNameOrCode(json["channel"].ToString());
+			bool ownerAdded		= false;
+			foreach (User user in json["oplist"].Select(u => Users.SingleByName(u.ToString())))
 			{
-				ownerAdded		= true;
-				continue;
+				if (user is null)
+				{
+					ownerAdded		= true;
+					continue;
+				}
+				else if (!ownerAdded)
+				{
+					channel.Owner	= user;
+					ownerAdded		= true;
+				}
+				else
+				{
+					tasks.Add(Task.Run(() => channel.AddMod(user)));
+				}
 			}
-			else if (!ownerAdded)
-			{
-				channel.Owner	= user;
-				ownerAdded		= true;
-			}
-			else
-			{
-				tasks.Add(Task.Run(() => channel.AddMod(user)));
-			}
-		}
 #if DEBUG
-		Console.WriteLine($"Found {channel.Mods.Count} mods for channel: {channel.Name}");
+			Console.WriteLine($"Found {channel.Mods.Count} mods for channel: {channel.Name}");
 #endif
+		}));
 		return Task.Run(() => Task.WaitAll([.. tasks]));
 	}
 #endregion
@@ -58,15 +61,15 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_ICH(JObject json)
+	private Task Handler_ICH(JObject json,bool logging = true)
 	{
-		while (Channels.IsChannelBeingCreated);
-		// joining channel
-		Channel channel = Channels.Channel_ChangeStatus(json["channel"].ToString(), UserRelationshipWithChannel.Joined);
 		List<Task> tasks = [];
-		foreach (User user in json["users"].Select(u => Users.SingleByName(u["identity"].ToString())))
+		tasks.Add(Task.Run(() =>
 		{
-			tasks.Add(Task.Run(() =>
+			Channels.CreationSemaphore.Wait();
+			Channels.CreationSemaphore.Release();
+			Channel channel = Channels.Channel_ChangeStatus(json["channel"].ToString(), UserRelationshipWithChannel.Joined);
+			foreach (User user in json["users"].Select(u => Users.SingleByName(u["identity"].ToString())))
 			{
 				if (user is null)
 				{
@@ -75,11 +78,12 @@ public partial class ApiConnection
 
 				channel.AddUser(user);
 				channel.AdEnabled = !json["mode"].ToString().Equals("chat");
-			}));
-		}
+				
+			}
 #if DEBUG
-		Console.WriteLine($"Adding {json["users"].Count()} users to {channel.Name} channel's userlist successful.");
+			Console.WriteLine($"Adding {json["users"].Count()} users to {channel.Name} channel's userlist successful.");
 #endif
+		}));
 		return Task.Run(() => Task.WaitAll([.. tasks]));
 	}
 #endregion
@@ -92,13 +96,12 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_JCH(JObject json)
+	private Task Handler_JCH(JObject json,bool logging = true)
 	{
 		if (!Users.TrySingleByName(json["character"]["identity"].ToString(),out User user))
 			throw new ArgumentException($"Incoming message was malformed: {json}",nameof(json));
-		Channels.TrySingleByNameOrCode(json["channel"].ToString(),out Channel channel);
 
-		if (Channels.IsChannelBeingCreated && channel is null && user.Name.Equals(CharacterName))
+		if (!Channels.TrySingleByNameOrCode(json["channel"].ToString(),out Channel channel) && Channels.IsChannelBeingCreated && user.Name.Equals(ApiUser.Name))
 		{
 			return Task.Run(() =>
 			{
@@ -111,8 +114,8 @@ public partial class ApiConnection
 
 		return Task.Run(() =>
 		{
-			JoinedChannelHandler?.Invoke(this, new ChannelEventArgs() { Channel = channel, User = user, ChannelStatus = UserRelationshipWithChannel.Left });
 			user.JoinChannel(channel);
+			JoinedChannelHandler?.Invoke(this, new ChannelEventArgs() { Channel = channel, User = user, ChannelStatus = UserRelationshipWithChannel.Left });
 			Console.WriteLine($"{user.Name} joined Channel: {channel.Name}. {channel.Users.Count} total users in channel.");
 		});
 	}
@@ -126,19 +129,21 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_LCH(JObject json)
-	{		
-		if (Channels.TrySingleByNameOrCode(json["channel"].ToString(),out Channel channel) &&
-			Users.TrySingleByName(json["character"].ToString(),out User user))
-		{
-			return Task.Run(() =>
+	private Task Handler_LCH(JObject json,bool logging = true)
+	{
+		return Task.Run(() => {
+			Channels.CreationSemaphore.Wait();
+			Channels.CreationSemaphore.Release();
+			if (Channels.TrySingleByNameOrCode(json["channel"].ToString(),out Channel channel) &&
+				Users.TrySingleByName(json["character"].ToString(),out User user))
 			{
-				user.LeaveChannel(channel);
-				LeftChannelHandler?.Invoke(this, new ChannelEventArgs() { Channel = channel, User = user, ChannelStatus = UserRelationshipWithChannel.Left });
-				Console.WriteLine($"{user.Name} left Channel: {json["channel"]}. {channel.Users.Count} total users in channel.");
-			});
-		}
-		throw new ArgumentException($"Incoming message was malformed: {json}",nameof(json));
+					user.LeaveChannel(channel);
+					LeftChannelHandler?.Invoke(this, new ChannelEventArgs() { Channel = channel, User = user, ChannelStatus = UserRelationshipWithChannel.Left });
+					Console.WriteLine($"{user.Name} left Channel: {json["channel"]}. {channel.Users.Count} total users in channel.");
+				
+			}
+			//throw new ArgumentException($"Incoming message was malformed: {json}",nameof(json));
+		});
 	}
 #endregion
 }

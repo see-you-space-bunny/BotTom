@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FChatApi.Enums;
 using FChatApi.EventArguments;
@@ -18,7 +19,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_CBU(JObject json)
+	private Task Handler_CBU(JObject json,bool logging = true)
 	{
 		return Task.CompletedTask;
 	}
@@ -32,8 +33,12 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_CDS(JObject json) =>
-		Task.Run(() => Channels.SingleByNameOrCode(json["channel"].ToString()).Description = json["description"].ToString());
+	private Task Handler_CDS(JObject json,bool logging = true) =>
+		Task.Run(() => {
+			Channels.CreationSemaphore.Wait();
+			Channels.CreationSemaphore.Release();
+			Channels.SingleByNameOrCode(json["channel"].ToString()).Description = json["description"].ToString();
+		});
 #endregion
 
 
@@ -44,7 +49,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_CIU(JObject json)
+	private Task Handler_CIU(JObject json,bool logging = true)
 	{
 		return Task.CompletedTask;
 	}

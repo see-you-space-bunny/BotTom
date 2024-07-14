@@ -49,7 +49,9 @@ public class User : IMessageRecipient
 
 #region (P+) Profile Info
 	/// <summary>the character's kinks and preferences thereof</summary>
-	public Dictionary<string, KinkPreference> Kinks { get; }
+	public Dictionary<DefaultKink, KinkPreference> Kinks { get; }
+	/// <summary>the character's kinks and preferences thereof</summary>
+	public Dictionary<string, KinkPreference> CustomKinks { get; }
 
 	/// <summary>all of the character's profile info</summary>
 	public Dictionary<ProfileInfoField,string> ProfileInfo { get; }
@@ -144,7 +146,8 @@ public class User : IMessageRecipient
 		Nickname    = string.Empty;
 		Memo        = string.Empty;
 		ProfileInfo	??= [];
-		Kinks		??= new Dictionary<string,KinkPreference>(StringComparer.InvariantCultureIgnoreCase);
+		Kinks		??= new Dictionary<DefaultKink,KinkPreference>();
+		CustomKinks	??= new Dictionary<string,KinkPreference>(StringComparer.InvariantCultureIgnoreCase);
 
 		// IMessageRecipient
 		SleepInterval	= new TimeSpan(0,0,0,0,milliseconds: 1);
@@ -168,7 +171,7 @@ public class User : IMessageRecipient
 	/// </summary>
 	/// <param name="preference">the preference we wish to filter for</param>
 	/// <returns>filtered list containing the kinks of the desired preference</returns>
-	public IEnumerable<string> GetKinks(KinkPreference preference) => Kinks.Where(k=>k.Value==preference).Select(k=>k.Key);
+	public IEnumerable<DefaultKink> GetKinks(KinkPreference preference) => Kinks.Where(k=>k.Value==preference).Select(k=>k.Key);
 
 #pragma warning disable CA1822 // Mark members as static
     /// <remarks>
@@ -225,7 +228,7 @@ public class User : IMessageRecipient
 
 
 #region (+) Update
-	public async Task Update(User value)
+	public async Task<User> Update(User value)
 	{
 		// Chat Info
 		UserStatus  = value.UserStatus;
@@ -240,7 +243,7 @@ public class User : IMessageRecipient
             Task.Run(() =>
 			{
 				Kinks.Clear();
-				foreach ((string kink,KinkPreference preference) in value.Kinks)
+				foreach ((DefaultKink kink,KinkPreference preference) in value.Kinks)
 				{
 					Kinks.TryAdd(kink,preference);
 				}
@@ -255,6 +258,7 @@ public class User : IMessageRecipient
 			}),
         ];
         await Task.WhenAll(tasks.Where(t => t != null).ToArray());
+		return this;
 	}
 
 #endregion
@@ -319,6 +323,8 @@ public class User : IMessageRecipient
 		User user = new User()
 		{
 			Name			=   (string)		reader.ReadString(),
+			Pronouns		=   (string)		reader.ReadString(),
+			Memo			=   (string)		reader.ReadString(),
 			BotMemo			=   (string)		reader.ReadString(),
 			NickColor		=   (BBCodeColor)	reader.ReadUInt16(),
 			PrivilegeLevel	=   (Privilege)		reader.ReadUInt16(),
@@ -331,7 +337,18 @@ public class User : IMessageRecipient
 				day:	reader.ReadInt32()
 			);
 		}
-		user.Pronouns		=   (string)		reader.ReadString();
+		for (int i = 0;i<reader.ReadUInt32();i++)
+		{
+			user.Kinks.Add((DefaultKink)reader.ReadUInt32(),(KinkPreference)reader.ReadUInt16());
+		}
+		for (int i = 0;i<reader.ReadUInt32();i++)
+		{
+			user.CustomKinks.Add((string)reader.ReadString(),(KinkPreference)reader.ReadUInt16());
+		}
+		for (int i = 0;i<reader.ReadUInt32();i++)
+		{
+			user.ProfileInfo.Add((ProfileInfoField)reader.ReadUInt16(),(string)reader.ReadString());
+		}
 		return user;
 	}
 
@@ -342,6 +359,8 @@ public class User : IMessageRecipient
 	public void Serialize(BinaryWriter writer)
 	{
 		writer.Write((string)	Name);
+		writer.Write((string)	Pronouns);
+		writer.Write((string)	Memo);
 		writer.Write((string)	BotMemo);
 		writer.Write((ushort)	NickColor);
 		writer.Write((ushort)	PrivilegeLevel);
@@ -352,7 +371,24 @@ public class User : IMessageRecipient
 			writer.Write((int)	WhenRegistered.Month);
 			writer.Write((int)	WhenRegistered.Day);
 		}
-		writer.Write((string)	Pronouns);
+		writer.Write((uint)		Kinks.Count);
+		foreach (KeyValuePair<DefaultKink,KinkPreference> kink in Kinks)
+		{
+			writer.Write((uint)		kink.Key);
+			writer.Write((ushort)	kink.Value);
+		}
+		writer.Write((uint)		CustomKinks.Count);
+		foreach (KeyValuePair<string,KinkPreference> customKink in CustomKinks)
+		{
+			writer.Write((string)	customKink.Key);
+			writer.Write((ushort)	customKink.Value);
+		}
+		writer.Write((uint)		ProfileInfo.Count);
+		foreach (KeyValuePair<ProfileInfoField,string> profileInfo in ProfileInfo)
+		{
+			writer.Write((ushort)	profileInfo.Key);
+			writer.Write((string)	profileInfo.Value);
+		}
 	}
 #endregion
 }

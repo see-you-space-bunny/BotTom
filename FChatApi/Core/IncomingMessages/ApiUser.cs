@@ -18,7 +18,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_FRL(JObject json)
+	private Task Handler_FRL(JObject json,bool logging = true)
 	{
 		return Task.CompletedTask;
 	}
@@ -31,7 +31,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_LIS(JObject json)
+	private Task Handler_LIS(JObject json,bool logging = true)
 	{
 		List<Task> tasks = [];
 		foreach(var userinfo in json["characters"])
@@ -45,7 +45,7 @@ public partial class ApiConnection
 				}
 				else
 				{
-					Users.TryAdd(new User()
+					Users.AddOrUpdate(new User()
 					{
 						Name		= userinfo[0].ToString(),
 						Gender		= userinfo[1].ToString(),

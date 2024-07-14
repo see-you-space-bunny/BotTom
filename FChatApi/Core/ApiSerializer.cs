@@ -27,7 +27,7 @@ public partial class ApiConnection
 
 		for (uint i = 0; i < count; i++)
 		{
-			Users.Add(User.Deserialize(reader));
+			Users.AddOrUpdate(User.Deserialize(reader));
 		}
 	}
 

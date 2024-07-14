@@ -18,7 +18,7 @@ public partial class ApiConnection
 	private static Task User_SendWhisper(User recipient, string message)
 	{
 		string toSend = string.Format(MessageCode.PRI.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,message,recipient.Name);
-		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {recipient.Name}: {message}");
+		Task.Run(() => Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {recipient.Name}: {message}"));
 #if DEBUG
 		return DebugSendAsync(toSend);
 #else
@@ -50,7 +50,7 @@ public partial class ApiConnection
 	{
 		ConnectionCheck();
 		string toSend = string.Format(MessageCode.MSG.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,channel.Code,message);
-		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {channel}: {message}");
+		Task.Run(() => Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {channel.Name}: {message}"));
 #if DEBUG
 		return DebugSendAsync(toSend);
 #else
@@ -82,7 +82,7 @@ public partial class ApiConnection
 	{
 		ConnectionCheck();
 		string toSend = string.Format(MessageCode.LRP.GetEnumAttribute<MessageCode,OutgoingMessageFormatAttribute>().Format,channel.Code,message);
-		Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {channel.Code}: {message}");
+		Task.Run(() => Console.WriteLine($"{DateTime.Now.ToShortTimeString()} | @ {channel.Name}: {message}"));
 #if DEBUG
 		return DebugSendAsync(toSend);
 #else

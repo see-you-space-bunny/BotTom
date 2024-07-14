@@ -98,7 +98,7 @@ public partial class ApiConnection
 		if (!Users.TrySingleByName(CharacterName,out User user))
 		{
 			user = new User(){ Name = CharacterName, ChatStatus = ChatStatus.Online };
-			Users.Add(user);
+			Users.AddOrUpdate(user);
 		}
 		ApiUser = user;
 
@@ -129,5 +129,11 @@ public partial class ApiConnection
 	/// </summary>
 	/// <returns>the api's connection status</returns>
 	public static bool IsConnected() => Client is not null && Client.Connected;
+
+	/// <summary>
+	/// used to ensure that the client waits to send messages before being affirmed as logged in
+	/// </summary>
+	/// <returns>the api-user's logged-in status</returns>
+	public bool IsLoggedIn { get; private set; } = false;
 #endregion
 }

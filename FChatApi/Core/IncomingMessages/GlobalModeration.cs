@@ -14,7 +14,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_AOP(JObject json)
+	private Task Handler_AOP(JObject json,bool logging = true)
 	{
 		return Task.CompletedTask;
 	}
@@ -28,7 +28,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_BRO(JObject json)
+	private Task Handler_BRO(JObject json,bool logging = true)
 	{
 		return Task.CompletedTask;
 	}
@@ -42,7 +42,7 @@ public partial class ApiConnection
 	/// </summary>
 	/// <param name="json">the incoming message's contents</param>
 	/// <returns>the task we initiated</returns>
-	private Task Handler_DOP(JObject json)
+	private Task Handler_DOP(JObject json,bool logging = true)
 	{
 		return Task.CompletedTask;
 	}

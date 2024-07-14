@@ -9,7 +9,7 @@ public partial class ApiConnection
 {
 #region (-) Handler_PIN
 	/// <summary>The keep-alive ping that maintains the api's connection.</summary>
-	private Task Handler_PIN()
+	private Task Handler_PIN(bool logging = false)
 	{
 		return Client.SendAsync(MessageCode.PIN.ToString());
 	}
