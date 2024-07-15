@@ -13,7 +13,7 @@ namespace CardGame;
 
 public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 {
-	private bool SummonAction(BotCommand command,FChatMessageBuilder messageBuilder,BoardState boardState,out string lastGameAction)
+	private bool SummonAction(CommandTokens command,FChatMessageBuilder messageBuilder,BoardState boardState,out string lastGameAction)
 	{
 		var activePlayer	= boardState.GetActivePlayer();
 		lastGameAction		= string.Empty;
@@ -69,7 +69,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 		return true;
 	}
 
-	private bool AttackAction(BotCommand command,FChatMessageBuilder messageBuilder,BoardState boardState,out string lastGameAction)
+	private bool AttackAction(CommandTokens command,FChatMessageBuilder messageBuilder,BoardState boardState,out string lastGameAction)
 	{
 		var activePlayer	= boardState.GetActivePlayer();
 		var nonActivePlayer	= boardState.GetNonActivePlayer();
@@ -211,7 +211,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 		return true;
 	}
 
-	private void TakeGameAction(BotCommand command,FChatMessageBuilder messageBuilder,CardGameCommand gameAction)
+	private void TakeGameAction(CommandTokens command,FChatMessageBuilder messageBuilder,CardGameCommand gameAction)
 	{
 		var match = OngoingMatches.FirstOrDefault(m => m.Channel == command.Message.Channel);
 		messageBuilder

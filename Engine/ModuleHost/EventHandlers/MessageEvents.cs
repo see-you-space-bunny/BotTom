@@ -12,7 +12,7 @@ public partial class ChatBot
 	/// Handles when we receive a message from the chat server
 	/// </summary>
 	/// <param name="command">command being sent, if any</param>
-	public void HandleMessage(BotCommand command)
+	public void HandleMessage(CommandTokens command)
 	{
 		if (!command.TryParseModule(out BotModule module))
 			module = BotModule.System;

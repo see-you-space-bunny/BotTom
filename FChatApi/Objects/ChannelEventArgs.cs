@@ -2,7 +2,7 @@
 using FChatApi.Enums;
 using FChatApi.Objects;
 
-namespace FChatApi.EventArguments;
+namespace FChatApi.Objects;
 
 public class ChannelEventArgs : EventArgs
 {
@@ -19,8 +19,8 @@ public class ChannelEventArgs : EventArgs
 	/// <summary>
 	/// number of current users
 	/// </summary>
-	/// 
 	public int UserCount;
+
 	/// <summary>
 	/// what kind of event has happened
 	/// </summary>

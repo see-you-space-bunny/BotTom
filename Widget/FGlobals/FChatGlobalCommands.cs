@@ -37,7 +37,7 @@ public partial class FChatGlobalCommands : FChatPlugin, IFChatPlugin
 		AttributeEnumExtensions.ProcessEnumForAttribute<AccessDeniedResponseAttribute>(typeof(GlobalCommand));
 	}
 
-	public override void HandleRecievedMessage(BotCommand command)
+	public override void HandleRecievedMessage(CommandTokens command)
 	{
 		if (!command.TryParseCommand(out GlobalCommand moduleCommand))
 			return;

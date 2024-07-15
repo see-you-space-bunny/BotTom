@@ -370,7 +370,8 @@ public enum MessageCode
 	LCH,
 
 	/// <summary><b>Character List</b><br/>
-	/// incoming with api-user's character list and online status ?
+	/// incoming list of characters, recieved on login<br/>
+	/// (INC) &lt;&lt; LIS {"characters": [["CharacterName","Gender","RelationshipToApiUser"]] }
 	/// </summary>
 	[OutgoingMessageFormat("LIS")]
 	LIS,

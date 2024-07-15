@@ -15,7 +15,7 @@ namespace CardGame;
 
 public partial class FChatTournamentOrganiser : FChatPlugin
 {
-	private bool AcceptChallenge(BotCommand command,FChatMessageBuilder commandResponse)
+	private bool AcceptChallenge(CommandTokens command,FChatMessageBuilder commandResponse)
 	{
 		CharacterStat stat1 = default;
 		if (command.Parameters.Length < 1)

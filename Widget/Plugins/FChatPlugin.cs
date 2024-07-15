@@ -35,7 +35,7 @@ public class FChatPlugin(ApiConnection api, TimeSpan updateInterval) : PluginBas
 	/// how we should handle a recieved message
 	/// </summary>
 	/// <param name="command">command sent</param>
-	public virtual void HandleRecievedMessage(BotCommand command) { }
+	public virtual void HandleRecievedMessage(CommandTokens command) { }
 	  
 	/// <summary>
 	/// how we should handle a successful channel joining
@@ -92,7 +92,7 @@ public class FChatPlugin(ApiConnection api, TimeSpan updateInterval) : PluginBas
 
     public override void Shutdown() { }
 
-    void IFChatPlugin.HandleRecievedMessage(BotCommand command)
+    void IFChatPlugin.HandleRecievedMessage(CommandTokens command)
     {
         HandleRecievedMessage(command);
     }

@@ -43,6 +43,20 @@ public enum GlobalCommand
 
 	[Description("")]
 	[MinimumPrivilege(Privilege.OwnerOperator)]
+	[SuccessResponse]
+	[FailureResponse]
+	[AccessDeniedResponse("You do not have permission to do that!")]
+	Promote,
+
+	[Description("")]
+	[MinimumPrivilege(Privilege.OwnerOperator)]
+	[SuccessResponse]
+	[FailureResponse]
+	[AccessDeniedResponse("You do not have permission to do that!")]
+	Demote,
+
+	[Description("")]
+	[MinimumPrivilege(Privilege.OwnerOperator)]
 	[SuccessResponse("Shutting down!")]
 	[FailureResponse]
 	[AccessDeniedResponse("You do not have permission to do that!")]

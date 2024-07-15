@@ -39,7 +39,7 @@ public class UserTracker
 #region (-) AddOrUpdate
 	internal void AddOrUpdate(User value)
 	{
-		KnownUsers.AddOrUpdate(value.Name,(key)=>value,(key,val) => { _ = val.Update(value); return val;} );
+		KnownUsers.AddOrUpdate(value.Name,(key)=>value,(key,val) => { _ = val.Update(value); return val; } );
 		if (value.IsRegistered)
 			if (!RegisteredUsers.TryAdd(value.Name,value))
 				RegisteredUsers[value.Name] = value;

@@ -13,7 +13,7 @@ namespace CardGame;
 
 public partial class FChatTournamentOrganiser : FChatPlugin
 {
-	private bool RejectChallenge(BotCommand command,FChatMessageBuilder commandResponse,FChatMessageBuilder challengerAlertResponse)
+	private bool RejectChallenge(CommandTokens command,FChatMessageBuilder commandResponse,FChatMessageBuilder challengerAlertResponse)
 	{
 		//////////
 			

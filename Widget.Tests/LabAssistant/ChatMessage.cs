@@ -6,7 +6,7 @@ namespace Widget.Tests.LabAssistant;
 
 internal static class ChatMessageAssistant
 {
-	internal static BotCommand NewDummyMessage(string user,string message)
+	internal static CommandTokens NewDummyMessage(string user,string message)
 	{
 		if (BotInfoAssistant.CommandParser.TryConvertCommand(
 			new FChatMessageBuilder()
@@ -14,7 +14,7 @@ internal static class ChatMessageAssistant
 				.WithAuthor(new User() { Name = user })
 				.WithMessage(message)
 				.Build(),
-			out BotCommand? command
+			out CommandTokens? command
 		))
 			return command!;
 		else

@@ -115,7 +115,7 @@ public partial class ApiConnection
 #if DEBUG
 		Console.WriteLine(NoticeBanner);
 		Console.WriteLine("Client successfully started!");
-		Console.WriteLine($"Connection timeout set to {((TimeSpan)connectionTimeout).Seconds} seconds.");
+		Console.WriteLine($"Connection timeout set to {((TimeSpan)connectionTimeout).TotalSeconds} seconds.");
 		Console.WriteLine(GenericBanner);
 #endif
 		DateTime whenToTimeout = DateTime.Now + (TimeSpan)connectionTimeout;

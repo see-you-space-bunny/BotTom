@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FChatApi.Enums;
-using FChatApi.EventArguments;
 using FChatApi.Objects;
 using Newtonsoft.Json.Linq;
 

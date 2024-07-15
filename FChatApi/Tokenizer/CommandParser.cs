@@ -1,7 +1,6 @@
 using System.Text;
 using FChatApi.Objects;
 using FChatApi.Enums;
-using FChatApi.EventArguments;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,10 +11,11 @@ namespace FChatApi.Tokenizer;
 
 public class CommandParser
 {
+	public const string DefaultPrefix = "!";
 	private int ModuleStartIndex { get => BotPrefix.Length; }
 	public string BotPrefix { get; private set; }
 
-	public CommandParser() : this(string.Empty)
+	public CommandParser() : this(null)
 	{ }
 
 	public CommandParser(string botPrefix)
@@ -23,13 +23,13 @@ public class CommandParser
 		WithBotPrefix(botPrefix);
 	}
 
-	public CommandParser WithBotPrefix(string value)
+	public CommandParser WithBotPrefix(string value = null)
 	{
-		BotPrefix = value + (value.EndsWith('!') ? string.Empty : '!');
+		BotPrefix = value ?? DefaultPrefix;
 		return this;
 	}
 	
-	public bool TryConvertCommand(FChatMessage fChatMessage,out BotCommand command)
+	public bool TryConvertCommand(FChatMessage fChatMessage,out CommandTokens command)
 	{
 		// Not a command
 		if (!fChatMessage.Message.StartsWith(BotPrefix))
@@ -88,7 +88,7 @@ public class CommandParser
 			privilege = fChatMessage.Author.PrivilegeLevel;
 		}
 		
-		command = new BotCommand(fChatMessage, botModule, moduleCommand, parsedTokens.Skip(2).ToArray());
+		command = new CommandTokens(fChatMessage, botModule, moduleCommand, parsedTokens.Skip(2).ToArray());
 		return true;
 	}
 
@@ -144,7 +144,7 @@ public class CommandParser
 			token = token.Append(current);
 		}
 
-		// we're done with the string, return whatever's left.  There IS an assumption here that a trailing " isn't necessary.
+		// we're done with the string, return whatever's left. There IS an assumption here that a trailing " isn't necessary.
 		yield return token.ToString();
 	}
 }

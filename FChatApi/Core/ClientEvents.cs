@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using FChatApi.Systems;
 using FChatApi.Objects;
 using FChatApi.Enums;
-using FChatApi.EventArguments;
 using System.Net.WebSockets;
 
 namespace FChatApi.Core;

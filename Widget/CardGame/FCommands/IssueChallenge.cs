@@ -15,7 +15,7 @@ namespace CardGame;
 
 public partial class FChatTournamentOrganiser : FChatPlugin
 {
-	private bool IssueChallenge(BotCommand command,FChatMessageBuilder commandResponse,FChatMessageBuilder targetAlertResponse)
+	private bool IssueChallenge(CommandTokens command,FChatMessageBuilder commandResponse,FChatMessageBuilder targetAlertResponse)
 	{
 		StringBuilder responseBuilder   = new();
 		StringBuilder alertBuilder      = new();

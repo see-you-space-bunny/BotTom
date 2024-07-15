@@ -34,7 +34,7 @@ namespace CardGame.MatchEntities
 			if (Card.CardArchetype == CharacterStat.DEX)
 				return true;
 
-			return Card.TurnAttacked > turn;
+			return Card.TurnAttacked < turn;
 		}
 
 		public bool CanAttackPlayer(ushort turn)
@@ -42,7 +42,7 @@ namespace CardGame.MatchEntities
 			if (Card is null)
 				return false;
 
-			return Card.TurnAttacked > turn;
+			return Card.TurnAttacked < turn;
 		}
 
 		public override string ToString()

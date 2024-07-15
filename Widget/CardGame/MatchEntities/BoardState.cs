@@ -27,7 +27,7 @@ public class BoardState(MatchPlayer player1,MatchPlayer player2)
 	private const string ActionInfoSummon	= "Once per turn, you may create a [color=pink]Summon[/color] to fight for you."+Indent2+
 												"[color=yellow](Example:[/color][spoiler] tom!xcg summon VIT 2[/spoiler][color=yellow])[/color]";
 	private const string ActionInfoAttack	= "Once for each summon you have on the field, you may [color=pink]Attack[/color] your opponent or their summons."+Indent2+
-												"[color=yellow](Example:[/color][spoiler] tom!xcg summon 1 2[/spoiler][color=yellow])[/color] ― "+
+												"[color=yellow](Example:[/color][spoiler] tom!xcg attack 1 2[/spoiler][color=yellow])[/color] ― "+
 												"[color=orange](Usage:[/color][spoiler] Specify the slot of [u]your summon first[/u], then [u]your target second[/u]. Your opponent is [b]slot 0[/b].[/spoiler][color=orange])[/color]";
 	//  Each summon may only attack once per turn. Summons can't attack the turn they come into play. (Exception:[spoiler] [color=red]DEX[/color] summons may attack [u]other summons[/u] the turn they enter play.[/spoiler])
 	private const string ActionInfoSpecial	= "Take a [color=pink]Special[/color] action."+Indent2+
@@ -70,13 +70,13 @@ public class BoardState(MatchPlayer player1,MatchPlayer player2)
 		foreach (PlaySlot slot in Player1.PlaySlots)
 		{
 			if (slot.Card is not null && slot._damage >= slot.Card!.Health)
-				slot.Card = null;
+				slot.Clear();
 		}
 
 		foreach (PlaySlot slot in Player2.PlaySlots)
 		{
 			if (slot.Card is not null && slot._damage >= slot.Card!.Health)
-				slot.Card = null;
+				slot.Clear();
 		}
 	}
 

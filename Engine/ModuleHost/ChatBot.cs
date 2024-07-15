@@ -18,8 +18,6 @@ public partial class ChatBot
 	/// </summary>
 	private Dictionary<BotModule,IFChatPlugin> FChatPlugins { get; }
 
-	private AsyncLock _UsersLock = new();
-
 	/// <summary>
 	/// constructor, inits plugins
 	/// </summary>
@@ -27,29 +25,6 @@ public partial class ChatBot
 	{
 		FChatPlugins = [];
 		AttributeEnumExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(BotModule));
-
-		DeserializeUsers();
-	}
-
-	private static void DeserializeUsers(string? path = null)
-	{
-		path ??= Path.Combine(Environment.CurrentDirectory,"sessiondata","KnownUsers");
-		if (!File.Exists(path))
-			return;
-
-		using (var stream = File.OpenRead(path))
-		{
-			var reader  = new BinaryReader(stream);
-			uint count  = reader.ReadUInt32();
-			if (count == 0)
-				return;
-
-			for (uint i=0;i<count;i++)
-			{
-				var user = User.Deserialize(reader);
-				user.Register();
-			}
-		}
 	}
 
 	/// <summary>
@@ -63,7 +38,6 @@ public partial class ChatBot
 			Console.WriteLine("You cannot add same plugin twice!");
 			return this;
 		}
-
 		FChatPlugins.Add(type,plugin);
 		return this;
 	}
@@ -88,14 +62,12 @@ public partial class ChatBot
 		//		if (Users.TryGetValue(regUser, out User? User) && ApiConnection.TryGetOnlineUserByName(regUser,out User user))
 		//			User.Update(user);
 
-		var tasks = new Task[FChatPlugins.Count];
-		int i = 0;
+		List<Task> tasks = [];
 		foreach (IFChatPlugin plugin in FChatPlugins.Values.Where(p => DateTime.Now >= p.NextUpdate))
 		{
-			tasks[i] = Task.Run(() => plugin.Update());
-			++i;
+			tasks.Add(Task.Run(() => plugin.Update()));
 		}
-		await Task.WhenAll(tasks.Where(t => t != null).ToArray());
+		await Task.WhenAll([.. tasks]);
 	}
 
 	/// <summary>
@@ -103,13 +75,11 @@ public partial class ChatBot
 	/// </summary>
 	public async Task Shutdown()
 	{
-		var tasks = new Task[FChatPlugins.Count];
-		int i = 0;
+		List<Task> tasks = [];
 		foreach (IFChatPlugin plugin in FChatPlugins.Values)
 		{
-			tasks[i] = Task.Run(() => plugin.Shutdown());
-			++i;
+			tasks.Add(Task.Run(() => plugin.Shutdown()));
 		}
-		await Task.WhenAll(tasks.Where(t => t != null).ToArray());
+		await Task.WhenAll([.. tasks]);
 	}
 }

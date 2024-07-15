@@ -59,7 +59,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 		AttributeEnumExtensions.ProcessEnumForAttribute<StatDecorationAttribute  >(typeof(CharacterStat));
 	}
 
-	public override void HandleRecievedMessage(BotCommand command)
+	public override void HandleRecievedMessage(CommandTokens command)
 	{
 		FChatMessageBuilder messageBuilder = new FChatMessageBuilder()
 			.WithAuthor(ApiConnection.CharacterName)
@@ -91,7 +91,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 	}
 
 
-	private string ValidateCommandUse(BotCommand command)
+	private string ValidateCommandUse(CommandTokens command)
 	{
 		try
 		{
@@ -112,7 +112,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 		}
 	}
 
-	public bool HandleValidatedCommand(FChatMessageBuilder messageBuilder,BotCommand command)
+	public bool HandleValidatedCommand(FChatMessageBuilder messageBuilder,CommandTokens command)
 	{
 		if (command.TryParseCommand(out CardGameCommand moduleCommand))
 		try
@@ -222,7 +222,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 	}
 
 
-    void IFChatPlugin.HandleRecievedMessage(BotCommand command) => HandleRecievedMessage(command);
+    void IFChatPlugin.HandleRecievedMessage(CommandTokens command) => HandleRecievedMessage(command);
 
     void IFChatPlugin.HandleJoinedChannel(ChannelEventArgs @event) => HandleJoinedChannel(@event);
 

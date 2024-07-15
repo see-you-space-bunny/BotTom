@@ -1,3 +1,4 @@
+using System;
 using FChatApi.Core;
 using FChatApi.Enums;
 
@@ -11,7 +12,7 @@ namespace FChatApi.Objects;
 /// <param name="recipient">the user that recieved the message (api-user)</param>
 /// <param name="channel">the channel (if any) that contains the message</param>
 /// <param name="message">the message itself</param>
-public class FChatMessage(FChatMessageType messageType, User author, User recipient, Channel channel, string message,ChatStatus status)
+public class FChatMessage(FChatMessageType messageType, User author, User recipient, Channel channel, string message,ChatStatus status) : EventArgs
 {
 	public readonly FChatMessageType MessageType = messageType;
 	public readonly User Author = author;

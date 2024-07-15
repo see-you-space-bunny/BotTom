@@ -8,12 +8,8 @@ using FChatApi.Interfaces;
 
 namespace FChatApi.Objects;
 
-public class FChatMessageBuilder(bool isSystemMessage = false)
+public class FChatMessageBuilder()
 {
-#region sysmessage
-	private bool _sysmessage = isSystemMessage;
-#endregion
-
 #region MessageRecipient
 	/// <summary>
 	/// The message's Recipient as an object that can host a message Queue.<br/>
@@ -147,8 +143,7 @@ public class FChatMessageBuilder(bool isSystemMessage = false)
 #region Build Method
 	public FChatMessage Build()
 	{
-		if (!_sysmessage)
-			ValidateAuthor();
+		ValidateAuthor();
 
 		ValidateMessageType();
 		
