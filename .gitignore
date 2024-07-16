@@ -407,3 +407,4 @@ Scratchpad/*
 
 FChatApi.Tests/TestData/messagebatch
 BotTom/sessioncache/users
+BotTom/settings.toml
