@@ -5,12 +5,12 @@ sealed class ShortFormAttribute : Attribute
 {
 		// See the attribute guidelines at
 		//  http://go.microsoft.com/fwlink/?LinkId=85236
-		readonly string description;
+		readonly string _value;
 		
 		// This is a positional argument
 		public ShortFormAttribute(string description)
 		{
-				this.description = description;
+				this._value = description;
 				
 				// TODO: Implement code here
 				/* throw new System.NotImplementedException(); */

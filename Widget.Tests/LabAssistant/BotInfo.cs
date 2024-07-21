@@ -1,4 +1,4 @@
-using FChatApi.Tokenizer;
+using Plugins.Tokenizer;
 
 namespace Widget.Tests.LabAssistant;
 

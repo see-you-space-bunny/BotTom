@@ -5,8 +5,7 @@ using FChatApi.Core;
 using FChatApi.Objects;
 using FChatApi.Enums;
 using FChatApi.Attributes;
-using FChatApi.Tokenizer;
-using FChatApi.EventArguments;
+using Plugins.Tokenizer;
 
 using ModularPlugins;
 
@@ -19,8 +18,6 @@ using CardGame.DataStructures;
 using CardGame.PersistentEntities;
 
 using ModularPlugins.Interfaces;
-using System.Text.RegularExpressions;
-using System.Reflection.PortableExecutable;
 
 namespace CardGame;
 

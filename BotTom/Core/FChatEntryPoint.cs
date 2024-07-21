@@ -1,8 +1,6 @@
-﻿using BotTom.FChat;
-
-using FChatApi.Core;
+﻿using FChatApi.Core;
 using FChatApi.Enums;
-using FChatApi.Tokenizer;
+using Plugins.Tokenizer;
 
 using Engine.ModuleHost;
 using Engine.ModuleHost.Enums;
@@ -187,8 +185,6 @@ partial class Program
 
 			await F_Chat.ConnectToChat(userName, passWord, characterName);
 			F_StartingChannel						= startingChannel;
-
-			SystemController.Instance.SetApi(F_Chat);
 
 			// initiate the loop
 			while (ApiConnection.IsConnected())

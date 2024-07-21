@@ -4,9 +4,8 @@ using System.ComponentModel;
 using FChatApi.Core;
 using FChatApi.Enums;
 using FChatApi.Objects;
-using FChatApi.Tokenizer;
+using Plugins.Tokenizer;
 using FChatApi.Attributes;
-using FChatApi.EventArguments;
 
 using ModularPlugins;
 using ModularPlugins.Interfaces;

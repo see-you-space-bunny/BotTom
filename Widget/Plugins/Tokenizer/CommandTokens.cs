@@ -1,9 +1,6 @@
 using FChatApi.Objects;
-using FChatApi.Enums;
-using System.Runtime.CompilerServices;
-using System;
 
-namespace FChatApi.Tokenizer;
+namespace Plugins.Tokenizer;
 
 public class CommandTokens(FChatMessage fChatMessage, string botModule, string moduleCommand, string[] parameters)
 {

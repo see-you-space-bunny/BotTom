@@ -4,7 +4,7 @@ using CardGame.Enums;
 using CardGame.MatchEntities;
 using FChatApi.Enums;
 using FChatApi.Objects;
-using FChatApi.Tokenizer;
+using Plugins.Tokenizer;
 
 using ModularPlugins;
 using ModularPlugins.Interfaces;

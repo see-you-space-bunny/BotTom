@@ -2,12 +2,18 @@
 <RootElement>
 	<CharacterClass Name="Default">
 		<Resources>
-			<HitPoints BaseValue="100">
+			<Health BaseValue="100">
+				<Limits MinimumValue="10" HardLimit="1.5">
+					<Abilities Power="5" Body="5" Reflex="5"/>
+				</Limits>
+				<AbilityScales Power="0.15" Body="0.80" Reflex="0.05"/>
+			</Health>
+			<Health BaseValue="100">
 				<Limits SoftLimit="1.0" HardLimit="1.5">
 					<Abilities Power="5" Body="5" Reflex="5"/>
 				</Limits>
 				<AbilityScales Power="0.15" Body="0.80" Reflex="0.05"/>
-			</HitPoints>
+			</Health>
 		</Resources>
 		<SkillActions>
 			<SkillAction Name="">
@@ -19,12 +25,53 @@
 	</CharacterClass>
 	<CharacterClass Name="Adventurer">
 		<Resources>
-			<HitPoints BaseValue="100">
-				<Limits SoftLimit="0.75" HardLimit="2.0">
+			<Health BaseValue="100">
+				<Limits MinimumValue="50" HardLimit="1.75">
 					<Abilities Power="3"/>
 				</Limits>
-				<AbilityScales Power="0.25" Body="0.65" Reflex="0.10"/>
-			</HitPoints>
+				<AbilityScales Power="0.25" Body="0.70" Luck="0.5"/>
+			</Health>
+			<Protection BaseValue="100">
+				<Limits MinimumValue="50" HardLimit="1.75">
+					<Abilities Power="3"/>
+				</Limits>
+				<AbilityScales Focus="0.35" Will="0.45" Integrity="0.15" Luck="0.5"/>
+			</Protection>
+			<Evasion BaseValue="100">
+				<Limits MinimumValue="50" HardLimit="1.75">
+					<Abilities Power="3"/>
+				</Limits>
+				<AbilityScales Reflex="0.60" Wit="0.20" Luck="0.20"/>
+			</Evasion>
+		</Resources>
+		<SkillActions>
+			<SkillAction Name="">
+				<PrimaryAttribute   Name="" Growth=""/>
+				<SecondaryAttribute Name="" Growth=""/>
+				<TertiaryAttribute  Name="" Growth=""/>
+			</SkillAction>
+		</SkillActions>
+	</CharacterClass>
+	<CharacterClass Name="Merchant">
+		<Resources>
+			<Health BaseValue="50">
+				<Limits MinimumValue="20" HardLimit="1.5">
+					<Abilities Power="3"/>
+				</Limits>
+				<AbilityScales Power="0.25" Body="0.70" Luck="0.5"/>
+			</Health>
+			<Protection BaseValue="50">
+				<Limits MinimumValue="20" HardLimit="1.75">
+					<Abilities Power="3"/>
+				</Limits>
+				<AbilityScales Focus="0.35" Will="0.45" Integrity="0.15" Luck="0.5"/>
+			</Protection>
+			<Evasion BaseValue="50">
+				<Limits MinimumValue="20" HardLimit="1.75">
+					<Abilities Power="3"/>
+				</Limits>
+				<AbilityScales Reflex="0.60" Wit="0.20" Luck="0.20"/>
+			</Evasion>
 		</Resources>
 		<SkillActions>
 			<SkillAction Name="">

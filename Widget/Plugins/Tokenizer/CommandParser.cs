@@ -1,13 +1,8 @@
 using System.Text;
 using FChatApi.Objects;
 using FChatApi.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using FChatApi.Attributes;
 
-namespace FChatApi.Tokenizer;
+namespace Plugins.Tokenizer;
 
 public class CommandParser
 {
@@ -18,12 +13,14 @@ public class CommandParser
 	public CommandParser() : this(null)
 	{ }
 
-	public CommandParser(string botPrefix)
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor.
+	public CommandParser(string? botPrefix)
 	{
 		WithBotPrefix(botPrefix);
 	}
+#pragma warning restore CS8618 // Consider adding the 'required' modifier or declaring as nullable.
 
-	public CommandParser WithBotPrefix(string value = null)
+	public CommandParser WithBotPrefix(string? value = null)
 	{
 		BotPrefix = value ?? DefaultPrefix;
 		return this;
@@ -34,7 +31,7 @@ public class CommandParser
 		// Not a command
 		if (!fChatMessage.Message.StartsWith(BotPrefix))
 		{
-			command = null;
+			command = null!;
 			return false;
 		}
 
@@ -45,18 +42,18 @@ public class CommandParser
 #if DEBUG
 			Console.WriteLine("it might be getting the bot's attention but doesn't have enough for a real command");
 #endif
-			command = null;
+			command = null!;
 			return false;
 		}
 		
-		string botModule = default;
+		string botModule = default!;
 		if (!(parsedTokens.Length == 0))
 		{
 			// Not a recognized module
 			botModule = parsedTokens[0];
 		}
 		
-		string moduleCommand = default;
+		string moduleCommand = default!;
 		if (!(parsedTokens.Length < 0))
 		{
 			// Not a recognized command
@@ -71,7 +68,7 @@ public class CommandParser
 			Console.WriteLine("Command cannot be issued by a non-user");
 			Console.WriteLine("Some operations may still trigger, but they will be exceptions");
 #endif
-			command = null;
+			command = null!;
 			return false;
 		}
 

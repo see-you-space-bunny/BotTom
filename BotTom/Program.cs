@@ -8,17 +8,8 @@ partial class Program
 	#region Main
 	static async Task Main(string[] args)
 	{
-		ControlPanel.LoadFileConfig();
 		Envy.Load(Path.Combine(Environment.CurrentDirectory, ".env"));
 		InitMxParser();
-
-		if (bool.TryParse(Environment.GetEnvironmentVariable("USE_DISCORD"),out bool useDiscord) && useDiscord)
-		{
-			string? discordToken = Environment.GetEnvironmentVariable("DISCORD_TOKEN");
-			
-			if (discordToken is not null)
-				await InitializeDiscord(discordToken);
-		}
 		
 		if (bool.TryParse(Environment.GetEnvironmentVariable("USE_FCHAT"),out bool useFchat) && useFchat)
 		{

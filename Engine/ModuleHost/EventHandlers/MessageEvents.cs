@@ -1,5 +1,5 @@
 using Engine.ModuleHost.Enums;
-using FChatApi.Tokenizer;
+using Plugins.Tokenizer;
 
 namespace Engine.ModuleHost;
 

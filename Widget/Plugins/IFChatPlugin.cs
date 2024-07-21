@@ -1,5 +1,5 @@
-using FChatApi.EventArguments;
-using FChatApi.Tokenizer;
+using Plugins.Tokenizer;
+using FChatApi.Objects;
 
 namespace ModularPlugins.Interfaces;
 

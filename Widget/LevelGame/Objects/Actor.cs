@@ -1,12 +1,16 @@
+using FChatApi.Attributes;
+using LevelGame.Attributes;
+using LevelGame.Core;
 using LevelGame.Enums;
 using LevelGame.SheetComponents;
 
-namespace LevelGame;
+namespace LevelGame.Objects;
 
 public class Actor : GameObject
 {
 	#region Constant
-	public const float HitPointsScalingFactor = 1.115f;
+	public const float HealthPointsScalingFactor = 1.115f;
+	public const int MinimumHealthPoints = 10;
 	#endregion
 
 	#region Fields(#)
@@ -19,10 +23,12 @@ public class Actor : GameObject
 
 	#region Properties (+)
 	/// <summary>
-	/// Hit Points formula: (int) BaseValue + Level * SQRT(POW(Body*MOD+Power*MOD+Finesse*MOD,2) + POW(Focus*MOD+Will*MOD+Wit*MOD+Presence*MOD+Integrity*MOD+Charm*MOD-1,2))
+	/// Hit Points formula: (int) BaseValue + Level * SumOfEach(Ability * MOD)
 	/// </summary>
-	public CharacterResource HealthPoints => _resources[Resource.HealthPoints];
-	public new int Level => _classLevels.Values.Sum((cl)=>cl.Level);
+	public CharacterResource Health		=>	_resources[Resource.Health];
+	public CharacterResource Protection	=>	_resources[Resource.Protection];
+	public CharacterResource Evasion	=>	_resources[Resource.Evasion];
+	public new int Level				=>	_classLevels.Values.Sum((cl)=>cl.Level);
 	#endregion
 	
 	public Actor() : base(0)
@@ -59,45 +65,44 @@ public class Actor : GameObject
 
 	public Actor ReCalculateDerivedStatistics()
 	{
-		ReCalculateHitPoints();
+		ReCalculateResourceLimits();
 		return this;
 	}
 
-	private void ReCalculateHitPoints()
+	private void ReCalculateResourceLimits()
 	{
-		int previousSoftLimit = HealthPoints.SoftLimit;
-		int previousHardLimit = HealthPoints.HardLimit;
-		foreach(ClassLevels classLevels in _classLevels.Values.Where((cl)=>cl.Level>0))
+		foreach (var resource in _resources)
 		{
-			(HealthPoints.SoftLimit, HealthPoints.HardLimit) = CalcHealthPointsLimits(classLevels);
+			ReCalculateResourceLimit(resource);
 		}
-		HealthPoints.Current *= Math.Max(HealthPoints.SoftLimit / previousSoftLimit, HealthPoints.HardLimit / previousHardLimit);
 	}
 
-	private (int SoftLimit,int HardLimit) CalcHealthPointsLimits(ClassLevels classLevels)
+	private void ReCalculateResourceLimit(KeyValuePair<Resource, CharacterResource> resource)
 	{
-		var healthPointScales = classLevels.Class.ResourceAbilityScales[Resource.HealthPoints];
-		var healthPointModifiers = classLevels.Class.ResourceModifiers[Resource.HealthPoints];
-		int softLimit = (int)(healthPointModifiers[ResourceModifier.SoftLimit] * (
-			healthPointModifiers[ResourceModifier.BaseValue] +
-			classLevels.Level * Math.Sqrt(
-				Math.Pow(
-					(double)(
-						_abilities[Ability.Power    ]*healthPointScales[Ability.Power    ] +
-						_abilities[Ability.Body     ]*healthPointScales[Ability.Body     ] +
-						_abilities[Ability.Reflex   ]*healthPointScales[Ability.Reflex   ]
-				),2d) + Math.Pow(
-					(double)(
-						_abilities[Ability.Focus    ]*healthPointScales[Ability.Focus    ] +
-						_abilities[Ability.Will     ]*healthPointScales[Ability.Will     ] +
-						_abilities[Ability.Wit      ]*healthPointScales[Ability.Wit      ] +
-						_abilities[Ability.Presence ]*healthPointScales[Ability.Presence ] +
-						_abilities[Ability.Integrity]*healthPointScales[Ability.Integrity] +
-						_abilities[Ability.Charm    ]*healthPointScales[Ability.Charm    ]
-				),2d)
-			)
+		int previousSoftLimit = resource.Value.SoftLimit;
+		int previousHardLimit = resource.Value.HardLimit;
+		foreach(ClassLevels classLevels in _classLevels.Values.Where((cl)=>cl.Level>0))
+		{
+			(resource.Value.SoftLimit, resource.Value.HardLimit) = CalcResourceLimits(classLevels,resource.Key);
+		}
+		resource.Value.Current *= Math.Max(resource.Value.SoftLimit / previousSoftLimit, resource.Value.HardLimit / previousHardLimit);
+	}
+
+	private (int SoftLimit,int HardLimit) CalcResourceLimits(ClassLevels classLevels,Resource resource)
+	{
+		var resourceScales		= classLevels.Class.ResourceAbilityScales[resource];
+		var resourceModifiers	= classLevels.Class.ResourceModifiers[resource];
+		int abilitySum			= _abilities.Keys.Sum(k=>(int)(_abilities[k]*resourceScales[k]));
+
+		int softLimit = (int)(resourceModifiers[ResourceModifier.SoftLimit] * (
+			resourceModifiers[ResourceModifier.BaseValue] +
+			classLevels.Level *
+			_abilities.Keys.Sum(k=>(int)(_abilities[k]*resourceScales[k]))
 		));
-		int hardLimit = (int)(softLimit * classLevels.Class.ResourceModifiers[Resource.HealthPoints][ResourceModifier.HardLimit]);
+
+		int hardLimit = (int)(softLimit * classLevels.Class.ResourceModifiers[resource][ResourceModifier.HardLimit]);
+		softLimit = Math.Max(softLimit,(int)classLevels.Class.ResourceModifiers[resource][ResourceModifier.MinimumValue]);
+		hardLimit = Math.Max(hardLimit,softLimit);
 		return (softLimit,hardLimit);
 	}
 
@@ -106,11 +111,19 @@ public class Actor : GameObject
 	{
 		if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
 			activeClassLevels.Level += levels;
-		// TODO: deposit deserialized classes in a centrally accessible place from which
-		//       to draw from!!
-		//else
-		//    _classLevels.Add(_activeClass,new ClassLevels( TODO:GetActiveClassInfoFromCentral ,levels));
+		else
+		    _classLevels.Add(_activeClass,new ClassLevels(World.CharacterClasses[_activeClass],levels));
 		ReCalculateDerivedStatistics();
+		return this;
+	}
+
+	public Actor FullRecovery()
+	{
+		foreach (var resource in _resources)
+		{
+			if (resource.Key.GetEnumAttribute<Resource,GameFlagsAttribute>().RefilledByFullRecovery)
+				resource.Value.Current = resource.Value.SoftLimit;
+		}
 		return this;
 	}
 

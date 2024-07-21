@@ -4,8 +4,7 @@ using FChatApi.Core;
 using FChatApi.Objects;
 using Engine.ModuleHost.Enums;
 using FChatApi.Enums;
-using FChatApi.Tokenizer;
-using FChatApi.EventArguments;
+using Plugins.Tokenizer;
 
 namespace Engine.ModuleHost;
 

@@ -3,25 +3,26 @@ using System.Globalization;
 
 using LevelGame.Enums;
 using LevelGame.SheetComponents;
+using FChatApi.Attributes;
+using LevelGame.Attributes;
 
-namespace LevelGame;
+namespace LevelGame.Serialization;
 
 public static class HumanXmlDeserializer
 {
-	#region 
+	#region Paths
 	private const string CharacterClassXPath = "/RootElement/CharacterClass";
 	private const string CurrentCharacterClassXPath = "/RootElement/CharacterClass[Name=\"{0}\"]";
-	private const string NameAttribute = "Name";
-	private const string Resources = "descendant::Resources";
-	private const string HitPoints = "descendant::HitPoints";
-	private const string Abilities = "descendant::Abilities";
-	private const string AbilityScales = "descendant::AbilityScales";
-	private const string SkillActions = "descendant::SkillActions";
-	private const string SkillAction = "descendant::SkillAction";
-	private const string Limits = "descendant::Limits";
-	private const string BaseValueAttribute = "BaseValue";
-	private const string SoftLimitAttribute = "SoftLimit";
-	private const string HardLimitAttribute = "HardLimit";
+	private const string NameAttribute			= "Name";
+	private const string Abilities				= "descendant::Abilities";
+	private const string AbilityScales			= "descendant::AbilityScales";
+	private const string SkillActions			= "descendant::SkillActions";
+	private const string SkillAction			= "descendant::SkillAction";
+	private const string Limits					= "descendant::Limits";
+	private const string BaseValueAttribute		= "BaseValue";
+	private const string MinimumValueAttribute	= "MinimumValue";
+	private const string SoftLimitAttribute		= "SoftLimit";
+	private const string HardLimitAttribute		= "HardLimit";
 	#endregion
 
 	private static readonly CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
@@ -54,34 +55,28 @@ public static class HumanXmlDeserializer
 
 	private static void GetResources(XmlNode characterClass, CharacterClassBuilder ccb)
 	{
-		XmlNode? resources = characterClass.SelectSingleNode(Resources);
-
-		if (resources != null)
-		{
-			GetHealthPoints(resources, ccb);
-		}
+		GetResourceInfo(characterClass, ccb, Resource.Health);
+		GetResourceInfo(characterClass, ccb, Resource.Protection);
+		GetResourceInfo(characterClass, ccb, Resource.Evasion);
 	}
 
-	private static void GetHealthPoints(XmlNode resources, CharacterClassBuilder ccb)
+	private static void GetResourceInfo(XmlNode characterClass, CharacterClassBuilder ccb, Resource resource)
 	{
-		XmlNode? healthPoints = resources.SelectSingleNode(HitPoints);
+		XmlNode? resourceInfo = characterClass.SelectSingleNode(resource.GetEnumAttribute<Resource,XmlKeyAttribute>().Value);
 
-		if (healthPoints != null)
-		{
-			if (healthPoints.Attributes != null)
-			{
-				if (healthPoints.Attributes[BaseValueAttribute] != null)
-					ccb.WithResourceModifier(Resource.HealthPoints,ResourceModifier.BaseValue,float.Parse(healthPoints.Attributes[BaseValueAttribute]!.Value,culture));
-			}
+		if (resourceInfo is null)
+			return;
+		
+		if (resourceInfo.Attributes is not null && resourceInfo.Attributes[BaseValueAttribute] is not null)
+			ccb.WithResourceModifier(resource,ResourceModifier.BaseValue,float.Parse(resourceInfo.Attributes[BaseValueAttribute]!.Value,culture));
 
-			XmlNode? healthLimits = healthPoints.SelectSingleNode(Limits);
-			if (healthLimits != null)
-				GetResourceLimits(Resource.HealthPoints, healthLimits, ccb);
+		XmlNode? resourceLimits = resourceInfo.SelectSingleNode(Limits);
+		if (resourceLimits != null)
+			GetResourceLimits(resource, resourceLimits, ccb);
 
-			XmlNode? healthAbilities = healthPoints.SelectSingleNode(AbilityScales);
-			if (healthAbilities != null)
-				GetResourceAbilityScales(Resource.HealthPoints, healthAbilities, ccb);
-		}
+		XmlNode? healthAbilities = resourceInfo.SelectSingleNode(AbilityScales);
+		if (healthAbilities != null)
+			GetResourceAbilityScales(resource, healthAbilities, ccb);
 	}
 
 	private static void GetResourceAbilityScales(Resource resource,XmlNode resourceAbilities,CharacterClassBuilder ccb)
@@ -98,6 +93,9 @@ public static class HumanXmlDeserializer
 	{
 		if (resourceLimits.Attributes != null)
 		{
+			if (resourceLimits.Attributes[MinimumValueAttribute] != null)
+				ccb.WithResourceModifier(resource,ResourceModifier.MinimumValue,float.Parse(resourceLimits.Attributes[MinimumValueAttribute]!.Value,culture));
+
 			if (resourceLimits.Attributes[SoftLimitAttribute] != null)
 				ccb.WithResourceModifier(resource,ResourceModifier.SoftLimit,float.Parse(resourceLimits.Attributes[SoftLimitAttribute]!.Value,culture));
 

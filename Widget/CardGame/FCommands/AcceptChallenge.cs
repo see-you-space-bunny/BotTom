@@ -2,7 +2,7 @@ using System.Text;
 
 using FChatApi.Objects;
 using FChatApi.Enums;
-using FChatApi.Tokenizer;
+using Plugins.Tokenizer;
 
 using ModularPlugins;
 

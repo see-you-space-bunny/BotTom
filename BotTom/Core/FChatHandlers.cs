@@ -1,9 +1,7 @@
 using FChatApi.Core;
 using FChatApi.Enums;
 using FChatApi.Objects;
-using FChatApi.EventArguments;
-using FChatApi.Tokenizer;
-using Engine.ModuleHost.Enums;
+using Plugins.Tokenizer;
 
 namespace BotTom;
 
@@ -16,7 +14,7 @@ public partial class Program
 	/// <param name="e">our event args</param>
 	static void HandleMessageReceived(object sender, FChatMessage @event)
 	{
-		if (F_CommandParser.TryConvertCommand(@event,out BotCommand command))
+		if (F_CommandParser.TryConvertCommand(@event,out CommandTokens command))
 		{
 			F_Bot!.HandleMessage(command);
 		}

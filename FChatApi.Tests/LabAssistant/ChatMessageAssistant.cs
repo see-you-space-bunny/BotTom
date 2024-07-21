@@ -1,6 +1,4 @@
 using Newtonsoft.Json.Linq;
-
-using FChatApi.EventArguments;
 using FChatApi.Objects;
 
 namespace FChatApi.Tests.LabAssitant;

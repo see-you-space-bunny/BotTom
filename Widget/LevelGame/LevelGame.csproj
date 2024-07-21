@@ -20,7 +20,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Engine\Serialization\Serialization.csproj" />
+		<ProjectReference Include="..\..\FChatApi\FChatApi.csproj" />
 	</ItemGroup>
 	
 </Project>

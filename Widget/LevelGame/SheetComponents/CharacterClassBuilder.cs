@@ -1,3 +1,6 @@
+using System.Collections.Immutable;
+using FChatApi.Attributes;
+using LevelGame.Attributes;
 using LevelGame.Enums;
 
 namespace LevelGame.SheetComponents;
@@ -7,7 +10,6 @@ public class CharacterClassBuilder
 	#region Constants
 	private const float DefaultDamageAbilityScales = 0.00f;
 	private const float DefaultDamageAbilityGroupScales = 1.00f;
-	private const float DefaultResourceModifier = 1.00f;
 	private const float DefaultResourceAbilityScales = 0.00f;
 	#endregion
 
@@ -35,7 +37,7 @@ public class CharacterClassBuilder
 			Dictionary<ResourceModifier,float> _resourceEntry = [];
 			foreach(ResourceModifier resourceModifier in Enum.GetValues(typeof(ResourceModifier)).Cast<ResourceModifier>())
 			{
-				_resourceEntry.Add(resourceModifier,DefaultResourceModifier);
+				_resourceEntry.Add(resourceModifier,resourceModifier.GetEnumAttribute<ResourceModifier,DefaultModifierAttribute>().Value);
 			}
 			_resourceModifiers.Add(resource,_resourceEntry);
 		}
@@ -109,13 +111,13 @@ public class CharacterClassBuilder
 
 	public CharacterClassBuilder WithResourceModifier(Resource resource,ResourceModifier resourceModifier,float value)
 	{
-		_resourceModifiers[resource][resourceModifier]  = value;
+		_resourceModifiers[resource][resourceModifier]	= value;
 		return this;
 	}
 
 	public CharacterClassBuilder WithResourceAbilityScales(Resource resource,Ability ability,float value)
 	{
-		_resourceAbilityScales[resource][ability]  = value;
+		_resourceAbilityScales[resource][ability]	= value;
 		return this;
 	}
 }

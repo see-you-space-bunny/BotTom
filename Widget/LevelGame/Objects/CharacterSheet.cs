@@ -1,4 +1,4 @@
-namespace LevelGame;
+namespace LevelGame.Objects;
 
 public class CharacterSheet : Actor
 {

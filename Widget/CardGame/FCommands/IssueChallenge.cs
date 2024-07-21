@@ -1,7 +1,7 @@
 using System.Text;
 
 using FChatApi.Objects;
-using FChatApi.Tokenizer;
+using Plugins.Tokenizer;
 
 using ModularPlugins;
 

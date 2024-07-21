@@ -1,8 +1,7 @@
 using FChatApi.Core;
 using FChatApi.Objects;
 using FChatApi.Enums;
-using FChatApi.Tokenizer;
-using FChatApi.EventArguments;
+using Plugins.Tokenizer;
 
 using ModularPlugins.Interfaces;
 
