@@ -7,7 +7,7 @@ using FChatApi.Enums;
 
 namespace FChatApi.Attributes;
 
-public static class AttributeEnumExtensions
+public static class AttributeExtensions
 {
 	/// <summary>
 	/// A dictionary indexed by EnumType + AttributeType pairs as Keys and
@@ -16,11 +16,17 @@ public static class AttributeEnumExtensions
 	static readonly Dictionary<Tuple<Type, Type>, Dictionary<Enum, Attribute>> _staticEnumAttributeLookup;
 
 	/// <summary>
+	/// A dictionary indexed by ClassType + AttributeType pairs as Keys and
+	/// ClassConstValue + AttributeValue Values.
+	/// </summary>
+	static readonly Dictionary<Tuple<Type, Type>, Attribute> _staticClassAttributeLookup;
+
+	/// <summary>
 	/// Gets the slow work out of the way during initialization, going through
 	/// the known EnumType + AttributeType pairs and pulling the AttributeValues
 	/// from them and storing them as the Value keyed to the Type + Type combination.
 	/// </summary>
-	static AttributeEnumExtensions()
+	static AttributeExtensions()
 	{
 		_staticEnumAttributeLookup = [];
 
@@ -73,6 +79,24 @@ public static class AttributeEnumExtensions
 	}
 
 	/// <summary>
+	/// Populates <c>_staticEnumAttributeLookup</c> using reflection, by iterating through each
+	/// member of the passed EnumType + AttributeType Key-pair's EnumType and storing those
+	/// Values in the inner Dictionary.
+	/// </summary>
+	/// <param name="key">An EnumType + AttributeType Key-pair</param>
+	static void ProcessClassForAttribute(Tuple<Type, Type> key)
+	{
+		if (_staticClassAttributeLookup.ContainsKey(key))
+			return;
+
+		(Type classType, Type TAttribute) = key;
+
+		_staticClassAttributeLookup[key] = (Attribute) classType
+			?.GetCustomAttributes(TAttribute, false)
+			?.SingleOrDefault()!;
+	}
+
+	/// <summary>
 	/// Takes <c>TEnum</c> and retreives an instance of <c>TAttribute</c> from <c>_staticEnumAttributeLookup</c> that matches the specified <c>enumValue</c>.
 	/// </summary>
 	/// <typeparam name="TEnum">The EnumType being looked at.</typeparam>
@@ -113,14 +137,14 @@ public static class AttributeEnumExtensions
 	/// <typeparam name="TAttribute">The AttributeType of which we want to retrieve an instance of.</typeparam>
 	/// <param name="enumValue">The specific const EnumValue from which we want to retrieve the data.</param>
 	/// <returns>The instance of the specified <c>enumValue</c>'s <c>TAttribute</c> as passed in the TypeParameter.</returns>
-	public static TAttribute GetAttribute<TEnum, TAttribute>(this TEnum enumValue) where TEnum : Enum where TAttribute : Attribute
+	public static TAttribute GetClassAttribute<TClass, TAttribute>(this TClass @class) where TClass : class where TAttribute : Attribute
 	{
-		return (TAttribute)(
-			typeof(TEnum)
-			.GetMember(enumValue.ToString())
-			.FirstOrDefault()
-			?.GetCustomAttributes(typeof(TAttribute), false)
-			?.FirstOrDefault()!
-			);
+		Tuple<Type, Type> key = Tuple.Create(typeof(TClass), typeof(TAttribute));
+		if (!_staticClassAttributeLookup.TryGetValue(key, out Attribute attribute))
+		{
+			ProcessClassForAttribute(key);
+			attribute = _staticClassAttributeLookup[key];
+		}
+		return (TAttribute)attribute;
 	}
 }

@@ -218,7 +218,7 @@ public class FChatMessageBuilder()
 		if (string.IsNullOrWhiteSpace(Message))
 			throw new InvalidOperationException("Attempting to build an empty message.");
 
-		int maxLength = AttributeEnumExtensions.GetEnumAttribute<FChatMessageType,MaximumLengthAttribute>(MessageType).Length;
+		int maxLength = AttributeExtensions.GetEnumAttribute<FChatMessageType,MaximumLengthAttribute>(MessageType).Length;
 
 		if (Message.Length > maxLength)
 			throw new InvalidOperationException($"Max message length of: {maxLength} characters.");
