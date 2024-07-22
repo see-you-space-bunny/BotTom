@@ -1,24 +1,41 @@
+using FChatApi.Enums;
+using LevelGame.Enums;
+
 namespace LevelGame.Attributes;
 
 [AttributeUsage(AttributeTargets.All)]
-sealed class ShortFormAttribute : Attribute
+sealed class AbilityInfoAttribute : Attribute
 {
 		// See the attribute guidelines at
 		//  http://go.microsoft.com/fwlink/?LinkId=85236
-		readonly string _value;
+		readonly AbilityGroup _group;
+		readonly AbilityType _type;
+		readonly BBCodeColor _color;
 		
 		// This is a positional argument
-		public ShortFormAttribute(string description)
+		public AbilityInfoAttribute(AbilityGroup group,AbilityType type,BBCodeColor color = BBCodeColor.white)
 		{
-				this._value = description;
+				this._group = group;
+				this._type = type;
+				this._color = color;
 				
 				// TODO: Implement code here
 				/* throw new System.NotImplementedException(); */
 		}
 		
-		public string Description
+		public BBCodeColor Color
 		{
-				get { return _value; }
+				get { return this._color; }
+		}
+		
+		public AbilityGroup Group
+		{
+				get { return this._group; }
+		}
+		
+		public AbilityType Type
+		{
+				get { return this._type; }
 		}
 		
 		// This is a named argument

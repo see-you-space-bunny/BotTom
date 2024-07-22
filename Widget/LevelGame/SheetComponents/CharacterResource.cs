@@ -1,10 +1,15 @@
 using System.Reflection.Metadata.Ecma335;
+using LevelGame.Attributes;
 using LevelGame.Enums;
 
 namespace LevelGame.SheetComponents;
 
 public class CharacterResource(int baseValue = 0,int hardLimit = -1,int softLimit = -1,bool moreIsBetter = true)
 {
+	internal CharacterResource(ResourceDefaultValuesAttribute defaults) :
+		this(defaults.BaseValue,defaults.HardLimit,defaults.SoftLimit,defaults.MoreIsBetter)
+	{ }
+
 	private int _baseValue = baseValue;
 
 	public int Current {

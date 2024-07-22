@@ -14,7 +14,7 @@ public class @CardGame(ITestOutputHelper output)
 		[Fact]
 		public void TestAttributeHandler()
 		{
-				StatAliasAttribute statAliasLevel = CharacterStat.LVL.GetAttribute<CharacterStat, StatAliasAttribute>();
+				StatAliasAttribute statAliasLevel = CharacterStat.LVL.GetEnumAttribute<CharacterStat, StatAliasAttribute>();
 				Assert.Equal(["Level","Lv"],statAliasLevel.Alias);
 
 				StatAliasAttribute statAliasLuck = CharacterStat.LUC.GetEnumAttribute<CharacterStat, StatAliasAttribute>();

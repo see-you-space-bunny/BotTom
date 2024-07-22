@@ -27,13 +27,13 @@ public partial class FChatGlobalCommands : FChatPlugin, IFChatPlugin
 
 	private static void PreProcessEnumAttributes()
 	{
-		AttributeEnumExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(GlobalCommand));
+		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(GlobalCommand));
 
-		AttributeEnumExtensions.ProcessEnumForAttribute<MinimumPrivilegeAttribute>(typeof(GlobalCommand));
+		AttributeExtensions.ProcessEnumForAttribute<MinimumPrivilegeAttribute>(typeof(GlobalCommand));
 
-		AttributeEnumExtensions.ProcessEnumForAttribute<SuccessResponseAttribute>(typeof(GlobalCommand));
-		AttributeEnumExtensions.ProcessEnumForAttribute<FailureResponseAttribute>(typeof(GlobalCommand));
-		AttributeEnumExtensions.ProcessEnumForAttribute<AccessDeniedResponseAttribute>(typeof(GlobalCommand));
+		AttributeExtensions.ProcessEnumForAttribute<SuccessResponseAttribute>(typeof(GlobalCommand));
+		AttributeExtensions.ProcessEnumForAttribute<FailureResponseAttribute>(typeof(GlobalCommand));
+		AttributeExtensions.ProcessEnumForAttribute<AccessDeniedResponseAttribute>(typeof(GlobalCommand));
 	}
 
 	public override void HandleRecievedMessage(CommandTokens command)

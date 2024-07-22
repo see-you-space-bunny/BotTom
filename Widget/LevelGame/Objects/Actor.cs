@@ -10,59 +10,47 @@ public class Actor : GameObject
 {
 	#region Constant
 	public const float HealthPointsScalingFactor = 1.115f;
-	public const int MinimumHealthPoints = 10;
 	#endregion
 
 	#region Fields(#)
 	protected ClassName _activeClass;
 	protected Dictionary<ClassName,ClassLevels> _classLevels;
 	protected Dictionary<Ability,int> _abilities;
-	protected Dictionary<SkillActions,SkillAction> _actions;
+	protected Dictionary<GameAction,SkillAction> _actions;
 	protected Dictionary<Resource,CharacterResource> _resources;
 	#endregion
 
 	#region Properties (+)
-	/// <summary>
-	/// Hit Points formula: (int) BaseValue + Level * SumOfEach(Ability * MOD)
-	/// </summary>
 	public CharacterResource Health		=>	_resources[Resource.Health];
 	public CharacterResource Protection	=>	_resources[Resource.Protection];
 	public CharacterResource Evasion	=>	_resources[Resource.Evasion];
-	public new int Level				=>	_classLevels.Values.Sum((cl)=>cl.Level);
+	public new int Level				=>	LevelSanityCheck();
 	#endregion
 	
 	public Actor() : base(0)
 	{
-		_actions = new Dictionary<SkillActions,SkillAction>{
-			[SkillActions.Ambush     ] = new SkillAction([Ability.Reflex,      Ability.Wit       ],0,5,3),
-			[SkillActions.Brawl      ] = new SkillAction([Ability.Power,       Ability.Body      ],0,5,3),
-			[SkillActions.Duel       ] = new SkillAction([Ability.Reflex,      Ability.Focus     ],0,5,3),
-			[SkillActions.Sneak      ] = new SkillAction([Ability.Reflex,      Ability.Wit       ],0,5,3),
-			[SkillActions.Steal      ] = new SkillAction([Ability.Reflex,      Ability.Wit       ],0,5,3),
-			[SkillActions.Trick      ] = new SkillAction([Ability.Charm,       Ability.Wit       ],0,5,3),
-			[SkillActions.Convince   ] = new SkillAction([Ability.Charm,       Ability.Presence  ],0,5,3),
-			[SkillActions.Taunt      ] = new SkillAction([Ability.Presence,    Ability.Charm     ],0,5,3),
-			[SkillActions.Threaten   ] = new SkillAction([Ability.Presence,    Ability.Power     ],0,5,3),
-		};
+		_actions = [];
+		foreach(GameAction gameAction in Enum.GetValues(typeof(GameAction)).Cast<GameAction>().Where(a=>a != GameAction.None))
+		{
+			_actions.Add(gameAction,new SkillAction(gameAction.GetEnumAttribute<GameAction,ActionDefaultValuesAttribute>()));
+		}
 
 		_abilities = [];
-		foreach(Ability ability in Enum.GetValues(typeof(Ability)).Cast<Ability>())
+		foreach(Ability ability in Enum.GetValues(typeof(Ability)).Cast<Ability>().Where(a=>a != Ability.None))
 		{
 			_abilities.Add(ability,0);
 		}
 
 		_resources = [];
-		foreach(Resource resource in Enum.GetValues(typeof(Resource)).Cast<Resource>())
+		foreach(Resource resource in Enum.GetValues(typeof(Resource)).Cast<Resource>().Where(a=>a != Resource.None))
 		{
-			_resources.Add(resource,new CharacterResource());
+			_resources.Add(resource,new CharacterResource(resource.GetEnumAttribute<Resource,ResourceDefaultValuesAttribute>()));
 		}
 
 		_classLevels = [];
-
-		// Causes StackOverFlowException!! ???
-		// Console.WriteLine(DescriptionAttribute.GetEnumDescription(Ability.Power));
 	}
 
+	#region Calculation
 	public Actor ReCalculateDerivedStatistics()
 	{
 		ReCalculateResourceLimits();
@@ -71,7 +59,7 @@ public class Actor : GameObject
 
 	private void ReCalculateResourceLimits()
 	{
-		foreach (var resource in _resources)
+		foreach (var resource in _resources.Where(r=>r.Value.IsHardLimited || r.Value.IsSoftLimited))
 		{
 			ReCalculateResourceLimit(resource);
 		}
@@ -83,46 +71,79 @@ public class Actor : GameObject
 		int previousHardLimit = resource.Value.HardLimit;
 		foreach(ClassLevels classLevels in _classLevels.Values.Where((cl)=>cl.Level>0))
 		{
-			(resource.Value.SoftLimit, resource.Value.HardLimit) = CalcResourceLimits(classLevels,resource.Key);
+			CalcResourceLimits(classLevels,resource);
 		}
-		resource.Value.Current *= Math.Max(resource.Value.SoftLimit / previousSoftLimit, resource.Value.HardLimit / previousHardLimit);
+		if (resource.Key.GetEnumAttribute<Resource,GameFlagsAttribute>().ScalesOnLimitChange)
+			resource.Value.Current *= Math.Max(resource.Value.SoftLimit / previousSoftLimit, resource.Value.HardLimit / previousHardLimit);
 	}
 
-	private (int SoftLimit,int HardLimit) CalcResourceLimits(ClassLevels classLevels,Resource resource)
+	private void CalcResourceLimits(ClassLevels classLevels,KeyValuePair<Resource, CharacterResource> resource)
 	{
-		var resourceScales		= classLevels.Class.ResourceAbilityScales[resource];
-		var resourceModifiers	= classLevels.Class.ResourceModifiers[resource];
-		int abilitySum			= _abilities.Keys.Sum(k=>(int)(_abilities[k]*resourceScales[k]));
-
-		int softLimit = (int)(resourceModifiers[ResourceModifier.SoftLimit] * (
-			resourceModifiers[ResourceModifier.BaseValue] +
-			classLevels.Level *
-			_abilities.Keys.Sum(k=>(int)(_abilities[k]*resourceScales[k]))
-		));
-
-		int hardLimit = (int)(softLimit * classLevels.Class.ResourceModifiers[resource][ResourceModifier.HardLimit]);
-		softLimit = Math.Max(softLimit,(int)classLevels.Class.ResourceModifiers[resource][ResourceModifier.MinimumValue]);
-		hardLimit = Math.Max(hardLimit,softLimit);
-		return (softLimit,hardLimit);
+		resource.Value.SoftLimit = resource.Value.IsSoftLimited ? CalcResourceLimit(classLevels, resource.Key,ResourceModifier.SoftLimit) : -1;
+		resource.Value.HardLimit = resource.Value.IsHardLimited ? CalcResourceLimit(classLevels, resource.Key,ResourceModifier.HardLimit) : -1;
 	}
+
+	/// <summary>
+	/// SoftLimit formula: (int) BaseValue + Level * BaseGrowth + SumOfEach(Ability * MOD)
+	/// </summary>
+	private int CalcResourceLimit(ClassLevels classLevels, Resource resource,ResourceModifier limit) =>
+		(int)Math.Max(
+			classLevels.Class.ResourceModifiers[resource][limit] *
+			(
+				classLevels.Class.ResourceModifiers[resource][ResourceModifier.BaseValue] +
+				classLevels.Level * classLevels.Class.ResourceModifiers[resource][ResourceModifier.BaseGrowth] +
+				_abilities.Keys.Sum(k =>(int)(_abilities[k] *classLevels.Class.ResourceAbilityScales[resource][k]))
+			),
+			classLevels.Class.ResourceModifiers[resource][ResourceModifier.MinimumValue]
+		);
+	
+	protected int LevelSanityCheck()
+	{
+		int level = _classLevels.Values.Sum((cl)=>cl.Level);
+		if (level != _abilities[Ability.Level])
+			_abilities[Ability.Level] = level;
+		return level;
+	}
+	#endregion
 
 	#region Actor Extensions
+	public Actor LevelUpRoll()
+	{
+		LevelUp(11 + World.Rng.Next(1,11) + World.Rng.Next(1,11));
+		return this;
+	}
+
 	public Actor LevelUp(int levels = 1)
 	{
 		if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
+		{
 			activeClassLevels.Level += levels;
+		}
 		else
+		{
 		    _classLevels.Add(_activeClass,new ClassLevels(World.CharacterClasses[_activeClass],levels));
+		}
+		_abilities[Ability.Level] += levels;
 		ReCalculateDerivedStatistics();
 		return this;
 	}
 
 	public Actor FullRecovery()
 	{
+		ReCalculateResourceLimits();
 		foreach (var resource in _resources)
 		{
 			if (resource.Key.GetEnumAttribute<Resource,GameFlagsAttribute>().RefilledByFullRecovery)
-				resource.Value.Current = resource.Value.SoftLimit;
+			{
+				if (resource.Value.IsSoftLimited)
+				{
+					resource.Value.Current = resource.Value.SoftLimit;
+				}
+				else if (resource.Value.IsHardLimited)
+				{
+					resource.Value.Current = resource.Value.HardLimit;
+				}
+			}
 		}
 		return this;
 	}

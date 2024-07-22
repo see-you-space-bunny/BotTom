@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.ComponentModel;
 using FChatApi.Attributes;
 using LevelGame.Attributes;
 using LevelGame.Enums;
@@ -10,6 +11,7 @@ namespace LevelGame.Core;
 public static class World
 {
     static readonly string XmlDirectory;
+	internal static readonly Random Rng;
     internal static readonly ConcurrentDictionary<ClassName,CharacterClass> CharacterClasses;
 
 
@@ -32,11 +34,32 @@ public static class World
 
 	static World()
 	{
-		AttributeEnumExtensions.ProcessEnumForAttribute<DefaultModifierAttribute>(typeof(ResourceModifier));
-		AttributeEnumExtensions.ProcessEnumForAttribute<GameFlagsAttribute		>(typeof(Resource));
-		AttributeEnumExtensions.ProcessEnumForAttribute<XmlKeyAttribute			>(typeof(Resource));
+		AttributeExtensions.ProcessEnumForAttribute<AbilityInfoAttribute		>(typeof(Ability));
+		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute		>(typeof(Ability));
+		AttributeExtensions.ProcessEnumForAttribute<ShortFormAttribute			>(typeof(Ability));
+
+		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute		>(typeof(Archetype));
+
+		AttributeExtensions.ProcessEnumForAttribute<DerivedAbilityInfoAttribute	>(typeof(DerivedAbility));
+		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute		>(typeof(DerivedAbility));
+		AttributeExtensions.ProcessEnumForAttribute<ShortFormAttribute			>(typeof(DerivedAbility));
+
+		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute		>(typeof(Echelon));
+		AttributeExtensions.ProcessEnumForAttribute<EchelonPropertiesAttribute	>(typeof(Echelon));
+
+		AttributeExtensions.ProcessEnumForAttribute<ActionPropertiesAttribute	>(typeof(GameAction));
+		AttributeExtensions.ProcessEnumForAttribute<ActionDefaultValuesAttribute>(typeof(GameAction));
+
+		AttributeExtensions.ProcessEnumForAttribute<XmlKeyAttribute				>(typeof(Resource));
+		AttributeExtensions.ProcessEnumForAttribute<GameFlagsAttribute			>(typeof(Resource));
+
+		AttributeExtensions.ProcessEnumForAttribute<DefaultModifierAttribute	>(typeof(ResourceModifier));
+
+		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute		>(typeof(StatusEffect));
+
 		CharacterClasses = [];
 		XmlDirectory = Path.Combine(Environment.CurrentDirectory,"xml");
+		Rng = new Random();
 		DirectorySanityCheck();
 	}
 }

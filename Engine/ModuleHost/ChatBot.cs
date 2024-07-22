@@ -24,7 +24,7 @@ public partial class ChatBot
 	public ChatBot()
 	{
 		FChatPlugins = [];
-		AttributeEnumExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(BotModule));
+		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(BotModule));
 	}
 
 	/// <summary>

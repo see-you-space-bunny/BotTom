@@ -45,15 +45,15 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 
 	private static void PreProcessEnumAttributes()
 	{
-		AttributeEnumExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(CharacterStat));
-		AttributeEnumExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(CharacterStatGroup));
-		AttributeEnumExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(CardGameCommand));
+		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(CharacterStat));
+		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(CharacterStatGroup));
+		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(CardGameCommand));
 
-		AttributeEnumExtensions.ProcessEnumForAttribute<StatAliasAttribute  >(typeof(CharacterStat));
+		AttributeExtensions.ProcessEnumForAttribute<StatAliasAttribute  >(typeof(CharacterStat));
 		
-		AttributeEnumExtensions.ProcessEnumForAttribute<StatGroupAttribute  >(typeof(CharacterStat));
+		AttributeExtensions.ProcessEnumForAttribute<StatGroupAttribute  >(typeof(CharacterStat));
 
-		AttributeEnumExtensions.ProcessEnumForAttribute<StatDecorationAttribute  >(typeof(CharacterStat));
+		AttributeExtensions.ProcessEnumForAttribute<StatDecorationAttribute  >(typeof(CharacterStat));
 	}
 
 	public override void HandleRecievedMessage(CommandTokens command)
