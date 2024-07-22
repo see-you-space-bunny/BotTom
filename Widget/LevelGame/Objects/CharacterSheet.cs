@@ -91,7 +91,7 @@ public class CharacterSheet : Actor
 
 		for (int i=0;i<reader.ReadUInt32();i++)
 		{
-			characterSheet._abilities[(Ability) reader.ReadUInt16()] = reader.ReadInt32();
+			characterSheet._abilities[(Ability) reader.ReadUInt16()].Current = reader.ReadInt32();
 		}
 
 		for (int i=0;i<reader.ReadUInt32();i++)
@@ -129,7 +129,7 @@ public class CharacterSheet : Actor
 		foreach (var ability in _abilities.Where(a=>a.Key != Ability.Level))
 		{
 			writer.Write((ushort)	ability.Key);
-			writer.Write((int)		ability.Value);
+			writer.Write((int)		ability.Value.BaseValue);
 		}
 
 		writer.Write((uint) 	_resources.Count);

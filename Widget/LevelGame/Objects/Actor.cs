@@ -15,9 +15,10 @@ public class Actor : GameObject
 	#region Fields(#)
 	protected ClassName _activeClass;
 	protected Dictionary<ClassName,ClassLevels> _classLevels;
-	protected Dictionary<Ability,int> _abilities;
+	protected Dictionary<Ability,CharacterResource> _abilities;
 	protected Dictionary<GameAction,SkillAction> _actions;
 	protected Dictionary<Resource,CharacterResource> _resources;
+	protected List<ActiveStatusEffect> _statusEffects;
 	#endregion
 
 	#region Properties (+)
@@ -38,7 +39,7 @@ public class Actor : GameObject
 		_abilities = [];
 		foreach(Ability ability in Enum.GetValues(typeof(Ability)).Cast<Ability>().Where(a=>a != Ability.None))
 		{
-			_abilities.Add(ability,0);
+			_abilities.Add(ability,new CharacterResource());
 		}
 
 		_resources = [];
@@ -47,10 +48,31 @@ public class Actor : GameObject
 			_resources.Add(resource,new CharacterResource(resource.GetEnumAttribute<Resource,ResourceDefaultValuesAttribute>()));
 		}
 
+		_statusEffects = [];
+
 		_classLevels = [];
 	}
 
 	#region Calculation
+	public Actor ReCalculateAll()
+	{
+		ReCalculateDerivedStatistics();
+		ReCalculateStatusEffects();
+		return this;
+	}
+
+	public Actor ReCalculateStatusEffects()
+	{
+		foreach (ActiveStatusEffect effect in _statusEffects)
+		{
+			foreach ((Ability ability,float baseValue) in effect.AffectsAbilities)
+			{
+				_abilities[ability].SumOfModifiers += (int)(baseValue * effect.Intensity);
+			}
+		}
+		return this;
+	}
+
 	public Actor ReCalculateDerivedStatistics()
 	{
 		ReCalculateResourceLimits();
@@ -74,7 +96,7 @@ public class Actor : GameObject
 			CalcResourceLimits(classLevels,resource);
 		}
 		if (resource.Key.GetEnumAttribute<Resource,GameFlagsAttribute>().ScalesOnLimitChange)
-			resource.Value.Current *= Math.Max(resource.Value.SoftLimit / previousSoftLimit, resource.Value.HardLimit / previousHardLimit);
+			resource.Value.Current *= Math.Max(Math.Max(resource.Value.SoftLimit / previousSoftLimit, resource.Value.HardLimit / previousHardLimit),1);
 	}
 
 	private void CalcResourceLimits(ClassLevels classLevels,KeyValuePair<Resource, CharacterResource> resource)
@@ -92,7 +114,7 @@ public class Actor : GameObject
 			(
 				classLevels.Class.ResourceModifiers[resource][ResourceModifier.BaseValue] +
 				classLevels.Level * classLevels.Class.ResourceModifiers[resource][ResourceModifier.BaseGrowth] +
-				_abilities.Keys.Sum(k =>(int)(_abilities[k] *classLevels.Class.ResourceAbilityScales[resource][k]))
+				_abilities.Keys.Sum(k =>(int)(_abilities[k].Current *classLevels.Class.ResourceAbilityScales[resource][k]))
 			),
 			classLevels.Class.ResourceModifiers[resource][ResourceModifier.MinimumValue]
 		);
@@ -100,8 +122,8 @@ public class Actor : GameObject
 	protected int LevelSanityCheck()
 	{
 		int level = _classLevels.Values.Sum((cl)=>cl.Level);
-		if (level != _abilities[Ability.Level])
-			_abilities[Ability.Level] = level;
+		if (level != _abilities[Ability.Level].BaseValue)
+			_abilities[Ability.Level].Current = level;
 		return level;
 	}
 	#endregion
@@ -123,7 +145,7 @@ public class Actor : GameObject
 		{
 		    _classLevels.Add(_activeClass,new ClassLevels(World.CharacterClasses[_activeClass],levels));
 		}
-		_abilities[Ability.Level] += levels;
+		_abilities[Ability.Level].Current += levels;
 		ReCalculateDerivedStatistics();
 		return this;
 	}

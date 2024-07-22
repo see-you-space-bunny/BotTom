@@ -12,12 +12,16 @@ public class CharacterResource(int baseValue = 0,int hardLimit = -1,int softLimi
 
 	private int _baseValue = baseValue;
 
+	public int BaseValue => _baseValue;
+
 	public int Current {
 		get => IsSoftLimited && _baseValue > SoftLimit? SoftLimit : _baseValue;
 		set => _baseValue = IsHardLimited && value > HardLimit? HardLimit : value;
 	}
 
-	public List<StatusEffect> Modifiers { get; } = [];
+	public int SumOfModifiers { get; set; }
+
+	public List<float> Multipliers { get; } = [];
 
 	public int CurrentNoSoftLimit { get=>_baseValue; }
 
