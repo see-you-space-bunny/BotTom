@@ -199,6 +199,18 @@ public class Actor : GameObject
 	}
 
 /// <summary>
+/// 
+/// </summary>
+/// <param name="ability"></param>
+/// <param name="value"></param>
+/// <returns>this Actor</returns>
+	public Actor AdjustAbility(Ability ability,int value)
+	{
+		_abilities[ability].BaseValue += value;
+		return this;
+	}
+
+/// <summary>
 /// Remove an amount of levels from this Actor's currently active class.
 /// </summary>
 /// <param name="levels">the levels to remove, unaffected by growth scales</param>
