@@ -8,25 +8,25 @@ namespace LevelGame.Objects;
 
 public class Actor : GameObject
 {
-	#region (+) Constants
+#region (+) Constants
 	public const float HealthPointsScalingFactor = 1.115f;
-	#endregion
+#endregion
 
-	#region (#) Fields
+#region (#) Fields
 	protected ClassName _activeClass;
 	protected Dictionary<ClassName,ClassLevels> _classLevels;
 	protected Dictionary<Ability,CharacterResource> _abilities;
 	protected Dictionary<GameAction,SkillAction> _actions;
 	protected Dictionary<Resource,CharacterResource> _resources;
 	protected List<ActiveStatusEffect> _statusEffects;
-	#endregion
+#endregion
 
-	#region (+) Properties
+#region (+) Properties
 	public CharacterResource Health		=>	_resources[Resource.Health];
 	public CharacterResource Protection	=>	_resources[Resource.Protection];
 	public CharacterResource Evasion	=>	_resources[Resource.Evasion];
-	public new int Level				=>	LevelSanityCheck();
-	#endregion
+	public new int Level				=>	_abilities[Ability.Level].Current;
+#endregion
 	
 	public Actor() : base(0)
 	{
@@ -53,14 +53,14 @@ public class Actor : GameObject
 		_classLevels = [];
 	}
 
-	#region Interaction
+#region Interaction
 	public void ApplyStatusEffect(StatusEffect statusEffect,float intensity,Actor? source)
 	{
 		_statusEffects.Add(new ActiveStatusEffect(){ EffectType = statusEffect, Target = this, Intensity = intensity, Source = source});
 	}
-	#endregion
+#endregion
 
-	#region Calculation
+#region Calculation
 	public Actor ReCalculateAll()
 	{
 		ReCalculateDerivedStatistics();
@@ -96,11 +96,28 @@ public class Actor : GameObject
 
 	private void ReCalculateResourceLimit(KeyValuePair<Resource, CharacterResource> resource)
 	{
-		int previousSoftLimit = resource.Value.SoftLimit;
-		int previousHardLimit = resource.Value.HardLimit;
+		int previousSoftLimit	= resource.Value.SoftLimit;
+		int previousHardLimit	= resource.Value.HardLimit;
+		int highestBaseValue	= int.MinValue;
+		int highestMinimumValue	= int.MinValue;
 		foreach(ClassLevels classLevels in _classLevels.Values.Where((cl)=>cl.Level>0))
 		{
+		}
+		foreach(ClassLevels classLevels in _classLevels.Values.Where((cl)=>cl.Level>0))
+		{
+			highestMinimumValue	= Math.Max(highestBaseValue,(int)classLevels.Class.ResourceModifiers[resource.Key][ResourceModifier.MinimumValue]);
+			highestBaseValue	= Math.Max(highestBaseValue,(int)classLevels.Class.ResourceModifiers[resource.Key][ResourceModifier.BaseValue]);
 			CalcResourceLimits(classLevels,resource);
+		}
+		if (resource.Value.IsSoftLimited)
+		{
+			resource.Value.SoftLimit += highestBaseValue;
+			resource.Value.SoftLimit = Math.Max(resource.Value.SoftLimit,highestMinimumValue);
+		}
+		if (resource.Value.IsHardLimited)
+		{
+			resource.Value.HardLimit += highestBaseValue;
+			resource.Value.HardLimit = Math.Max(resource.Value.HardLimit,highestMinimumValue);
 		}
 		if (resource.Key.GetEnumAttribute<Resource,GameFlagsAttribute>().ScalesOnLimitChange)
 			resource.Value.BaseValue *= Math.Max(Math.Max(resource.Value.SoftLimit / Math.Max(previousSoftLimit,1), resource.Value.HardLimit / Math.Max(previousHardLimit,1)),1);
@@ -111,48 +128,94 @@ public class Actor : GameObject
 		resource.Value.SoftLimit = resource.Value.IsSoftLimited ? CalcResourceLimit(classLevels, resource.Key,ResourceModifier.SoftLimit) : -1;
 		resource.Value.HardLimit = resource.Value.IsHardLimited ? CalcResourceLimit(classLevels, resource.Key,ResourceModifier.HardLimit) : -1;
 	}
-
-	/// <summary>
-	/// SoftLimit formula: (int) ClassBaseValue + ClassLevel * ClassLevelScales + SumOfEach(Ability * ClassAbilityScales)
-	/// </summary>
-	private int CalcResourceLimit(ClassLevels classLevels, Resource resource,ResourceModifier limit) =>
-		(int)Math.Max(
-			classLevels.Class.ResourceModifiers[resource][limit] *
-			(
-				classLevels.Class.ResourceModifiers[resource][ResourceModifier.BaseValue] +
-				classLevels.Level * classLevels.Class.ResourceAbilityScales[resource][Ability.Level] +
-				_abilities.Keys.Where(k=>k!=Ability.Level).Sum(k =>(int)(_abilities[k].Current * classLevels.Class.ResourceAbilityScales[resource][k]))
-			),
-			classLevels.Class.ResourceModifiers[resource][ResourceModifier.MinimumValue]
-		);
 	
-	protected int LevelSanityCheck()
-	{
-		int level = _classLevels.Values.Sum((cl)=>cl.Level);
-		if (level != _abilities[Ability.Level].BaseValue)
-			_abilities[Ability.Level].BaseValue = level;
-		return level;
-	}
-	#endregion
+/// <summary>
+/// SoftLimit formula: (int) ClassLevel * ClassLevelScales + SumOfEach(Ability * ClassAbilityScales)
+/// </summary>
+/// <param name="classLevels">the class for which we are calculating the limit</param>
+/// <param name="resource">the resource whose limit is being calculated</param>
+/// <param name="limit">the soft of hard limit being calculated</param>
+/// <returns>the resource's calculated limit</returns>
+	private int CalcResourceLimit(ClassLevels classLevels, Resource resource,ResourceModifier limit) =>
+		(int)(classLevels.Class.ResourceModifiers[resource][limit] * (
+			classLevels.Level * classLevels.Class.ResourceAbilityScales[resource][Ability.Level] +
+			_abilities.Keys.Where(k=>k!=Ability.Level).Sum(k =>(int)(_abilities[k].Current * classLevels.Class.ResourceAbilityScales[resource][k]))
+		));
+#endregion
 
-	#region Actor Extensions
+#region Actor Extensions
+/// <summary>
+/// Generates a random number between 18 and 33 and calls the <c>LevelUp</c> method.<br/>
+/// The <c>LevelUp</c> method is subject to growth-scales.
+/// </summary>
+/// <returns>this Actor</returns>
 	public Actor LevelUpRoll()
 	{
-		LevelUp(11 + World.Rng.Next(1,11) + World.Rng.Next(1,11));
+		LevelUp(15 + World.Rng.Next(1,7) + World.Rng.Next(1,7) + World.Rng.Next(1,7));
 		return this;
 	}
 
+/// <summary>
+/// Adds a number of levels to this Actor's currently active class.
+/// </summary>
+/// <param name="levels">the number of levels to add, subject to growth-scales</param>
+/// <returns>this Actor</returns>
 	public Actor LevelUp(int levels = 1)
 	{
 		if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
 		{
+			GrowAbilities(_classLevels[_activeClass],null);
+			levels = (int)Math.Round(activeClassLevels.Class.AbilityGrowth[Ability.Level] * levels);
+			levels = levels == 0 ? 1 : levels;
 			activeClassLevels.Level += levels;
 		}
 		else
 		{
-		    _classLevels.Add(_activeClass,new ClassLevels(World.CharacterClasses[_activeClass],levels));
+			ClassLevels @class = new (World.CharacterClasses[_activeClass],0);
+			levels = (int)Math.Round(@class.Class.AbilityGrowth[Ability.Level] * levels);
+			levels = levels == 0 ? 1 : levels;
+			@class.Level += levels;
+		    _classLevels.Add(_activeClass,@class);
 		}
 		_abilities[Ability.Level].BaseValue += levels;
+		GrowAbilities(_classLevels[_activeClass],levels);
+		ReCalculateDerivedStatistics();
+		return this;
+	}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="class">the class levels</param>
+/// <param name="levels">when null, removes all current abilities gained from this class' levels</param>
+/// <returns>this Actor</returns>
+	private Actor GrowAbilities(ClassLevels classLevels,int? levels)
+	{
+		foreach ((Ability key, CharacterResource ability) in _abilities)
+		{
+			ability.BaseValue += (int)(classLevels.Class.AbilityGrowth[key] * (levels ?? -classLevels.Level));
+		}
+		return this;
+	}
+
+/// <summary>
+/// Remove an amount of levels from this Actor's currently active class.
+/// </summary>
+/// <param name="levels">the levels to remove, unaffected by growth scales</param>
+/// <returns>this Actor</returns>
+	public Actor RemoveLevels(int levels)
+	{
+		if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
+		{
+			GrowAbilities(_classLevels[_activeClass],null);
+			activeClassLevels.Level -= levels;
+		}
+		else
+		{
+		    _classLevels.Add(_activeClass,new ClassLevels(World.CharacterClasses[_activeClass],-levels));
+		}
+		_abilities[Ability.Level].BaseValue -= levels;
+		GrowAbilities(_classLevels[_activeClass],-levels);
 		ReCalculateDerivedStatistics();
 		return this;
 	}
@@ -194,5 +257,5 @@ public class Actor : GameObject
 		_resources[resource].BaseValue = value;
 		return this;
 	}
-	#endregion
+#endregion
 }

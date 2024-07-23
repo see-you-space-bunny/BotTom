@@ -10,6 +10,7 @@ using ModularPlugins.Interfaces;
 
 using FGlobals;
 using CardGame;
+using FGlobals.Enums;
 
 namespace BotTom;
 
@@ -162,10 +163,10 @@ partial class Program
 
 ////////////// Add our plugins here ////////////////////////////////////////////////
 #if DEBUG
-			F_Bot.AddPlugin(BotModule.System,new FChatGlobalCommands(F_Chat,new TimeSpan(15000))
+			F_Bot.AddPlugin(BotModule.System,	new FChatGlobalCommands(F_Chat,new TimeSpan(15000))
 				.SetOperators(F_Owner,		Privilege.OwnerOperator)
 				.SetOperators(F_GlobalOps,	Privilege.GlobalOperator));
-			F_Bot.AddPlugin(BotModule.XCG,new FChatTournamentOrganiser(F_Chat,new TimeSpan(500)));
+			F_Bot.AddPlugin(BotModule.XCG,		new FChatTournamentOrganiser(F_Chat,new TimeSpan(500)));
 #else
 			F_Bot.AddPlugin<FChatGlobalCommands>(new FChatGlobalCommands(F_Chat)
 				.SetOperators(F_Owner,		Privilege.OwnerOperator)

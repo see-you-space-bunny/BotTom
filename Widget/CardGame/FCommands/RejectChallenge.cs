@@ -11,7 +11,7 @@ using CardGame.Commands;
 
 namespace CardGame;
 
-public partial class FChatTournamentOrganiser : FChatPlugin
+public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>
 {
 	private bool RejectChallenge(CommandTokens command,FChatMessageBuilder commandResponse,FChatMessageBuilder challengerAlertResponse)
 	{

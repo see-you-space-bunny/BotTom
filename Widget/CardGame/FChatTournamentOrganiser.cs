@@ -21,7 +21,7 @@ using ModularPlugins.Interfaces;
 
 namespace CardGame;
 
-public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
+public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IFChatPlugin
 {
 	private const string GameChannelName = "ครtгคl ςђค๓קเ๏ภร";
 
@@ -41,19 +41,35 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 		PlayerCharacters		= [];
 		IncomingChallenges      = [];
 		OngoingMatches          = [];
+		RegisterCommandRestrictions();
+	}
+
+	private void RegisterCommandRestrictions()
+	{
+		ChannelLockedCommands.Add(CardGameCommand.Summon);
+		ChannelLockedCommands.Add(CardGameCommand.Attack);
+		ChannelLockedCommands.Add(CardGameCommand.Special);
+		ChannelLockedCommands.Add(CardGameCommand.Confirm);
+		ChannelLockedCommands.Add(CardGameCommand.Target);
+		ChannelLockedCommands.Add(CardGameCommand.Info);
+
+		WhispersLockedCommands.Add(CardGameCommand.CgImportStats);
+		WhispersLockedCommands.Add(CardGameCommand.Challenge);
+		WhispersLockedCommands.Add(CardGameCommand.Accept);
+		WhispersLockedCommands.Add(CardGameCommand.Reject);
 	}
 
 	private static void PreProcessEnumAttributes()
 	{
-		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(CharacterStat));
-		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(CharacterStatGroup));
-		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(CardGameCommand));
+		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute	>(typeof(CharacterStat));
+		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute	>(typeof(CharacterStatGroup));
+		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute	>(typeof(CardGameCommand));
 
-		AttributeExtensions.ProcessEnumForAttribute<StatAliasAttribute  >(typeof(CharacterStat));
-		
-		AttributeExtensions.ProcessEnumForAttribute<StatGroupAttribute  >(typeof(CharacterStat));
+		AttributeExtensions.ProcessEnumForAttribute<StatAliasAttribute  	>(typeof(CharacterStat));
+			
+		AttributeExtensions.ProcessEnumForAttribute<StatGroupAttribute  	>(typeof(CharacterStat));
 
-		AttributeExtensions.ProcessEnumForAttribute<StatDecorationAttribute  >(typeof(CharacterStat));
+		AttributeExtensions.ProcessEnumForAttribute<StatDecorationAttribute	>(typeof(CharacterStat));
 	}
 
 	public override void HandleRecievedMessage(CommandTokens command)
@@ -144,7 +160,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
 						FChatApi.EnqueueMessage(alertTargetMessage);
 					return true;
 
-				case CardGameCommand.Set:
+				case CardGameCommand.CgImportStats:
 					return false;
 				
 				default:

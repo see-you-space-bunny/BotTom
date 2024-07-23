@@ -14,7 +14,7 @@ using FGlobals.Enums;
 
 namespace FGlobals;
 
-public partial class FChatGlobalCommands : FChatPlugin, IFChatPlugin
+public partial class FChatGlobalCommands : FChatPlugin<GlobalCommand>, IFChatPlugin
 {
 
 
@@ -23,7 +23,18 @@ public partial class FChatGlobalCommands : FChatPlugin, IFChatPlugin
 #endif
 
 	public FChatGlobalCommands(ApiConnection api, TimeSpan updateInterval) : base(api, updateInterval)
-	{ }
+	{
+		RegisterCommandRestrictions();
+	}
+
+	private void RegisterCommandRestrictions()
+	{
+		ChannelLockedCommands.Add(GlobalCommand.ChInvite);
+		WhispersLockedCommands.Add(GlobalCommand.ChCreate);
+		WhispersLockedCommands.Add(GlobalCommand.Register);
+		WhispersLockedCommands.Add(GlobalCommand.UnRegister);
+		WhispersLockedCommands.Add(GlobalCommand.Whoami);
+	}
 
 	private static void PreProcessEnumAttributes()
 	{

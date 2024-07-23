@@ -15,16 +15,22 @@ public class @LevelGame(ITestOutputHelper output)
 	private readonly ITestOutputHelper _output = output;
 	
 	[Theory]
-	[InlineData("Adventurer","Testo Telesto",110,105,105)]
-	[InlineData("Merchant","Besto Balesto",55,50,50)]
-	[InlineData("Nobody","Bronto Balonto",11,10,10)]
-	public void TestNewCharacter(string className,string characterName,int health,int protection,int evasion)
+	[InlineData("Nobody"		,10		,20		,10		,10		)]
+	[InlineData("Adventurer"	,10		,204	,203	,203	)]
+	[InlineData("Merchant"		,10		,102	,101	,102	)] // evasion off by 1: (expected 103)
+	[InlineData("Nobody"		,100	,110	,10		,10		)]
+	[InlineData("Adventurer"	,100	,1153	,1149	,1151	)]
+	[InlineData("Merchant"		,100	,579	,579	,586	)]
+	[InlineData("Nobody"		,200	,210	,10		,10		)]
+	[InlineData("Adventurer"	,200	,2208	,2200	,2202	)]
+	[InlineData("Merchant"		,200	,1109	,1110	,1123	)]
+	public void TestNewCharacter(string className,int levels,int health,int protection,int evasion)
 	{
-		World.LoadClasses("CharacterClasses.csv");
-		CharacterSheet character = new(0uL,characterName);
-		character.ChangeClass(Enum.Parse<ClassName>(className)).LevelUp().FullRecovery();
-		Assert.InRange<int>(character.Health.Current,health,health*2);
-		Assert.InRange<int>(character.Protection.Current,protection,protection*2);
-		Assert.InRange<int>(character.Evasion.Current,evasion,evasion*2);
+		World.LoadClasses("CharacterClasses - Export.csv");
+		CharacterSheet character = new(0uL,"Testo Telesto");
+		character.ChangeClass(Enum.Parse<ClassName>(className)).LevelUp(levels).FullRecovery();
+		Assert.Equal(health,		character.Health.Current);
+		Assert.Equal(protection,	character.Protection.Current);
+		Assert.Equal(evasion,		character.Evasion.Current);
 	}
 }

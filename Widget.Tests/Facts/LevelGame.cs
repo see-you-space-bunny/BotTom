@@ -20,7 +20,7 @@ public class @LevelGame(ITestOutputHelper output)
 	{
 		string className = "Adventurer";
 
-		List<CharacterClass> characterClasses = DeserializeKommaVaues.GetClasses(Path.Combine(CsvDirectory,$"CharacterClasses.csv"));
+		List<CharacterClass> characterClasses = DeserializeKommaVaues.GetClasses(Path.Combine(CsvDirectory,$"CharacterClasses - Export.csv"));
 
 		Assert.Contains(characterClasses, c => c.ToString() == className);
 		

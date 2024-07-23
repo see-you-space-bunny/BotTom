@@ -13,7 +13,7 @@ using FChatApi.Core;
 
 namespace CardGame;
 
-public partial class FChatTournamentOrganiser : FChatPlugin
+public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>
 {
 	private bool AcceptChallenge(CommandTokens command,FChatMessageBuilder commandResponse)
 	{

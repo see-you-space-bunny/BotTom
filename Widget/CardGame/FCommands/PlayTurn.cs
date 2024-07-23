@@ -11,7 +11,7 @@ using ModularPlugins.Interfaces;
 
 namespace CardGame;
 
-public partial class FChatTournamentOrganiser : FChatPlugin, IFChatPlugin
+public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IFChatPlugin
 {
 	private bool SummonAction(CommandTokens command,FChatMessageBuilder messageBuilder,BoardState boardState,out string lastGameAction)
 	{

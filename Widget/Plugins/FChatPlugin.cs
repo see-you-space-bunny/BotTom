@@ -16,13 +16,19 @@ namespace ModularPlugins;
 /// <param name="api"></param>
 /// <param name="commandChar">the symbol that wakes the module up</param>
 /// <param name="updateInterval">how often this module runs Update().<br/>defaults to: Never</param>
-public class FChatPlugin(ApiConnection api, TimeSpan updateInterval) : PluginBase(updateInterval), IFChatPlugin
+public class FChatPlugin<TCommand>(ApiConnection api, TimeSpan updateInterval) : PluginBase(updateInterval), IFChatPlugin
 {
 	/// <summary>our api connection</summary>
 	public ApiConnection FChatApi { get; } = api;
 
 	/// <summary>the channels in which this module is active</summary>
 	public Dictionary<string, Channel> ActiveChannels { get; } = [];
+
+	/// <summary>commands which can only be used in <c>ActiveChannels</c></summary>
+	public List<TCommand> ChannelLockedCommands { get; } = [];
+
+	/// <summary>commands which can only be used in whispers</summary>
+	public List<TCommand> WhispersLockedCommands { get; } = [];
 
 	/// <summary>the operators </summary>
 	public Dictionary<string, Privilege> Operators { get; } = [];
@@ -51,7 +57,7 @@ public class FChatPlugin(ApiConnection api, TimeSpan updateInterval) : PluginBas
 	/// <summary>
 	/// Add Operators to the module
 	/// </summary>
-	public FChatPlugin SetOperators(IEnumerable<string> values,Privilege privilege)
+	public FChatPlugin<TCommand> SetOperators(IEnumerable<string> values,Privilege privilege)
 	{
 		if (privilege >= Privilege.GlobalOperator)
 		{

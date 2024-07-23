@@ -87,7 +87,7 @@ public class CharacterSheet : Actor
 			characterSheet.LevelUp((int) reader.ReadInt32());
 		}
 		characterSheet.ChangeClass((ClassName)	reader.ReadUInt32());
-		characterSheet.LevelSanityCheck();
+		characterSheet._abilities[Ability.Level].BaseValue = characterSheet._classLevels.Values.Sum((cl)=>cl.Level);
 
 		for (int i=0;i<reader.ReadUInt32();i++)
 		{

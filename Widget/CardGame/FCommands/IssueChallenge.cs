@@ -13,7 +13,7 @@ using System.Text.RegularExpressions;
 
 namespace CardGame;
 
-public partial class FChatTournamentOrganiser : FChatPlugin
+public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>
 {
 	private bool IssueChallenge(CommandTokens command,FChatMessageBuilder commandResponse,FChatMessageBuilder targetAlertResponse)
 	{

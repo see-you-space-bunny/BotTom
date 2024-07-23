@@ -37,7 +37,7 @@ public enum CardGameCommand
 	
 	/// <summary>set STAT VALUE</summary>
 	[Description("")]
-	Set,
+	CgImportStats,
 
 	/// <summary>challenge STAT1 STAT2 [user]charactername[/user]</summary>
 	[Description("")]
