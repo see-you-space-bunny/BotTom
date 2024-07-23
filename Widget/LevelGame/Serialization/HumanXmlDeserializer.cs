@@ -8,6 +8,7 @@ using LevelGame.Attributes;
 
 namespace LevelGame.Serialization;
 
+/**
 public static class HumanXmlDeserializer
 {
 	#region Paths
@@ -46,9 +47,9 @@ public static class HumanXmlDeserializer
 
 	private static readonly CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
 
-	public static void /** ItemSettings */ GetItemSettings(string filePath) { }
+	public static void /** ItemSettings / GetItemSettings(string filePath) { }
 
-	public static void /** FeatSettings */ GetFeatSettings(string filePath) { }
+	public static void /** FeatSettings / GetFeatSettings(string filePath) { }
 
 	public static IEnumerable<CharacterClass> GetClasses(string filePath)
 	{
@@ -136,12 +137,12 @@ public static class HumanXmlDeserializer
 	{
 		if (resourceAbilityLimits.Attributes is null)
 			return;
-		
-		/** TODO: Add "health ability limits" to CharacterClass / CharacterClassBuilder
+		/**
+		 TODO: Add "health ability limits" to CharacterClass / CharacterClassBuilder
 		foreach(Ability ability in Enum.GetValues(typeof(Ability)).Cast<Ability>())
 			if (healthAbilities.Attributes[ability.ToString()] != null)
 				ccb.WithHealthAbilityLimit(ability,float.Parse(healthAbilities.Attributes[ability.ToString()]!.Value,culture));
-		*/
+		/
 	}
 
 	private static bool TrySelectSingleNode(XmlNode node,string xpath,out XmlNode xmlNode)
@@ -152,3 +153,4 @@ public static class HumanXmlDeserializer
 		return true;
 	}
 }
+*/

@@ -11,13 +11,13 @@ public class ActiveStatusEffect
 {
 	public required StatusEffect EffectType;
 	
-	public required List<(Ability Ability,float BaseValue)> AffectsAbilities;
+	public List<(Ability Ability,float BaseValue)> AffectsAbilities;
 
-	public required List<(Resource Ability,ResourceModifier Modifier,float BaseValue)> AffectsResources;
+	public List<(Resource Ability,ResourceModifier Modifier,float BaseValue)> AffectsResources;
 
-	public required List<(DerivedAbility Ability,float BaseValue)> AffectsDerivedAbilities;
+	public List<(DerivedAbility Ability,float BaseValue)> AffectsDerivedAbilities;
 
-	public required List<(BodyAttribute Ability,float BaseValue)> AffectsBodyAttributes;
+	public List<(BodyAttribute Ability,float BaseValue)> AffectsBodyAttributes;
 	
 	public float Intensity;
 	
@@ -33,14 +33,10 @@ public class ActiveStatusEffect
 
 	public StatusEffectTermination Termination;
 
-	public void Apply()
-	{
-
-	}
-
-	private ActiveStatusEffect()
+	internal ActiveStatusEffect()
 	{
 		AffectsAbilities		= [];
+		AffectsResources		= [];
 		AffectsDerivedAbilities	= [];
 		AffectsBodyAttributes	= [];
 		Intensity				= 1.0f;

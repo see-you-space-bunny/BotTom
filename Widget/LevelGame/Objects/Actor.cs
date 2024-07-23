@@ -8,11 +8,11 @@ namespace LevelGame.Objects;
 
 public class Actor : GameObject
 {
-	#region Constant
+	#region (+) Constants
 	public const float HealthPointsScalingFactor = 1.115f;
 	#endregion
 
-	#region Fields(#)
+	#region (#) Fields
 	protected ClassName _activeClass;
 	protected Dictionary<ClassName,ClassLevels> _classLevels;
 	protected Dictionary<Ability,CharacterResource> _abilities;
@@ -21,7 +21,7 @@ public class Actor : GameObject
 	protected List<ActiveStatusEffect> _statusEffects;
 	#endregion
 
-	#region Properties (+)
+	#region (+) Properties
 	public CharacterResource Health		=>	_resources[Resource.Health];
 	public CharacterResource Protection	=>	_resources[Resource.Protection];
 	public CharacterResource Evasion	=>	_resources[Resource.Evasion];
@@ -52,6 +52,13 @@ public class Actor : GameObject
 
 		_classLevels = [];
 	}
+
+	#region Interaction
+	public void ApplyStatusEffect(StatusEffect statusEffect,float intensity,Actor? source)
+	{
+		_statusEffects.Add(new ActiveStatusEffect(){ EffectType = statusEffect, Target = this, Intensity = intensity, Source = source});
+	}
+	#endregion
 
 	#region Calculation
 	public Actor ReCalculateAll()
@@ -96,7 +103,7 @@ public class Actor : GameObject
 			CalcResourceLimits(classLevels,resource);
 		}
 		if (resource.Key.GetEnumAttribute<Resource,GameFlagsAttribute>().ScalesOnLimitChange)
-			resource.Value.Current *= Math.Max(Math.Max(resource.Value.SoftLimit / previousSoftLimit, resource.Value.HardLimit / previousHardLimit),1);
+			resource.Value.BaseValue *= Math.Max(Math.Max(resource.Value.SoftLimit / Math.Max(previousSoftLimit,1), resource.Value.HardLimit / Math.Max(previousHardLimit,1)),1);
 	}
 
 	private void CalcResourceLimits(ClassLevels classLevels,KeyValuePair<Resource, CharacterResource> resource)
@@ -106,15 +113,15 @@ public class Actor : GameObject
 	}
 
 	/// <summary>
-	/// SoftLimit formula: (int) BaseValue + Level * BaseGrowth + SumOfEach(Ability * MOD)
+	/// SoftLimit formula: (int) ClassBaseValue + ClassLevel * ClassLevelScales + SumOfEach(Ability * ClassAbilityScales)
 	/// </summary>
 	private int CalcResourceLimit(ClassLevels classLevels, Resource resource,ResourceModifier limit) =>
 		(int)Math.Max(
 			classLevels.Class.ResourceModifiers[resource][limit] *
 			(
 				classLevels.Class.ResourceModifiers[resource][ResourceModifier.BaseValue] +
-				classLevels.Level * classLevels.Class.ResourceModifiers[resource][ResourceModifier.BaseGrowth] +
-				_abilities.Keys.Sum(k =>(int)(_abilities[k].Current *classLevels.Class.ResourceAbilityScales[resource][k]))
+				classLevels.Level * classLevels.Class.ResourceAbilityScales[resource][Ability.Level] +
+				_abilities.Keys.Where(k=>k!=Ability.Level).Sum(k =>(int)(_abilities[k].Current * classLevels.Class.ResourceAbilityScales[resource][k]))
 			),
 			classLevels.Class.ResourceModifiers[resource][ResourceModifier.MinimumValue]
 		);
@@ -123,7 +130,7 @@ public class Actor : GameObject
 	{
 		int level = _classLevels.Values.Sum((cl)=>cl.Level);
 		if (level != _abilities[Ability.Level].BaseValue)
-			_abilities[Ability.Level].Current = level;
+			_abilities[Ability.Level].BaseValue = level;
 		return level;
 	}
 	#endregion
@@ -145,7 +152,7 @@ public class Actor : GameObject
 		{
 		    _classLevels.Add(_activeClass,new ClassLevels(World.CharacterClasses[_activeClass],levels));
 		}
-		_abilities[Ability.Level].Current += levels;
+		_abilities[Ability.Level].BaseValue += levels;
 		ReCalculateDerivedStatistics();
 		return this;
 	}
@@ -159,11 +166,11 @@ public class Actor : GameObject
 			{
 				if (resource.Value.IsSoftLimited)
 				{
-					resource.Value.Current = resource.Value.SoftLimit;
+					resource.Value.BaseValue = resource.Value.SoftLimit;
 				}
 				else if (resource.Value.IsHardLimited)
 				{
-					resource.Value.Current = resource.Value.HardLimit;
+					resource.Value.BaseValue = resource.Value.HardLimit;
 				}
 			}
 		}
@@ -178,13 +185,13 @@ public class Actor : GameObject
 
 	public Actor AddToResource(Resource resource,int value)
 	{
-		_resources[resource].Current += value;
+		_resources[resource].BaseValue += value;
 		return this;
 	}
 
 	public Actor SetResource(Resource resource,int value)
 	{
-		_resources[resource].Current = value;
+		_resources[resource].BaseValue = value;
 		return this;
 	}
 	#endregion

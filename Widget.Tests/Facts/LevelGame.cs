@@ -13,32 +13,32 @@ public class @LevelGame(ITestOutputHelper output)
 {
 	private readonly ITestOutputHelper _output = output;
 
-    static readonly string XmlDirectory;
+    static readonly string CsvDirectory;
 	
 	[Fact]
 	public void TestReadableDeserializer()
 	{
 		string className = "Adventurer";
 
-		IEnumerable<CharacterClass> characterClasses = HumanXmlDeserializer.GetClasses(Path.Combine(XmlDirectory,$"CharacterClasses.xml"));
+		List<CharacterClass> characterClasses = DeserializeKommaVaues.GetClasses(Path.Combine(CsvDirectory,$"CharacterClasses.csv"));
 
-		Assert.Contains(characterClasses, c => c.TextName == className);
+		Assert.Contains(characterClasses, c => c.ToString() == className);
 		
-		CharacterClass @class = characterClasses.First(c => c.TextName == className);
+		CharacterClass @class = characterClasses.First(c => c.ToString() == className);
 
-		Assert.Equal(100.0f,	@class.ResourceModifiers[Resource.Health][ResourceModifier.BaseValue]);
-		Assert.Equal(0.75f,		@class.ResourceModifiers[Resource.Health][ResourceModifier.SoftLimit]);
-		Assert.Equal(2.00f,		@class.ResourceModifiers[Resource.Health][ResourceModifier.HardLimit]);
+		Assert.Equal(100.0f,	@class.ResourceModifiers	[Resource.Health][ResourceModifier.BaseValue]);
+		Assert.Equal(1.75f,		@class.ResourceModifiers	[Resource.Health][ResourceModifier.HardLimit]);
 
 		Assert.Equal(0.25f,		@class.ResourceAbilityScales[Resource.Health][Ability.Power]);
-		Assert.Equal(0.65f,		@class.ResourceAbilityScales[Resource.Health][Ability.Body]);
-		Assert.Equal(0.10f,		@class.ResourceAbilityScales[Resource.Health][Ability.Reflex]);
+		Assert.Equal(0.70f,		@class.ResourceAbilityScales[Resource.Health][Ability.Body]);
+		Assert.Equal(0.00f,		@class.ResourceAbilityScales[Resource.Health][Ability.Reflex]);
+		Assert.Equal(0.05f,		@class.ResourceAbilityScales[Resource.Health][Ability.Luck]);
 	}
 
 	private static void DirectorySanityCheck()
 	{
-		if (!Directory.Exists(XmlDirectory))
-			Directory.CreateDirectory(XmlDirectory);
+		if (!Directory.Exists(CsvDirectory))
+			Directory.CreateDirectory(CsvDirectory);
 	}
 
 	private static void Serialize<T>(T serializable, string fileName)
@@ -52,7 +52,7 @@ public class @LevelGame(ITestOutputHelper output)
 
 	static @LevelGame()
 	{
-		XmlDirectory = Path.Combine(Environment.CurrentDirectory,"xml");
+		CsvDirectory = Path.Combine(Environment.CurrentDirectory,"csv");
 		DirectorySanityCheck();
 	}
 }

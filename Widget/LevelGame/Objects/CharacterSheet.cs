@@ -91,12 +91,12 @@ public class CharacterSheet : Actor
 
 		for (int i=0;i<reader.ReadUInt32();i++)
 		{
-			characterSheet._abilities[(Ability) reader.ReadUInt16()].Current = reader.ReadInt32();
+			characterSheet._abilities[(Ability) reader.ReadUInt16()].BaseValue = reader.ReadInt32();
 		}
 
 		for (int i=0;i<reader.ReadUInt32();i++)
 		{
-			characterSheet._resources[(Resource) reader.ReadUInt16()].Current = reader.ReadInt32();
+			characterSheet._resources[(Resource) reader.ReadUInt16()].BaseValue = reader.ReadInt32();
 		}
 
 		return characterSheet;

@@ -1,8 +1,10 @@
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using FChatApi.Attributes;
+using FChatApi.Objects;
 using LevelGame.Attributes;
 using LevelGame.Enums;
+using LevelGame.Objects;
 using LevelGame.Serialization;
 using LevelGame.SheetComponents;
 
@@ -10,26 +12,31 @@ namespace LevelGame.Core;
 
 public static class World
 {
-    static readonly string XmlDirectory;
+    private static readonly string CsvDirectory;
 	internal static readonly Random Rng;
     internal static readonly ConcurrentDictionary<ClassName,CharacterClass> CharacterClasses;
+    internal static readonly ConcurrentDictionary<string,CharacterSheet> CharacterSheets;
 
 
-	public static void LoadClasses(string filePath) => LoadClasses(XmlDirectory,filePath);
+	public static void LoadClasses(string filePath) => LoadClasses(CsvDirectory,filePath);
 
 	public static void LoadClasses(string directory,string filePath)
 	{
-		foreach (CharacterClass @class in HumanXmlDeserializer.GetClasses(Path.Combine(directory,filePath)))
+		foreach (CharacterClass @class in DeserializeKommaVaues.GetClasses(Path.Combine(directory,filePath)))
 		{
 			CharacterClasses.AddOrUpdate(@class.Name,(k)=>@class,(k,v)=>@class);
 		}
 	}
 
-
 	private static void DirectorySanityCheck()
 	{
-		if (!Directory.Exists(XmlDirectory))
-			Directory.CreateDirectory(XmlDirectory);
+		if (!Directory.Exists(CsvDirectory))
+			Directory.CreateDirectory(CsvDirectory);
+	}
+
+	public static void ApplyStatusEffect(User target,StatusEffect statusEffect,float intensity,User? source)
+	{
+		CharacterSheets[target.Name].ApplyStatusEffect(statusEffect,intensity,source is null ? null : CharacterSheets[source.Name]);
 	}
 
 	static World()
@@ -57,8 +64,9 @@ public static class World
 
 		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute		>(typeof(StatusEffect));
 
-		CharacterClasses = [];
-		XmlDirectory = Path.Combine(Environment.CurrentDirectory,"xml");
+		CharacterClasses 	= [];
+		CharacterSheets		= new ConcurrentDictionary<string, CharacterSheet>(StringComparer.InvariantCultureIgnoreCase);
+		CsvDirectory = Path.Combine(Environment.CurrentDirectory,"csv");
 		Rng = new Random();
 		DirectorySanityCheck();
 	}

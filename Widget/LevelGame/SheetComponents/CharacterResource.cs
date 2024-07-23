@@ -11,22 +11,30 @@ public class CharacterResource(int baseValue = 0,int hardLimit = -1,int softLimi
 	{ }
 
 	private int _baseValue = baseValue;
+	private int _softLimit = softLimit;
+	private int _hardLimit = hardLimit;
 
-	public int BaseValue => _baseValue;
+	public int BaseValue {
+		get => _baseValue;
+		set => _baseValue = IsHardLimited && value > HardLimit ?
+			HardLimit : value;
+	}
 
 	public int Current {
-		get => IsSoftLimited && _baseValue > SoftLimit? SoftLimit : _baseValue;
-		set => _baseValue = IsHardLimited && value > HardLimit? HardLimit : value;
+		get => IsSoftLimited && CurrentNoSoftLimit > SoftLimit ?
+			SoftLimit : CurrentNoSoftLimit;
 	}
 
 	public int SumOfModifiers { get; set; }
+	public float CombinedMultipliers { get; set; } = 1.0f;
 
-	public List<float> Multipliers { get; } = [];
+	public int SumOfLimitModifiers { get; set; }
+	public float CombinedLimitMultipliers { get; set; } = 1.0f;
 
-	public int CurrentNoSoftLimit { get=>_baseValue; }
+	public int CurrentNoSoftLimit { get=>(int)((_baseValue + SumOfModifiers)*CombinedMultipliers); }
 
-	public int SoftLimit { get; set; } = softLimit;
-	public int HardLimit { get; set; } = hardLimit;
+	public int SoftLimit { get=>(int)((_softLimit + SumOfLimitModifiers)*CombinedLimitMultipliers); set=> _softLimit=value; }
+	public int HardLimit { get=>(int)((_hardLimit + SumOfLimitModifiers)*CombinedLimitMultipliers); set=> _hardLimit=value; }
 	
 	public bool IsSoftLimited { get; set; } = softLimit >= 0;
 	public bool IsHardLimited { get; set; } = hardLimit >= 0;

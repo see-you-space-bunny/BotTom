@@ -16,11 +16,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="xml/**" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="csv/**" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\FChatApi\FChatApi.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="CsvHelper" Version="33.0.1" />
 	</ItemGroup>
 	
 </Project>
