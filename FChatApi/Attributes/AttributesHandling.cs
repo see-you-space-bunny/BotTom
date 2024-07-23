@@ -28,7 +28,8 @@ public static class AttributeExtensions
 	/// </summary>
 	static AttributeExtensions()
 	{
-		_staticEnumAttributeLookup = [];
+		_staticEnumAttributeLookup	= [];
+		_staticClassAttributeLookup	= [];
 
 		// Put known enum types here to speed things up later
 		ProcessEnumForAttribute<DescriptionAttribute			>(typeof(Privilege));
