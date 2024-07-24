@@ -87,7 +87,7 @@ public class CharacterSheet : Actor
 			characterSheet.LevelUp((int) reader.ReadInt32());
 		}
 		characterSheet.ChangeClass((ClassName)	reader.ReadUInt32());
-		characterSheet._abilities[Ability.Level].BaseValue = characterSheet._classLevels.Values.Sum((cl)=>cl.Level);
+		characterSheet.Level.BaseValue = characterSheet._classLevels.Values.Sum((cl)=>cl.Level);
 
 		for (int i=0;i<reader.ReadUInt32();i++)
 		{
@@ -125,8 +125,8 @@ public class CharacterSheet : Actor
 		}
 		writer.Write((uint)		_activeClass);
 
-		writer.Write((uint) 	_abilities.Count);
-		foreach (var ability in _abilities.Where(a=>a.Key != Ability.Level))
+		writer.Write((uint) 	Abilities.Count);
+		foreach (var ability in Abilities)
 		{
 			writer.Write((ushort)	ability.Key);
 			writer.Write((int)		ability.Value.BaseValue);

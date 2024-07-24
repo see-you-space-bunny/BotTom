@@ -25,7 +25,8 @@ public class Actor : GameObject
 	public CharacterResource Health		=>	_resources[Resource.Health];
 	public CharacterResource Protection	=>	_resources[Resource.Protection];
 	public CharacterResource Evasion	=>	_resources[Resource.Evasion];
-	public new int Level				=>	_abilities[Ability.Level].Current;
+	public Dictionary<Ability,CharacterResource> Abilities => _abilities.Where(k=>k.Key!=Ability.Level).ToDictionary();
+	public new CharacterResource Level	=>	_abilities[Ability.Level];
 #endregion
 	
 	public Actor() : base(0)
@@ -74,7 +75,7 @@ public class Actor : GameObject
 		{
 			foreach ((Ability ability,float baseValue) in effect.AffectsAbilities)
 			{
-				_abilities[ability].SumOfModifiers += (int)(baseValue * effect.Intensity);
+				_abilities[ability].SumOfModifiers += baseValue * effect.Intensity;
 			}
 		}
 		return this;
@@ -102,9 +103,6 @@ public class Actor : GameObject
 		int highestMinimumValue	= int.MinValue;
 		foreach(ClassLevels classLevels in _classLevels.Values.Where((cl)=>cl.Level>0))
 		{
-		}
-		foreach(ClassLevels classLevels in _classLevels.Values.Where((cl)=>cl.Level>0))
-		{
 			highestMinimumValue	= Math.Max(highestBaseValue,(int)classLevels.Class.ResourceModifiers[resource.Key][ResourceModifier.MinimumValue]);
 			highestBaseValue	= Math.Max(highestBaseValue,(int)classLevels.Class.ResourceModifiers[resource.Key][ResourceModifier.BaseValue]);
 			CalcResourceLimits(classLevels,resource);
@@ -125,8 +123,8 @@ public class Actor : GameObject
 
 	private void CalcResourceLimits(ClassLevels classLevels,KeyValuePair<Resource, CharacterResource> resource)
 	{
-		resource.Value.SoftLimit = resource.Value.IsSoftLimited ? CalcResourceLimit(classLevels, resource.Key,ResourceModifier.SoftLimit) : -1;
-		resource.Value.HardLimit = resource.Value.IsHardLimited ? CalcResourceLimit(classLevels, resource.Key,ResourceModifier.HardLimit) : -1;
+		resource.Value.SoftLimit = resource.Value.IsSoftLimited ? (int)CalcResourceLimit(classLevels, resource.Key,ResourceModifier.SoftLimit) : -1;
+		resource.Value.HardLimit = resource.Value.IsHardLimited ? (int)CalcResourceLimit(classLevels, resource.Key,ResourceModifier.HardLimit) : -1;
 	}
 	
 /// <summary>
@@ -136,11 +134,12 @@ public class Actor : GameObject
 /// <param name="resource">the resource whose limit is being calculated</param>
 /// <param name="limit">the soft of hard limit being calculated</param>
 /// <returns>the resource's calculated limit</returns>
-	private int CalcResourceLimit(ClassLevels classLevels, Resource resource,ResourceModifier limit) =>
-		(int)(classLevels.Class.ResourceModifiers[resource][limit] * (
+	private float CalcResourceLimit(ClassLevels classLevels, Resource resource,ResourceModifier limit) =>
+		classLevels.Class.ResourceModifiers[resource][limit] * (
 			classLevels.Level * classLevels.Class.ResourceAbilityScales[resource][Ability.Level] +
-			_abilities.Keys.Where(k=>k!=Ability.Level).Sum(k =>(int)(_abilities[k].Current * classLevels.Class.ResourceAbilityScales[resource][k]))
-		));
+			Abilities.Keys
+				.Sum(k =>Abilities[k].Current * classLevels.Class.ResourceAbilityScales[resource][k])
+		);
 #endregion
 
 #region Actor Extensions
@@ -164,7 +163,7 @@ public class Actor : GameObject
 	{
 		if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
 		{
-			GrowAbilities(_classLevels[_activeClass],null);
+			GrowAbilities(_classLevels[_activeClass],null,false);
 			levels = (int)Math.Round(activeClassLevels.Class.AbilityGrowth[Ability.Level] * levels);
 			levels = levels == 0 ? 1 : levels;
 			activeClassLevels.Level += levels;
@@ -177,9 +176,8 @@ public class Actor : GameObject
 			@class.Level += levels;
 		    _classLevels.Add(_activeClass,@class);
 		}
-		_abilities[Ability.Level].BaseValue += levels;
-		GrowAbilities(_classLevels[_activeClass],levels);
-		ReCalculateDerivedStatistics();
+		Level.BaseValue += levels;
+		GrowAbilities(_classLevels[_activeClass],0);
 		return this;
 	}
 
@@ -189,12 +187,44 @@ public class Actor : GameObject
 /// <param name="class">the class levels</param>
 /// <param name="levels">when null, removes all current abilities gained from this class' levels</param>
 /// <returns>this Actor</returns>
-	private Actor GrowAbilities(ClassLevels classLevels,int? levels)
+	private Actor GrowAbilities(ClassLevels classLevels,int? levels,bool recalculate = true)
 	{
-		foreach ((Ability key, CharacterResource ability) in _abilities)
+		foreach ((Ability key, CharacterResource ability) in Abilities)
 		{
-			ability.BaseValue += (int)(classLevels.Class.AbilityGrowth[key] * (levels ?? -classLevels.Level));
+			ability.BaseValue += classLevels.Class.AbilityGrowth[key] * (classLevels.Level + levels ?? -classLevels.Level);
 		}
+		if (recalculate)
+			ReCalculateDerivedStatistics();
+		return this;
+	}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="value"></param>
+/// <returns>this Actor</returns>
+	public Actor AdjustAllAbilities(int value,bool recalculate = true)
+	{
+		AdjustAbilities([.. Abilities.Keys], value,false);
+		if (recalculate)
+			ReCalculateDerivedStatistics();
+		return this;
+	}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="abilities"></param>
+/// <param name="value"></param>
+/// <returns>this Actor</returns>
+	public Actor AdjustAbilities(Ability[] abilities,int value,bool recalculate = true)
+	{
+		foreach (Ability ability in abilities)
+		{
+			AdjustAbility(ability,value,false);
+		}
+		if (recalculate)
+			ReCalculateDerivedStatistics();
 		return this;
 	}
 
@@ -204,9 +234,11 @@ public class Actor : GameObject
 /// <param name="ability"></param>
 /// <param name="value"></param>
 /// <returns>this Actor</returns>
-	public Actor AdjustAbility(Ability ability,int value)
+	public Actor AdjustAbility(Ability ability,int value,bool recalculate = true)
 	{
-		_abilities[ability].BaseValue += value;
+		Abilities[ability].BaseValue += value;
+		if (recalculate)
+			ReCalculateDerivedStatistics();
 		return this;
 	}
 
@@ -219,14 +251,14 @@ public class Actor : GameObject
 	{
 		if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
 		{
-			GrowAbilities(_classLevels[_activeClass],null);
+			GrowAbilities(_classLevels[_activeClass],null,false);
 			activeClassLevels.Level -= levels;
 		}
 		else
 		{
 		    _classLevels.Add(_activeClass,new ClassLevels(World.CharacterClasses[_activeClass],-levels));
 		}
-		_abilities[Ability.Level].BaseValue -= levels;
+		Level.BaseValue -= levels;
 		GrowAbilities(_classLevels[_activeClass],-levels);
 		ReCalculateDerivedStatistics();
 		return this;

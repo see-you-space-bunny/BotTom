@@ -10,11 +10,11 @@ public class CharacterResource(int baseValue = 0,int hardLimit = -1,int softLimi
 		this(defaults.BaseValue,defaults.HardLimit,defaults.SoftLimit,defaults.MoreIsBetter)
 	{ }
 
-	private int _baseValue = baseValue;
+	private float _baseValue = baseValue;
 	private int _softLimit = softLimit;
 	private int _hardLimit = hardLimit;
 
-	public int BaseValue {
+	public float BaseValue {
 		get => _baseValue;
 		set => _baseValue = IsHardLimited && value > HardLimit ?
 			HardLimit : value;
@@ -25,10 +25,10 @@ public class CharacterResource(int baseValue = 0,int hardLimit = -1,int softLimi
 			SoftLimit : CurrentNoSoftLimit;
 	}
 
-	public int SumOfModifiers { get; set; }
+	public float SumOfModifiers { get; set; }
 	public float CombinedMultipliers { get; set; } = 1.0f;
 
-	public int SumOfLimitModifiers { get; set; }
+	public float SumOfLimitModifiers { get; set; }
 	public float CombinedLimitMultipliers { get; set; } = 1.0f;
 
 	public int CurrentNoSoftLimit { get=>(int)((_baseValue + SumOfModifiers)*CombinedMultipliers); }
