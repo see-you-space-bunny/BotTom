@@ -2,6 +2,7 @@ using FChatApi.Attributes;
 using LevelGame.Attributes;
 using LevelGame.Core;
 using LevelGame.Enums;
+using LevelGame.Effects;
 using LevelGame.SheetComponents;
 
 namespace LevelGame.Objects;
@@ -55,9 +56,44 @@ public class Actor : GameObject
 	}
 
 #region Interaction
-	public void ApplyStatusEffect(StatusEffect statusEffect,float intensity,Actor? source)
+	public Actor ApplyAttackEffect(
+		AttackEffect attack,
+		out (
+			float	Accuracy,
+			float	AccuracyRatio,
+			bool	Hit,
+			float	Impact,
+			float	ImpactRatio,
+			bool	ProtBreak,
+			float	Harm,
+			bool	Kill
+		) info)
 	{
-		_statusEffects.Add(new ActiveStatusEffect(){ EffectType = statusEffect, Target = this, Intensity = intensity, Source = source});
+		if (!attack.TryToHit(Evasion))
+		{
+		}
+
+		if (!attack.TryToImpact(Protection))
+		{
+		}
+
+		if (!attack.TryToHarm(Health))
+		{
+
+		}
+		else
+		{
+            Core.FRoleplayMC.ApplyStatusEffect(StatusEffect.Defeated,this,1.0f, attack.Source);
+		}
+
+		info = attack.AttackInfo();
+		return this;
+	}
+
+	public Actor ApplyStatusEffect(ActiveStatusEffect statusEffect)
+	{
+		_statusEffects.Add(statusEffect);
+		return this;
 	}
 #endregion
 
@@ -150,7 +186,7 @@ public class Actor : GameObject
 /// <returns>this Actor</returns>
 	public Actor LevelUpRoll()
 	{
-		LevelUp(15 + World.Rng.Next(1,7) + World.Rng.Next(1,7) + World.Rng.Next(1,7));
+        LevelUp(15 + Core.FRoleplayMC.Rng.Next(1,7) + Core.FRoleplayMC.Rng.Next(1,7) + Core.FRoleplayMC.Rng.Next(1,7));
 		return this;
 	}
 
@@ -170,7 +206,7 @@ public class Actor : GameObject
 		}
 		else
 		{
-			ClassLevels @class = new (World.CharacterClasses[_activeClass],0);
+            ClassLevels @class = new (Core.FRoleplayMC.CharacterClasses[_activeClass],0);
 			levels = (int)Math.Round(@class.Class.AbilityGrowth[Ability.Level] * levels);
 			levels = levels == 0 ? 1 : levels;
 			@class.Level += levels;
@@ -256,7 +292,7 @@ public class Actor : GameObject
 		}
 		else
 		{
-		    _classLevels.Add(_activeClass,new ClassLevels(World.CharacterClasses[_activeClass],-levels));
+            _classLevels.Add(_activeClass, new ClassLevels(Core.FRoleplayMC.CharacterClasses[_activeClass], -levels));
 		}
 		Level.BaseValue -= levels;
 		GrowAbilities(_classLevels[_activeClass],-levels);

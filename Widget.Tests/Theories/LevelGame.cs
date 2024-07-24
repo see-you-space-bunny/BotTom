@@ -29,7 +29,7 @@ public class @LevelGame(ITestOutputHelper output)
 	[InlineData("Merchant"		,100	,630	,631	,637	,50	)]
 	public void TestResourceScaling(string className,int levels,int health,int protection,int evasion,int abilityAdjustment)
 	{
-		World.LoadClasses("CharacterClasses - Export.csv");
+		global::LevelGame.Core.FRoleplayMC.LoadClasses("CharacterClasses - Export.csv");
 		CharacterSheet character = new(0uL,"Testo Telesto");
 		character
 			.ChangeClass(Enum.Parse<ClassName>(className))

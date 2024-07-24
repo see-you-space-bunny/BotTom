@@ -24,7 +24,7 @@ public class FChatMessageBuilder()
 	/// Indicates whether or not the message has a valid Recipient.
 	/// </summary>
 	public bool HasRecipient =>
-		!(Recipient is null || string.IsNullOrWhiteSpace(Recipient.Name)) || !(Channel is null || string.IsNullOrWhiteSpace(Channel.Code));
+		!string.IsNullOrWhiteSpace(Recipient?.Name) || !string.IsNullOrWhiteSpace(Channel?.Code);
 #endregion
 
 
@@ -176,7 +176,7 @@ public class FChatMessageBuilder()
 	/// </summary>
 	private void ValidateAuthor()
 	{
-		if (Author is null || string.IsNullOrWhiteSpace(Author.Name))
+		if (string.IsNullOrWhiteSpace(Author?.Name))
 			throw new InvalidOperationException("Attempting to build an unsigned (no Author) message. A message should always have an Author!");
 	}
 

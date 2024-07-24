@@ -6,4 +6,7 @@ public enum StatusEffect
 {
     [Description]
     None,
+
+    [Description]
+    Defeated,
 }

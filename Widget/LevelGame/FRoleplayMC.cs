@@ -1,18 +1,21 @@
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using FChatApi.Attributes;
-using FChatApi.Objects;
 using LevelGame.Attributes;
 using LevelGame.Enums;
 using LevelGame.Factories;
 using LevelGame.Interfaces;
 using LevelGame.Objects;
-using LevelGame.Serialization;
 using LevelGame.SheetComponents;
+using FChatApi.Core;
+using ModularPlugins;
+using ModularPlugins.Interfaces;
+using LevelGame.Serialization;
+using FChatApi.Objects;
 
-namespace LevelGame.Core;
+namespace LevelGame;
 
-public static class FRoleplayMC
+public partial class FRoleplayMC : FChatPlugin<LevelGameCommand>, IFChatPlugin
 {
     private static readonly string CsvDirectory;
 	internal static readonly Random Rng;
@@ -54,7 +57,30 @@ public static class FRoleplayMC
 			);
 	}
 
-	static FRoleplayMC()
+    public FRoleplayMC(ApiConnection api, TimeSpan updateInterval) : base(api, updateInterval)
+    {
+		RegisterCommandRestrictions();
+	}
+
+    static FRoleplayMC()
+    {
+		CharacterClasses	= [];
+		CharacterSheets		= new ConcurrentDictionary<string, CharacterSheet>(StringComparer.InvariantCultureIgnoreCase);
+		CsvDirectory		= Path.Combine(Environment.CurrentDirectory,"csv");
+		Rng					= new Random();
+		StatusEffectFactory	= new StatusEffectFactory();
+		ActionQueue			= [];
+		DirectorySanityCheck();
+		PreProcessEnumAttributes();
+	}
+
+	private void RegisterCommandRestrictions()
+	{
+		//ChannelLockedCommands.Add(LevelGameCommand);
+		//WhispersLockedCommands.Add(LevelGameCommand);
+	}
+
+	private static void PreProcessEnumAttributes()
 	{
 		AttributeExtensions.ProcessEnumForAttribute<AbilityInfoAttribute		>(typeof(Ability));
 		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute		>(typeof(Ability));
@@ -78,13 +104,5 @@ public static class FRoleplayMC
 		AttributeExtensions.ProcessEnumForAttribute<DefaultModifierAttribute	>(typeof(ResourceModifier));
 
 		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute		>(typeof(StatusEffect));
-
-		CharacterClasses	= [];
-		CharacterSheets		= new ConcurrentDictionary<string, CharacterSheet>(StringComparer.InvariantCultureIgnoreCase);
-		CsvDirectory		= Path.Combine(Environment.CurrentDirectory,"csv");
-		Rng					= new Random();
-		StatusEffectFactory	= new StatusEffectFactory();
-		ActionQueue			= [];
-		DirectorySanityCheck();
 	}
 }
