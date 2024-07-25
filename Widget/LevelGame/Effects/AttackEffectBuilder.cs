@@ -2,13 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using LevelGame.Enums;
 using LevelGame.Objects;
 
 namespace LevelGame.Effects;
 
 public class AttackEffectBuilder
 {
-	Actor? _source;
+	Actor _source;
+	EnvironmentSource _environmentSource;
     float _harm;
     float _impact;
     float _accuracy;
@@ -56,16 +58,18 @@ public class AttackEffectBuilder
     public AttackEffect Build()
     {
         return new AttackEffect(
+			_source,
+			_environmentSource,
 			_harm,
 			_impact,
 			_accuracy,
-            [.. _carriedEffects],
-			_source
+            [.. _carriedEffects]
         );
     }
 
     public AttackEffectBuilder()
     {
+		_source			= default!;
         _harm			= 0.0f;
         _impact			= 0.0f;
         _accuracy		= 0.0f;

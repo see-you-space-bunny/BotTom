@@ -1,4 +1,5 @@
 using LevelGame.Enums;
+using LevelGame.Statistics;
 
 namespace LevelGame.Objects;
 
@@ -99,6 +100,7 @@ public class CharacterSheet : Actor
 			characterSheet._resources[(Resource) reader.ReadUInt16()].BaseValue = reader.ReadInt32();
 		}
 
+		characterSheet.Statistics = ActorStatistics.Deserialize(reader);
 		return characterSheet;
 	}
 
@@ -138,6 +140,7 @@ public class CharacterSheet : Actor
 			writer.Write((ushort)	resource.Key);
 			writer.Write((int)		resource.Value.CurrentNoSoftLimit);
 		}
+		Statistics.Serialize(writer);
 	}
 
 	#endregion

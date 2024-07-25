@@ -22,6 +22,7 @@ public partial class FRoleplayMC : FChatPlugin<LevelGameCommand>, IFChatPlugin
     internal static readonly ConcurrentDictionary<ClassName,CharacterClass> CharacterClasses;
     internal static readonly ConcurrentDictionary<string,CharacterSheet> CharacterSheets;
 	internal static StatusEffectFactory StatusEffectFactory;
+	internal static AttackFactory AttackFactory;
 	internal static List<IPendingAction> ActionQueue;
 
 
@@ -69,6 +70,7 @@ public partial class FRoleplayMC : FChatPlugin<LevelGameCommand>, IFChatPlugin
 		CsvDirectory		= Path.Combine(Environment.CurrentDirectory,"csv");
 		Rng					= new Random();
 		StatusEffectFactory	= new StatusEffectFactory();
+		AttackFactory		= new AttackFactory();
 		ActionQueue			= [];
 		DirectorySanityCheck();
 		PreProcessEnumAttributes();

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using LevelGame.Core;
 using LevelGame.Enums;
 using LevelGame.Objects;
 
@@ -134,7 +133,7 @@ public class ActiveStatusEffectBuilder
 	public bool Proc() => Proc(_procChance);
 
 	private static bool Proc(float percentageChance) =>
-Core.FRoleplayMC.Rng.Next(1,10001) > percentageChance*10000.0f;
+		FRoleplayMC.Rng.Next(1,10001) > percentageChance*10000.0f;
 
     public bool IsReadyToBuild() =>
 		_target is not null && _effectType != StatusEffect.None;

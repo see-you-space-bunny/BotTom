@@ -8,6 +8,7 @@ public class GameObject(int level)
 
 	#region Properties (+)
 	public int Level => _level;
+	public ulong Id { get; internal set; }
 	#endregion
 	
 }

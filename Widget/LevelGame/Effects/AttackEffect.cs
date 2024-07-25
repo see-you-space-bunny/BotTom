@@ -2,14 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using LevelGame.Enums;
+using LevelGame.Interfaces;
 using LevelGame.Objects;
 using LevelGame.SheetComponents;
 
 namespace LevelGame.Effects;
 
-public class AttackEffect
+public class AttackEffect : IAttackEffect
 {
-	public Actor? Source;
+	private const float MinimumStaminaRatio = 0.15f;
+
+	public Actor Source;
+	public EnvironmentSource EnvironmentSource;
 
 	public readonly float Accuracy;
 	public readonly float Impact;
@@ -19,9 +24,10 @@ public class AttackEffect
 	private float _remainingImpact;
 	private float _remainingHarm;
 
-	private float _appliedHarm;
-	private float _appliedImpact;
 	private float _appliedAccuracy;
+	private float _appliedImpact;
+	private float _appliedHarm;
+	private float _appliedOverkill;
 
 	private bool _hit;
 	private bool _protBreak;
@@ -37,11 +43,12 @@ public class AttackEffect
 /// </summary>
 /// <param name="evasion"></param>
 /// <returns>true if the attack hit its target</returns>
-	public bool TryToHit(CharacterResource evasion)
+	public bool TryToHit(CharacterResource evasion,CharacterResource health)
 	{
 		RefreshRemainingDamage();
 		int initialEvasion	= evasion.Current;
-		evasion.BaseValue   -= _remainingAccuracy; // reduce actual evasion loss by a 'stamina' value
+		_appliedAccuracy	= (float)Math.Min(_remainingAccuracy / Math.Pow(2,health.Current/health.SoftLimit),(health.Current)*MinimumStaminaRatio);
+		evasion.BaseValue   -= _appliedAccuracy;
 		_remainingAccuracy	-= initialEvasion;
 		_hit = Accuracy >= initialEvasion;
 		return _hit;
@@ -63,6 +70,7 @@ public class AttackEffect
 		if (_remainingImpact > 0)
 		{
 			float overflowImpact    = Math.Max(_remainingImpact - protection.Current,0);
+			_appliedImpact			= _remainingImpact - overflowImpact;
 			protection.BaseValue	-= _remainingImpact;
 			ImpactRatio             = overflowImpact / _remainingImpact;
 		}
@@ -86,34 +94,48 @@ public class AttackEffect
 		_remainingHarm		*= ImpactRatio;
 		health.BaseValue    -= _remainingHarm;
 		_kill = health.BaseValue <= 0;
+		if (health.BaseValue < 0)
+			_appliedOverkill -= health.BaseValue;
+		_appliedHarm = _remainingHarm - _appliedOverkill;
 		return _kill;
 	}
 
-	public (float,float,bool,float,float,bool,float,bool) AttackInfo() =>
-		(Accuracy,AccuracyRatio,_hit,Impact,ImpactRatio,_protBreak,Harm,_kill);
+	public (ulong,bool,ulong,bool,ulong,bool,ulong) AttackInfo() =>
+		((ulong)_appliedAccuracy,_hit,(ulong)_appliedImpact,_protBreak,(ulong)_appliedHarm,_kill,(ulong)_appliedOverkill);
 
 	private void RefreshRemainingDamage()
 	{
 		_remainingHarm		= Harm;
 		_remainingImpact	= Impact;
 		_remainingAccuracy	= Accuracy;
+		_appliedAccuracy	= 0;
+		_appliedImpact		= 0;
+		_appliedHarm		= 0;
+		_appliedOverkill	= 0;
 		_hit				= false;
 		_protBreak			= false;
 		_kill				= false;
 		ImpactRatio			= 0;
 	}
 
-	public AttackEffect(float harm,float impact,float accuracy,ActiveStatusEffectBuilder[]? carriedEffects = null,Actor? source = null)
+	public AttackEffect(Actor source,float harm,float impact,float accuracy,ActiveStatusEffectBuilder[]? carriedEffects = null)
 	{
-		Source			= source;
-		Harm            = harm;
-		Impact          = impact;
-		Accuracy        = accuracy;
-		CarriedEffects  = carriedEffects ?? [];
+		Source				= source;
+		EnvironmentSource	= EnvironmentSource.None;
+		Harm            	= harm;
+		Impact          	= impact;
+		Accuracy        	= accuracy;
+		CarriedEffects  	= carriedEffects ?? [];
 	}
 
-	AttackEffect()
+	public AttackEffect(Actor source,EnvironmentSource environmentSource,float harm,float impact,float accuracy,ActiveStatusEffectBuilder[]? carriedEffects = null)
+		: this(source,harm,impact,accuracy,carriedEffects)
 	{
-		CarriedEffects = [];
+		Source				= source;
+		EnvironmentSource	= environmentSource;
+		Harm            	= harm;
+		Impact          	= impact;
+		Accuracy        	= accuracy;
+		CarriedEffects  	= carriedEffects ?? [];
 	}
 }

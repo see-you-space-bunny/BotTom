@@ -6,7 +6,6 @@ using LevelGame.Objects;
 using LevelGame.Serialization;
 using System.Runtime.Serialization;
 using System.Xml;
-using LevelGame.Core;
 
 namespace Widget.Tests.Theories;
 
@@ -29,7 +28,7 @@ public class @LevelGame(ITestOutputHelper output)
 	[InlineData("Merchant"		,100	,630	,631	,637	,50	)]
 	public void TestResourceScaling(string className,int levels,int health,int protection,int evasion,int abilityAdjustment)
 	{
-		global::LevelGame.Core.FRoleplayMC.LoadClasses("CharacterClasses - Export.csv");
+		FRoleplayMC.LoadClasses("CharacterClasses - Export.csv");
 		CharacterSheet character = new(0uL,"Testo Telesto");
 		character
 			.ChangeClass(Enum.Parse<ClassName>(className))
@@ -40,5 +39,20 @@ public class @LevelGame(ITestOutputHelper output)
 		Assert.Equal(health,		character.Health.Current);
 		Assert.Equal(protection,	character.Protection.Current);
 		Assert.Equal(evasion,		character.Evasion.Current);
+	}
+	
+	[Theory]
+	[InlineData("Adventurer"	,100	,10		,10		,10		,0	)]
+	public void TestAttackScaling(string className,int levels,int accuracy,int impact,int harm,int abilityAdjustment)
+	{
+		FRoleplayMC.LoadClasses("CharacterClasses - Export.csv");
+		CharacterSheet character = new(0uL,"Testo Telesto");
+		character
+			.ChangeClass(Enum.Parse<ClassName>(className))
+			.LevelUp(levels)
+			.AdjustAllAbilities(abilityAdjustment,true)
+			.FullRecovery();
+
+
 	}
 }
