@@ -8,22 +8,20 @@ public class CharacterSheet : Actor
 	#region Fields(-)
 	private ulong _userId;
 	private string _uniqueCharacterName;
-	private string _characterName;
 	private string? _characterNickname;
 	private bool _useOnlyNickname;
 	#endregion
 
 	#region Properties (+)
-	public string CharacterName => _characterNickname != null ? (_useOnlyNickname ? _characterNickname : $"{_characterNickname} ({_characterName})") : _characterName;
+	public new string CharacterName => _characterNickname != null ? (_useOnlyNickname ? _characterNickname : $"{_characterNickname} ({_characterName})") : _characterName;
 	public bool CharacterNameIsIdentifier { get; internal set; }
 	#endregion
 
 	#region Private Constructor
-	private CharacterSheet() : base()
+	private CharacterSheet() : base(string.Empty)
 	{
 		_userId                 = 0;
 		_uniqueCharacterName    = string.Empty;
-		_characterName          = string.Empty;
 
 		_useOnlyNickname        = false;
 	}

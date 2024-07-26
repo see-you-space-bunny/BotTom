@@ -1,11 +1,7 @@
 using Xunit.Abstractions;
-
 using LevelGame;
 using LevelGame.Enums;
 using LevelGame.Objects;
-using LevelGame.Serialization;
-using System.Runtime.Serialization;
-using System.Xml;
 
 namespace Widget.Tests.Theories;
 
@@ -42,17 +38,35 @@ public class @LevelGame(ITestOutputHelper output)
 	}
 	
 	[Theory]
-	[InlineData("Adventurer"	,100	,10		,10		,10		,0	)]
-	public void TestAttackScaling(string className,int levels,int accuracy,int impact,int harm,int abilityAdjustment)
+	[InlineData("Adventurer"	,AttackType.Basic	,100	,0		,757	,817	,817	,0	)]
+	[InlineData("Adventurer"	,AttackType.Basic	,200	,100	,3030	,3270	,3270	,0	)]
+	[InlineData("Adventurer"	,AttackType.Basic	,100	,-100	,378	,408	,408	,0	)]
+	[InlineData("Adventurer"	,AttackType.Basic	,50		,-50	,262	,283	,283	,0	)]
+	public void TestAttackScaling(string className,AttackType attackType,int levels,int levelgap,int accuracy,int impact,int harm,int abilityAdjustment)
 	{
 		FRoleplayMC.LoadClasses("CharacterClasses - Export.csv");
-		CharacterSheet character = new(0uL,"Testo Telesto");
-		character
+
+		CharacterSheet attacker = new(0uL,"Alecto Attacko");
+		attacker
 			.ChangeClass(Enum.Parse<ClassName>(className))
 			.LevelUp(levels)
 			.AdjustAllAbilities(abilityAdjustment,true)
 			.FullRecovery();
 
+		CharacterSheet defender = new(0uL,"Domino Defendo");
+		defender
+			.ChangeClass(Enum.Parse<ClassName>(className))
+			.LevelUp(levels-levelgap)
+			.AdjustAllAbilities(abilityAdjustment,true)
+			.FullRecovery();
+
+		var attack = FRoleplayMC
+			.AttackPool[attackType]
+			.BuildAttack(defender,attacker);
+
+		Assert.Equal(accuracy,	(int)attack.Accuracy);
+		Assert.Equal(impact,	(int)attack.Impact);
+		Assert.Equal(harm,		(int)attack.Harm);
 
 	}
 }

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FChatApi.Core;
+using FChatApi.Objects;
 using LevelGame.Enums;
 using LevelGame.Interfaces;
 using LevelGame.Objects;
@@ -9,34 +11,45 @@ using LevelGame.SheetComponents;
 
 namespace LevelGame.Effects;
 
-public class AttackEffect : IAttackEffect
+public class AttackEffect : IPendingAction
 {
 	private const float MinimumStaminaRatio = 0.15f;
+	private const float RemainingHealthMultiplier = 2.5f;
+	/// <summary>
+	/// {0} = attacker<br/>
+	/// {1} = target<br/>
+	/// {2} = attack flavor text<br/>
+	/// {3} = die roll (attacker)<br/>
+	/// {4} = die roll (target)<br/>
+	/// {5} = attack outcome
+	/// </summary>
+	private const string DefaultMessageFormat = "{0} attacked {1} {2} ({3}🎲 vs {4}🎲)\n{5}";
 
-	public Actor Source;
-	public EnvironmentSource EnvironmentSource;
-
+	public readonly Actor Source;
+	public readonly EnvironmentSource EnvironmentSource;
+	public readonly Actor Target;
 	public readonly float Accuracy;
 	public readonly float Impact;
 	public readonly float Harm;
 
-	private float _remainingAccuracy;
-	private float _remainingImpact;
-	private float _remainingHarm;
+	private ActiveStatusEffect[] CarriedEffects;
+	
+	protected float _remainingAccuracy;
+	protected float _remainingImpact;
+	protected float _remainingHarm;
 
-	private float _appliedAccuracy;
-	private float _appliedImpact;
-	private float _appliedHarm;
-	private float _appliedOverkill;
+	protected float _appliedAccuracy;
+	protected float _appliedImpact;
+	protected float _appliedHarm;
+	protected float _appliedOverkill;
 
-	private bool _hit;
-	private bool _protBreak;
-	private bool _kill;
+	protected bool _hit;
+	protected bool _protBreak;
+	protected bool _kill;
 
-	private float AccuracyRatio => Accuracy == 0 ? Math.Max(_remainingAccuracy / Accuracy,0) : -1;
-	private float ImpactRatio = 0;
+	protected float _accuracyRatio => Accuracy == 0 ? Math.Max(_remainingAccuracy / Accuracy,0) : -1;
 
-	public readonly ActiveStatusEffectBuilder[] CarriedEffects;
+	protected float _impactRatio = 0;
 
 /// <summary>
 /// 
@@ -47,7 +60,17 @@ public class AttackEffect : IAttackEffect
 	{
 		RefreshRemainingDamage();
 		int initialEvasion	= evasion.Current;
-		_appliedAccuracy	= (float)Math.Min(_remainingAccuracy / Math.Pow(2,health.Current/health.SoftLimit),(health.Current)*MinimumStaminaRatio);
+		_appliedAccuracy	= (float)Math.Min(
+			_remainingAccuracy
+				/ (
+					health.Current
+						/ health.SoftLimit
+							* RemainingHealthMultiplier
+				),
+			_remainingAccuracy
+				- health.Current
+					* MinimumStaminaRatio
+		);
 		evasion.BaseValue   -= _appliedAccuracy;
 		_remainingAccuracy	-= initialEvasion;
 		_hit = Accuracy >= initialEvasion;
@@ -65,14 +88,14 @@ public class AttackEffect : IAttackEffect
 			return false;
 		if (Accuracy > 0)
 		{
-			_remainingImpact *= AccuracyRatio;
+			_remainingImpact *= _accuracyRatio;
 		}
 		if (_remainingImpact > 0)
 		{
 			float overflowImpact    = Math.Max(_remainingImpact - protection.Current,0);
 			_appliedImpact			= _remainingImpact - overflowImpact;
 			protection.BaseValue	-= _remainingImpact;
-			ImpactRatio             = overflowImpact / _remainingImpact;
+			_impactRatio             = overflowImpact / _remainingImpact;
 		}
 		_protBreak = protection.Current <= 0;
 		return _protBreak;
@@ -89,9 +112,9 @@ public class AttackEffect : IAttackEffect
 			return false;
 		if (Accuracy > 0)
 		{
-			_remainingHarm   *= AccuracyRatio;
+			_remainingHarm   *= _accuracyRatio;
 		}
-		_remainingHarm		*= ImpactRatio;
+		_remainingHarm		*= _impactRatio;
 		health.BaseValue    -= _remainingHarm;
 		_kill = health.BaseValue <= 0;
 		if (health.BaseValue < 0)
@@ -115,27 +138,100 @@ public class AttackEffect : IAttackEffect
 		_hit				= false;
 		_protBreak			= false;
 		_kill				= false;
-		ImpactRatio			= 0;
+		_impactRatio		= 0;
 	}
 
-	public AttackEffect(Actor source,float harm,float impact,float accuracy,ActiveStatusEffectBuilder[]? carriedEffects = null)
-	{
-		Source				= source;
-		EnvironmentSource	= EnvironmentSource.None;
-		Harm            	= harm;
-		Impact          	= impact;
-		Accuracy        	= accuracy;
-		CarriedEffects  	= carriedEffects ?? [];
-	}
+	public AttackEffect(Actor source,Actor target,float harm,float impact,float accuracy,ActiveStatusEffect[]? carriedEffects = null)
+		: this(source,EnvironmentSource.None,target,harm,impact,accuracy,carriedEffects)
+	{ }
 
-	public AttackEffect(Actor source,EnvironmentSource environmentSource,float harm,float impact,float accuracy,ActiveStatusEffectBuilder[]? carriedEffects = null)
-		: this(source,harm,impact,accuracy,carriedEffects)
+	public AttackEffect(Actor source,EnvironmentSource environmentSource,Actor target,float harm,float impact,float accuracy,ActiveStatusEffect[]? carriedEffects = null)
 	{
+		_responder			= default!;
 		Source				= source;
 		EnvironmentSource	= environmentSource;
-		Harm            	= harm;
-		Impact          	= impact;
-		Accuracy        	= accuracy;
-		CarriedEffects  	= carriedEffects ?? [];
+		Target				= target;
+		Harm				= harm;
+		Impact				= impact;
+		Accuracy			= accuracy;
+		CarriedEffects		= carriedEffects ?? [];
 	}
+
+#region IPendingAction
+	User _responder;
+	Channel? _channel;
+	User IPendingAction.Responder => _responder;
+	Channel? IPendingAction.Channel => _channel;
+
+	IPendingAction IPendingAction.WithResponder(User value)
+	{
+		_responder = value;
+		return this;
+	}
+
+	IPendingAction IPendingAction.WithChannel(Channel value)
+	{
+		_channel = value;
+		return this;
+	}
+
+	IPendingAction IPendingAction.ExecuteEffect()
+	{
+		if (!TryToHit(Target.Evasion,Target.Health))
+		{ }
+
+		if (!TryToImpact(Target.Protection))
+		{ }
+
+		if (!TryToHarm(Target.Health))
+		{
+            FRoleplayMC.ApplyStatusEffect(StatusEffect.Defeated,Target,1.0f,null);
+		}
+
+		if (EnvironmentSource != EnvironmentSource.None)
+		{
+			Target.Statistics.RecordIncomingAttackResults(Source,(ulong)_appliedAccuracy,_hit,(ulong)_appliedImpact,_protBreak,(ulong)_appliedHarm,_kill,(ulong)_appliedOverkill);
+			Source.Statistics.RecordOutgoingAttackResults(Target,(ulong)_appliedAccuracy,_hit,(ulong)_appliedImpact,_protBreak,(ulong)_appliedHarm,_kill,(ulong)_appliedOverkill);
+		}
+		else
+		{
+			Target.Statistics.RecordIncomingAttackResults(EnvironmentSource,(ulong)_appliedAccuracy,_hit,(ulong)_appliedImpact,_protBreak,(ulong)_appliedHarm,_kill,(ulong)_appliedOverkill);
+			Source.Statistics.RecordOutgoingAttackResults(EnvironmentSource,(ulong)_appliedAccuracy,_hit,(ulong)_appliedImpact,_protBreak,(ulong)_appliedHarm,_kill,(ulong)_appliedOverkill);
+		}
+		return this;
+	}
+
+	IPendingAction IPendingAction.EnqueueMessage(ApiConnection api)
+	{
+		var message = new FChatMessageBuilder();
+
+		if (_channel is not null)
+		{
+			message
+				.WithChannel(_channel)
+				.WithMessageType(FChatApi.Enums.FChatMessageType.Basic);
+		}
+		else
+		{
+			message
+				.WithRecipient(_responder)
+				.WithMessageType(FChatApi.Enums.FChatMessageType.Whisper);
+		}
+		
+		message.WithMessage(
+			string.Format(
+				DefaultMessageFormat,
+				Source.CharacterName,
+				Target.CharacterName,
+				"lorem ipsum!",
+				"[color=red]1[/color]",
+				"47",
+				"Lorem ipsum dolor sit amet.."
+			)
+		);
+
+		api.EnqueueMessage(message);
+		return this;
+	}
+	#endregion
 }

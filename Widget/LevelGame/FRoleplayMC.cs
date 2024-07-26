@@ -12,6 +12,7 @@ using ModularPlugins;
 using ModularPlugins.Interfaces;
 using LevelGame.Serialization;
 using FChatApi.Objects;
+using LevelGame.Effects;
 
 namespace LevelGame;
 
@@ -20,12 +21,24 @@ public partial class FRoleplayMC : FChatPlugin<LevelGameCommand>, IFChatPlugin
     private static readonly string CsvDirectory;
 	internal static readonly Random Rng;
     internal static readonly ConcurrentDictionary<ClassName,CharacterClass> CharacterClasses;
+	public static readonly ConcurrentDictionary<AttackType,AttackChassis> AttackPool;
     internal static readonly ConcurrentDictionary<string,CharacterSheet> CharacterSheets;
 	internal static StatusEffectFactory StatusEffectFactory;
-	internal static AttackFactory AttackFactory;
 	internal static List<IPendingAction> ActionQueue;
 
+#region LoadAttacks
+	public static void LoadAttacks(string filePath) => LoadAttacks(CsvDirectory,filePath);
 
+	public static void LoadAttacks(string directory,string filePath)
+	{
+		foreach (AttackChassis chassis in DeserializeKommaVaues.GetAttacks(Path.Combine(directory,filePath)))
+		{
+			AttackPool.AddOrUpdate(chassis.AttackType,(k)=>chassis,(k,v)=>chassis);
+		}
+	}
+#endregion
+	
+#region LoadClasses
 	public static void LoadClasses(string filePath) => LoadClasses(CsvDirectory,filePath);
 
 	public static void LoadClasses(string directory,string filePath)
@@ -35,13 +48,9 @@ public partial class FRoleplayMC : FChatPlugin<LevelGameCommand>, IFChatPlugin
 			CharacterClasses.AddOrUpdate(@class.Name,(k)=>@class,(k,v)=>@class);
 		}
 	}
+#endregion
 
-	private static void DirectorySanityCheck()
-	{
-		if (!Directory.Exists(CsvDirectory))
-			Directory.CreateDirectory(CsvDirectory);
-	}
-
+#region Apply Effect
 	public static void ApplyStatusEffect(StatusEffect statusEffect,User target,float intensity,User? source = null) =>
 		ApplyStatusEffect(statusEffect,CharacterSheets[target.Name],intensity,source is null ? null : CharacterSheets[source.Name]);
 
@@ -57,7 +66,9 @@ public partial class FRoleplayMC : FChatPlugin<LevelGameCommand>, IFChatPlugin
 				)
 			);
 	}
+#endregion
 
+#region Constructor
     public FRoleplayMC(ApiConnection api, TimeSpan updateInterval) : base(api, updateInterval)
     {
 		RegisterCommandRestrictions();
@@ -66,22 +77,28 @@ public partial class FRoleplayMC : FChatPlugin<LevelGameCommand>, IFChatPlugin
     static FRoleplayMC()
     {
 		CharacterClasses	= [];
+		AttackPool			= [];
 		CharacterSheets		= new ConcurrentDictionary<string, CharacterSheet>(StringComparer.InvariantCultureIgnoreCase);
 		CsvDirectory		= Path.Combine(Environment.CurrentDirectory,"csv");
 		Rng					= new Random();
 		StatusEffectFactory	= new StatusEffectFactory();
-		AttackFactory		= new AttackFactory();
 		ActionQueue			= [];
 		DirectorySanityCheck();
 		PreProcessEnumAttributes();
+		LoadClasses("CharacterClasses - Export.csv");
+		LoadAttacks("CharacterClasses - Attacks.csv");
 	}
+#endregion
 
+#region Cmd Restrictions
 	private void RegisterCommandRestrictions()
 	{
 		//ChannelLockedCommands.Add(LevelGameCommand);
 		//WhispersLockedCommands.Add(LevelGameCommand);
 	}
+#endregion
 
+#region Attributes
 	private static void PreProcessEnumAttributes()
 	{
 		AttributeExtensions.ProcessEnumForAttribute<AbilityInfoAttribute		>(typeof(Ability));
@@ -107,4 +124,13 @@ public partial class FRoleplayMC : FChatPlugin<LevelGameCommand>, IFChatPlugin
 
 		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute		>(typeof(StatusEffect));
 	}
+#endregion
+
+#region Sanity Checks
+	private static void DirectorySanityCheck()
+	{
+		if (!Directory.Exists(CsvDirectory))
+			Directory.CreateDirectory(CsvDirectory);
+	}
+#endregion
 }

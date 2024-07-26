@@ -15,7 +15,13 @@ public class CharacterClassBuilder
     #endregion
 
 	#region csv-TextName
-	public string TextName				{ set { _name = Enum.Parse<ClassName>(value); } }	
+	private string _textName;
+	public string TextName {
+		set {
+			_textName = value;
+			_name = Enum.Parse<ClassName>(value.Trim().Replace(" ","").Replace("_",""));
+		}
+	}	
     #endregion
 
 	#region csv-Health
@@ -122,6 +128,7 @@ public class CharacterClassBuilder
 	public CharacterClassBuilder()
 	{
 		_name = ClassName.Nobody;
+		_textName = string.Empty;
 		_abilityGrowth			= Enum.GetValues(typeof(Ability)).Cast<Ability>().Where(a=>a != Ability.None).ToDictionary(a=>a,a=>0.0f);
 		_resourceAbilityScales	= Enum.GetValues(typeof(Resource)).Cast<Resource>().Where(r=>r != Resource.None).ToDictionary(li=>li,li=>new Dictionary<Ability, float>());
 		foreach (var abilityScalesDictionary in _resourceAbilityScales.Values)

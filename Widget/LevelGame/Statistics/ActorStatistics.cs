@@ -1,3 +1,5 @@
+using System.Numerics;
+using LevelGame.Effects;
 using LevelGame.Enums;
 using LevelGame.Objects;
 
@@ -10,6 +12,19 @@ public class ActorStatistics
 	private Dictionary<StatisticsCategory,Dictionary<ulong,ulong>> _combatRecordsPvPOutgoing;
 	private Dictionary<StatisticsCategory,Dictionary<EnvironmentSource,ulong>> _combatRecordsPvEIncoming;
 	private Dictionary<StatisticsCategory,Dictionary<EnvironmentSource,ulong>> _combatRecordsPvEOutgoing;
+	#endregion
+
+	#region Combined Totals
+	public BigInteger TotalEvasionLoss =>
+		new BigInteger(_combatRecordsPvEIncoming[StatisticsCategory.EvasionLoss].Values.ToList().Sum(uL=>(decimal)uL)) + 
+		new BigInteger(_combatRecordsPvPIncoming[StatisticsCategory.EvasionLoss].Values.ToList().Sum(uL=>(decimal)uL));
+	public BigInteger TotalProtectionLoss =>
+		new BigInteger(_combatRecordsPvEIncoming[StatisticsCategory.ProtectionLoss].Values.ToList().Sum(uL=>(decimal)uL)) + 
+		new BigInteger(_combatRecordsPvPIncoming[StatisticsCategory.ProtectionLoss].Values.ToList().Sum(uL=>(decimal)uL));
+	public BigInteger TotalHealthLoss =>
+		new BigInteger(_combatRecordsPvEIncoming[StatisticsCategory.HealthLoss].Values.ToList().Sum(uL=>(decimal)uL)) + 
+		new BigInteger(_combatRecordsPvPIncoming[StatisticsCategory.HealthLoss].Values.ToList().Sum(uL=>(decimal)uL));
+	public BigInteger TotalDamageTaken => TotalProtectionLoss + TotalHealthLoss;
 	#endregion
 
 	#region Record Events

@@ -14,6 +14,11 @@ public class Actor : GameObject
 	public const float HealthPointsScalingFactor = 1.115f;
 #endregion
 
+#region Properties (+)
+	protected string _characterName;
+	public string CharacterName => _characterName;
+#endregion
+
 #region (#) Fields
 	protected ClassName _activeClass;
 	protected Dictionary<ClassName,ClassLevels> _classLevels;
@@ -36,36 +41,12 @@ public class Actor : GameObject
 #endregion
 
 #region Interaction
-	public Actor AttackTarget(AttackType attackType,Actor target)
+	public Actor AttackActorTarget(AttackType attackType,Actor target)
 	{
-		FRoleplayMC.AttackFactory.NewAttack(attackType,this,target);
 		return this;
 	}
 
-	private Actor ApplyAttackEffect(AttackEffect<Actor> attack)
-	{
-		(ulong EvasionLoss,bool Hit,ulong ProtectionLoss,bool ProtBreak,ulong HealthLoss,bool Kill,ulong Overkill) = attack.AttackInfo();
-		if (Kill)
-		{
-            FRoleplayMC.ApplyStatusEffect(StatusEffect.Defeated,this,1.0f, attack.Source);
-		}
-		Statistics.RecordIncomingAttackResults(attack.Source,EvasionLoss,Hit,ProtectionLoss,ProtBreak,HealthLoss,Kill,Overkill);
-		Statistics.RecordOutgoingAttackResults(attack.Source,EvasionLoss,Hit,ProtectionLoss,ProtBreak,HealthLoss,Kill,Overkill);
-		return this;
-	}
-
-	private Actor ApplyAttackEffect(AttackEffect<EnvironmentSource> attack)
-	{
-		(ulong EvasionLoss,bool Hit,ulong ProtectionLoss,bool ProtBreak,ulong HealthLoss,bool Kill,ulong Overkill) = attack.AttackInfo();
-		if (Kill)
-		{
-            FRoleplayMC.ApplyStatusEffect(StatusEffect.Defeated,this,1.0f,null);
-		}
-		Statistics.RecordIncomingAttackResults(attack.Source,EvasionLoss,Hit,ProtectionLoss,ProtBreak,HealthLoss,Kill,Overkill);
-		Statistics.RecordOutgoingAttackResults(attack.Source,EvasionLoss,Hit,ProtectionLoss,ProtBreak,HealthLoss,Kill,Overkill);
-		return this;
-	}
-	public Actor ApplyAttackEffect(IAttackEffect attack)
+	public Actor ApplyAttackEffect(AttackEffect attack)
 	{
 		if (!attack.TryToHit(Evasion,Health))
 		{ }
@@ -74,12 +55,21 @@ public class Actor : GameObject
 		{ }
 
 		if (!attack.TryToHarm(Health))
-		{ }
+		{
+            FRoleplayMC.ApplyStatusEffect(StatusEffect.Defeated,this,1.0f,null);
+		}
 
-		if (attack is AttackEffect<Actor>)
-			ApplyAttackEffect((attack as AttackEffect<Actor>)!);
-		else if (attack is AttackEffect<EnvironmentSource>)
-			ApplyAttackEffect((attack as AttackEffect<EnvironmentSource>)!);
+		(ulong EvasionLoss,bool Hit,ulong ProtectionLoss,bool ProtBreak,ulong HealthLoss,bool Kill,ulong Overkill) = attack.AttackInfo();
+		if (attack.EnvironmentSource != EnvironmentSource.None)
+		{
+			Statistics.RecordIncomingAttackResults(attack.Source,EvasionLoss,Hit,ProtectionLoss,ProtBreak,HealthLoss,Kill,Overkill);
+			Statistics.RecordOutgoingAttackResults(attack.Source,EvasionLoss,Hit,ProtectionLoss,ProtBreak,HealthLoss,Kill,Overkill);
+		}
+		else
+		{
+			Statistics.RecordIncomingAttackResults(attack.EnvironmentSource,EvasionLoss,Hit,ProtectionLoss,ProtBreak,HealthLoss,Kill,Overkill);
+			Statistics.RecordOutgoingAttackResults(attack.EnvironmentSource,EvasionLoss,Hit,ProtectionLoss,ProtBreak,HealthLoss,Kill,Overkill);
+		}
 		return this;
 	}
 
@@ -333,8 +323,9 @@ public class Actor : GameObject
 #endregion
 
 #region (+) Constructor
-	public Actor() : base(0)
+	public Actor(string name) : base(0)
 	{
+		_characterName = name;
 		_actions = [];
 		foreach(GameAction gameAction in Enum.GetValues(typeof(GameAction)).Cast<GameAction>().Where(a=>a != GameAction.None))
 		{
