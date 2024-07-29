@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using LevelGame.Effects;
-using LevelGame.Enums;
-using LevelGame.Objects;
+using RoleplayingGame.Effects;
+using RoleplayingGame.Enums;
+using RoleplayingGame.Objects;
 
-namespace LevelGame.Factories;
+namespace RoleplayingGame.Factories;
 
 public class StatusEffectFactory
 {

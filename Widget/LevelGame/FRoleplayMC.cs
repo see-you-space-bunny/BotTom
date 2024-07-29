@@ -1,20 +1,20 @@
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using FChatApi.Attributes;
-using LevelGame.Attributes;
-using LevelGame.Enums;
-using LevelGame.Factories;
-using LevelGame.Interfaces;
-using LevelGame.Objects;
-using LevelGame.SheetComponents;
+using RoleplayingGame.Attributes;
+using RoleplayingGame.Enums;
+using RoleplayingGame.Factories;
+using RoleplayingGame.Interfaces;
+using RoleplayingGame.Objects;
+using RoleplayingGame.SheetComponents;
 using FChatApi.Core;
 using ModularPlugins;
 using ModularPlugins.Interfaces;
-using LevelGame.Serialization;
+using RoleplayingGame.Serialization;
 using FChatApi.Objects;
-using LevelGame.Effects;
+using RoleplayingGame.Effects;
 
-namespace LevelGame;
+namespace RoleplayingGame;
 
 public partial class FRoleplayMC : FChatPlugin<LevelGameCommand>, IFChatPlugin
 {

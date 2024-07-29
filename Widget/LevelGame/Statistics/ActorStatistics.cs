@@ -1,9 +1,9 @@
 using System.Numerics;
-using LevelGame.Effects;
-using LevelGame.Enums;
-using LevelGame.Objects;
+using RoleplayingGame.Effects;
+using RoleplayingGame.Enums;
+using RoleplayingGame.Objects;
 
-namespace LevelGame.Statistics;
+namespace RoleplayingGame.Statistics;
 
 public class ActorStatistics
 {

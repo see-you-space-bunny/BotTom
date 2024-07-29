@@ -1,7 +1,7 @@
 using Xunit.Abstractions;
-using LevelGame;
-using LevelGame.Enums;
-using LevelGame.Objects;
+using RoleplayingGame;
+using RoleplayingGame.Enums;
+using RoleplayingGame.Objects;
 
 namespace Widget.Tests.Theories;
 

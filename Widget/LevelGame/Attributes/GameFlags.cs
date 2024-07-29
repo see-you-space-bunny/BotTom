@@ -1,4 +1,4 @@
-namespace LevelGame.Attributes;
+namespace RoleplayingGame.Attributes;
 
 [AttributeUsage(AttributeTargets.All)]
 sealed class GameFlagsAttribute : Attribute

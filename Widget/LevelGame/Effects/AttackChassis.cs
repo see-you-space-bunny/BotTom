@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using LevelGame.Enums;
-using LevelGame.Interfaces;
-using LevelGame.Objects;
-using LevelGame.SheetComponents;
+using RoleplayingGame.Enums;
+using RoleplayingGame.Interfaces;
+using RoleplayingGame.Objects;
+using RoleplayingGame.SheetComponents;
 
-namespace LevelGame.Effects;
+namespace RoleplayingGame.Effects;
 
 public class AttackChassis
 {

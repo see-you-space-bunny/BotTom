@@ -1,4 +1,4 @@
-namespace LevelGame.SheetComponents;
+namespace RoleplayingGame.SheetComponents;
 
 public class ClassLevels(CharacterClass @class,int level=0)
 {

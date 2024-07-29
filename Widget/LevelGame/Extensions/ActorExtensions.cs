@@ -1,7 +1,7 @@
-using LevelGame.Enums;
-using LevelGame.Objects;
+using RoleplayingGame.Enums;
+using RoleplayingGame.Objects;
 
-namespace LevelGame;
+namespace RoleplayingGame;
 
 public static class ActorExtensions
 {

@@ -1,8 +1,8 @@
 using System.ComponentModel;
 
-using LevelGame.Attributes;
+using RoleplayingGame.Attributes;
 
-namespace LevelGame.Enums;
+namespace RoleplayingGame.Enums;
 
 // Abilities always in order: Offense, Defense, Flexile
 public enum DerivedAbility

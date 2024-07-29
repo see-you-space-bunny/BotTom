@@ -1,7 +1,7 @@
-using LevelGame.Attributes;
-using LevelGame.Enums;
+using RoleplayingGame.Attributes;
+using RoleplayingGame.Enums;
 
-namespace LevelGame.SheetComponents;
+namespace RoleplayingGame.SheetComponents;
 
 public class SkillAction : CharacterResource
 {

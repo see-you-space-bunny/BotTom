@@ -1,8 +1,8 @@
 using System.Reflection.Metadata.Ecma335;
-using LevelGame.Attributes;
-using LevelGame.Enums;
+using RoleplayingGame.Attributes;
+using RoleplayingGame.Enums;
 
-namespace LevelGame.SheetComponents;
+namespace RoleplayingGame.SheetComponents;
 
 public class CharacterResource(int baseValue = 0,int hardLimit = -1,int softLimit = -1,bool moreIsBetter = true)
 {

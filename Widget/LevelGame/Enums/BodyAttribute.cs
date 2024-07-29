@@ -1,4 +1,4 @@
-namespace LevelGame.Enums;
+namespace RoleplayingGame.Enums;
 
 public enum BodyAttribute
 {

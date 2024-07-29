@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using LevelGame.Enums;
-using LevelGame.Objects;
+using RoleplayingGame.Enums;
+using RoleplayingGame.Objects;
 
-namespace LevelGame.Effects;
+namespace RoleplayingGame.Effects;
 
 public class ActiveStatusEffectBuilder
 {

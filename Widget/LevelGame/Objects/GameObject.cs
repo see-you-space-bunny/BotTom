@@ -1,4 +1,4 @@
-namespace LevelGame.Objects;
+namespace RoleplayingGame.Objects;
 
 public class GameObject(int level)
 {

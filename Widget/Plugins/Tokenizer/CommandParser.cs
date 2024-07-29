@@ -1,12 +1,15 @@
 using System.Text;
 using FChatApi.Objects;
 using FChatApi.Enums;
+using FChatApi.Attributes;
+using Plugins.Attributes;
 
 namespace Plugins.Tokenizer;
 
 public class CommandParser
 {
 	public const string DefaultPrefix = "!";
+	public const string DefaultInlinePrefix = "[noparse=";
 	private int ModuleStartIndex { get => BotPrefix.Length; }
 	public string BotPrefix { get; private set; }
 
@@ -26,66 +29,28 @@ public class CommandParser
 		return this;
 	}
 	
-	public bool TryConvertCommand(FChatMessage fChatMessage,out CommandTokens command)
+	public bool TryConvertCommand(FChatMessage fChatMessage,out CommandTokens commandTokens)
 	{
+
 		// Not a command
 		if (!fChatMessage.Message.StartsWith(BotPrefix))
 		{
-			command = null!;
+			commandTokens = null!;
 			return false;
 		}
 
 		// parse the command; starts after the comand prefix
 		string[] parsedTokens = Parse(fChatMessage.Message[ModuleStartIndex..]).ToArray();
-		if (parsedTokens.Length < 2)
+		if (parsedTokens.Length < 1)
 		{
 #if DEBUG
 			Console.WriteLine("it might be getting the bot's attention but doesn't have enough for a real command");
 #endif
-			command = null!;
-			return false;
-		}
-		
-		string botModule = default!;
-		if (!(parsedTokens.Length == 0))
-		{
-			// Not a recognized module
-			botModule = parsedTokens[0];
-		}
-		
-		string moduleCommand = default!;
-		if (!(parsedTokens.Length < 0))
-		{
-			// Not a recognized command
-			moduleCommand = parsedTokens[1];
-		}
-
-		// Command cannot be issued by a non-user
-		if (fChatMessage.Author == null)
-		{
-			// Some operations may still trigger, but they will be exceptions
-#if DEBUG
-			Console.WriteLine("Command cannot be issued by a non-user");
-			Console.WriteLine("Some operations may still trigger, but they will be exceptions");
-#endif
-			command = null!;
+			commandTokens = null!;
 			return false;
 		}
 
-		Privilege privilege = Privilege.None;
-		if (fChatMessage.Author.PrivilegeLevel == Privilege.None)
-		{
-#if DEBUG
-			Task.Run(()=>Console.WriteLine("Defaulting 'Privilege.None user to 'Privilege.UnregisteredUser"));
-#endif
-			privilege = Privilege.UnregisteredUser;
-		}
-		else
-		{
-			privilege = fChatMessage.Author.PrivilegeLevel;
-		}
-		
-		command = new CommandTokens(fChatMessage, botModule, moduleCommand, parsedTokens.Skip(2).ToArray());
+		commandTokens = new CommandTokens(fChatMessage, parsedTokens[0], string.Join(' ',parsedTokens.Skip(1)));
 		return true;
 	}
 

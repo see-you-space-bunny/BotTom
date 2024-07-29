@@ -11,6 +11,8 @@ using ModularPlugins;
 using ModularPlugins.Interfaces;
 
 using FGlobals.Enums;
+using Plugins.Attributes;
+using System.Text.RegularExpressions;
 
 namespace FGlobals;
 
@@ -41,117 +43,62 @@ public partial class FChatGlobalCommands : FChatPlugin<GlobalCommand>, IFChatPlu
 		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(GlobalCommand));
 
 		AttributeExtensions.ProcessEnumForAttribute<MinimumPrivilegeAttribute>(typeof(GlobalCommand));
-
-		AttributeExtensions.ProcessEnumForAttribute<SuccessResponseAttribute>(typeof(GlobalCommand));
-		AttributeExtensions.ProcessEnumForAttribute<FailureResponseAttribute>(typeof(GlobalCommand));
-		AttributeExtensions.ProcessEnumForAttribute<AccessDeniedResponseAttribute>(typeof(GlobalCommand));
 	}
 
-	public override void HandleRecievedMessage(CommandTokens command)
+	public override void HandleRecievedMessage(CommandTokens commandTokens)
 	{
-		if (!command.TryParseCommand(out GlobalCommand moduleCommand))
+		//////////////
+		
+		if (!commandTokens.TryGetParameters(out GlobalCommand command, out Dictionary<string,string> parameters))
 			return;
+		
+		if (commandTokens.Source.Author.PrivilegeLevel < command.GetEnumAttribute<GlobalCommand, MinimumPrivilegeAttribute>().Privilege)
+			return;
+			
+		//////////////
 
 		bool respondWithMessage = true;
 		
 		FChatMessageBuilder messageBuilder = new FChatMessageBuilder()
 			.WithAuthor(ApiConnection.CharacterName)
-			.WithRecipient(command.Message.Author.Name)
-			.WithChannel(command.Message.Channel)
-			.WithMessageType(command.Message.Channel is not null ? FChatMessageType.Basic : FChatMessageType.Whisper);
-
-
-		var requiredPrivilege = moduleCommand
-			.GetEnumAttribute<GlobalCommand, MinimumPrivilegeAttribute>()
-			.Privilege;
+			.WithRecipient(commandTokens.Source.Author.Name)
+			.WithChannel(commandTokens.Source.Channel)
+			.WithMessageType(commandTokens.Source.Channel is not null ? FChatMessageType.Basic : FChatMessageType.Whisper);
 
 		////////////// DO STUFF HERE
 		
-		switch (moduleCommand)
+		switch (command)
 		{
 			#region Register
 			case GlobalCommand.Register:
-				if (command.Message.Author is not null)
+				if (commandTokens.Source.Author is not null)
 				{                  
-					if (!ApiConnection.Users.RegisteredUsers.ContainsKey(command.Message.Author.Name))
+					if (!ApiConnection.Users.RegisteredUsers.ContainsKey(commandTokens.Source.Author.Name))
 					{
-						messageBuilder
-							.WithMessage(
-								!string.IsNullOrWhiteSpace(moduleCommand.GetEnumAttribute<GlobalCommand, SuccessResponseAttribute>().Message)
-								? moduleCommand.GetEnumAttribute<GlobalCommand, SuccessResponseAttribute>().Message
-								: FailureResponseAttribute.Generic);
-
-						command.Message.Author.Register();
-						if (GlobalOperators.TryGetValue(command.Message.Author.Name, out Privilege globalPrivilege))
+						commandTokens.Source.Author.Register();
+						if (GlobalOperators.TryGetValue(commandTokens.Source.Author.Name, out Privilege globalPrivilege))
 						{
-							command.Message.Author.PrivilegeLevel = globalPrivilege;
+							commandTokens.Source.Author.PrivilegeLevel = globalPrivilege;
 						}
-						else if (Operators.TryGetValue(command.Message.Author.Name, out Privilege opPrivilege))
+						else if (Operators.TryGetValue(commandTokens.Source.Author.Name, out Privilege opPrivilege))
 						{
-							command.Message.Author.PrivilegeLevel = opPrivilege;
+							commandTokens.Source.Author.PrivilegeLevel = opPrivilege;
 						}
 					}
 					else
 					{
-						messageBuilder
-							.WithMessage(
-								!string.IsNullOrWhiteSpace(GlobalCommand.Whoami.GetEnumAttribute<GlobalCommand, FailureResponseAttribute>().Message)
-								? GlobalCommand.Whoami.GetEnumAttribute<GlobalCommand, FailureResponseAttribute>().Message
-								: FailureResponseAttribute.Generic);
 					}
-				}
-				else
-				{
-					messageBuilder
-						.WithMessage(
-							!string.IsNullOrWhiteSpace(moduleCommand.GetEnumAttribute<GlobalCommand, AccessDeniedResponseAttribute>().Message)
-							? moduleCommand.GetEnumAttribute<GlobalCommand, AccessDeniedResponseAttribute>().Message
-							: AccessDeniedResponseAttribute.Generic);
 				}
 				break;
 			#endregion
 
 			#region UnRegister
 			case GlobalCommand.UnRegister:
-				if (command.Message.Author.PrivilegeLevel >= requiredPrivilege)
-				{
-					command.Message.Author.UnRegister();
-					messageBuilder
-						.WithMessage(
-							!string.IsNullOrWhiteSpace(moduleCommand.GetEnumAttribute<GlobalCommand, SuccessResponseAttribute>().Message)
-							? moduleCommand.GetEnumAttribute<GlobalCommand, SuccessResponseAttribute>().Message
-							: FailureResponseAttribute.Generic);
-				}
-				else
-				{
-					messageBuilder
-						.WithMessage(
-							!string.IsNullOrWhiteSpace(moduleCommand.GetEnumAttribute<GlobalCommand, AccessDeniedResponseAttribute>().Message)
-							? moduleCommand.GetEnumAttribute<GlobalCommand, AccessDeniedResponseAttribute>().Message
-							: AccessDeniedResponseAttribute.Generic);
-				}
 				break;
 			#endregion
 
 			#region Whoami
 			case GlobalCommand.Whoami:
-				if (command.Message.Author.PrivilegeLevel >= requiredPrivilege)
-				{
-					var sb = new StringBuilder();
-					sb.Append(moduleCommand.GetEnumAttribute<GlobalCommand, SuccessResponseAttribute>().Message);
-					sb.Append($"You are {command.Message.Author!.Mention}. ");
-					sb.Append($"You are a {command.Message.Author.PrivilegeLevel}. ");
-					sb.Append($"You are registered since {command.Message.Author.WhenRegistered.ToShortDateString()}.");
-					messageBuilder.WithMessage(sb.ToString());
-				}
-				else
-				{
-					messageBuilder
-						.WithMessage(
-							!string.IsNullOrWhiteSpace(GlobalCommand.Whoami.GetEnumAttribute<GlobalCommand, FailureResponseAttribute>().Message)
-							? GlobalCommand.Whoami.GetEnumAttribute<GlobalCommand, FailureResponseAttribute>().Message
-							: FailureResponseAttribute.Generic);
-				}
 				break;
 			#endregion
 
@@ -160,7 +107,7 @@ public partial class FChatGlobalCommands : FChatPlugin<GlobalCommand>, IFChatPlu
 				ApiConnection.Mod_SetChannelUserStatus(
 					ApiConnection.Channels.GetList(ChannelType.Private).Values
 						.FirstOrDefault(c => c.CreatedByApi),
-					ApiConnection.Users.SingleByName(command.Parameters[0]),
+					ApiConnection.Users.SingleByName(parameters["User"]),
 					UserRoomStatus.Invited
 				);
 				respondWithMessage = false;
@@ -169,31 +116,15 @@ public partial class FChatGlobalCommands : FChatPlugin<GlobalCommand>, IFChatPlu
 
 			#region ChCreate
 			case GlobalCommand.ChCreate:
-				ApiConnection.User_CreateChannel(command.Parameters[0]);
+				ApiConnection.User_CreateChannel(parameters["ChannelName"]);
 				respondWithMessage = false;
 				break;
 			#endregion
 
 			#region Shutdown
 			case GlobalCommand.Shutdown:
-				if (command.Message.Author.PrivilegeLevel >= requiredPrivilege)
-				{
-					ApiConnection.SetShutdownFlag();
-					ApiConnection.SerializeUsers();
-					messageBuilder
-						.WithMessage(
-							!string.IsNullOrWhiteSpace(moduleCommand.GetEnumAttribute<GlobalCommand, SuccessResponseAttribute>().Message)
-							? moduleCommand.GetEnumAttribute<GlobalCommand, SuccessResponseAttribute>().Message
-							: FailureResponseAttribute.Generic);
-				}
-				else
-				{
-					messageBuilder
-						.WithMessage(
-							!string.IsNullOrWhiteSpace(moduleCommand.GetEnumAttribute<GlobalCommand, AccessDeniedResponseAttribute>().Message)
-							? moduleCommand.GetEnumAttribute<GlobalCommand, AccessDeniedResponseAttribute>().Message
-							: AccessDeniedResponseAttribute.Generic);
-				}
+				ApiConnection.SetShutdownFlag();
+				ApiConnection.SerializeUsers();
 				break;
 			#endregion
 

@@ -1,25 +1,27 @@
 using System;
+using System.Text.RegularExpressions;
 using FChatApi.Enums;
+using Plugins.Enums;
 
-namespace FChatApi.Attributes;
+namespace Plugins.Attributes;
 
 [AttributeUsage(AttributeTargets.All)]
-public class MinimumPrivilegeAttribute : Attribute
+public class CommandPatternAttribute : Attribute
 {
 // See the attribute guidelines at
 //  http://go.microsoft.com/fwlink/?LinkId=85236
-readonly Privilege _privilege;
+readonly Regex _pattern;
 
 // This is a positional argument
-public MinimumPrivilegeAttribute(Privilege privilege)
+public CommandPatternAttribute(string pattern)
 {
-	this._privilege = privilege;
+	this._pattern = new Regex(pattern);
 	
 	// TODO: Implement code here
 	/* throw new System.NotImplementedException(); */
 }
 
-public Privilege Privilege => _privilege;
+public Regex Pattern => _pattern;
 
 // This is a named argument
 /* public int NamedInt { get; set; } */

@@ -4,12 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using FChatApi.Core;
 using FChatApi.Objects;
-using LevelGame.Enums;
-using LevelGame.Interfaces;
-using LevelGame.Objects;
-using LevelGame.SheetComponents;
+using RoleplayingGame.Enums;
+using RoleplayingGame.Interfaces;
+using RoleplayingGame.Objects;
+using RoleplayingGame.SheetComponents;
 
-namespace LevelGame.Effects;
+namespace RoleplayingGame.Effects;
 
 public class AttackEffect : IPendingAction
 {

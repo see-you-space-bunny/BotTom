@@ -1,12 +1,12 @@
 using System.Xml;
 using System.Globalization;
 
-using LevelGame.Enums;
-using LevelGame.SheetComponents;
+using RoleplayingGame.Enums;
+using RoleplayingGame.SheetComponents;
 using FChatApi.Attributes;
-using LevelGame.Attributes;
+using RoleplayingGame.Attributes;
 
-namespace LevelGame.Serialization;
+namespace RoleplayingGame.Serialization;
 
 /**
 public static class HumanXmlDeserializer

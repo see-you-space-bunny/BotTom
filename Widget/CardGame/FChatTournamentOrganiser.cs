@@ -18,6 +18,7 @@ using CardGame.DataStructures;
 using CardGame.PersistentEntities;
 
 using ModularPlugins.Interfaces;
+using Plugins.Attributes;
 
 namespace CardGame;
 
@@ -72,29 +73,9 @@ public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IF
 		AttributeExtensions.ProcessEnumForAttribute<StatDecorationAttribute	>(typeof(CharacterStat));
 	}
 
-	public override void HandleRecievedMessage(CommandTokens command)
+	public override void HandleRecievedMessage(CommandTokens commandTokens)
 	{
-		FChatMessageBuilder messageBuilder = new FChatMessageBuilder()
-			.WithAuthor(ApiConnection.CharacterName)
-			.WithRecipient(command.Message.Author.Name)
-			.WithChannel(command.Message.Channel);
-		
-		string message = ValidateCommandUse(command);
-
-		if (!string.IsNullOrWhiteSpace(message))
-			FChatApi
-				.EnqueueMessage(
-					messageBuilder
-						.WithMessage(message)
-				);
-
-		////// DO STUFF HERE
-		
-		bool respondWithMessage = HandleValidatedCommand(messageBuilder,command);
-
-		////////////////////
-
-		if (respondWithMessage)
+		if (HandleCommand(commandTokens,out var messageBuilder))
 		{
 #if DEBUG
 			MostRecentMessage = messageBuilder;
@@ -103,61 +84,49 @@ public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IF
 		}
 	}
 
-
-	private string ValidateCommandUse(CommandTokens command)
+	public bool HandleCommand(CommandTokens commandTokens,out FChatMessageBuilder messageBuilder)
 	{
-		try
-		{
-			// User may not be null
-			if (command.Message.Author == null)
-				throw new ArgumentNullException(nameof(command),$"The (BotCommand) User property may not be null when handling a {command.ModuleCommand} command.");
-
-			return string.Empty;
-		}
-		catch (DisallowedCommandException disallowedCommand)
-		{
-			return disallowedCommand.Reason switch
-			{
-				CommandState.InsufficientPermission    => "You don't have permission to do that!",
-				CommandState.ResponseRequired          => $"You need to respond to {IncomingChallenges[command.Message.Author].Challenger.Mention}'s challenge first!",
-				_ => throw new ArgumentOutOfRangeException(command.ToString(), $"Unexpected {typeof(CommandState)} value: {disallowedCommand.Reason}")
-			};
-		}
-	}
-
-	public bool HandleValidatedCommand(FChatMessageBuilder messageBuilder,CommandTokens command)
-	{
-		if (command.TryParseCommand(out CardGameCommand moduleCommand))
+		messageBuilder = new FChatMessageBuilder();
+		//////////////
+		
+		if (!commandTokens.TryGetParameters(out CardGameCommand command, out Dictionary<string,string> parameters))
+			return false;
+		
+		if (commandTokens.Source.Author.PrivilegeLevel<command.GetEnumAttribute<CardGameCommand,MinimumPrivilegeAttribute>().Privilege)
+			return false;
+			
+		//////////////
 		try
 		{
 			var alertTargetMessage = new FChatMessageBuilder()
-				.WithAuthor(ApiConnection.CharacterName)
-				.WithoutMention()
-            	.WithMessageType(command.Message.Channel is not null ? FChatMessageType.Basic : FChatMessageType.Whisper);
+				.WithAuthor(ApiConnection.ApiUser)
+				.WithRecipient(commandTokens.Source.Author)
+				.WithChannel(commandTokens.Source.Channel)
+            	.WithMessageType(commandTokens.Source.Channel is not null ? FChatMessageType.Basic : FChatMessageType.Whisper);
 
-			switch (moduleCommand)
+			switch (command)
 			{
 				case CardGameCommand.Summon:
 				case CardGameCommand.Attack:
 				case CardGameCommand.Special:
 				case CardGameCommand.Target:
 				case CardGameCommand.EndTurn:
-					TakeGameAction(command,messageBuilder,moduleCommand);
+					TakeGameAction(commandTokens,messageBuilder,command);
 					return true;
 
 				case CardGameCommand.Challenge:
-					if (IssueChallenge(command,messageBuilder,alertTargetMessage))
-						FChatApi.EnqueueMessage(alertTargetMessage);
+					if (IssueChallenge(commandTokens,messageBuilder,alertTargetMessage))
+							FChatApi.EnqueueMessage(alertTargetMessage);
 					return true;
 
 				case CardGameCommand.Accept:
-					if (AcceptChallenge(command,messageBuilder))
+					if (AcceptChallenge(commandTokens,messageBuilder))
 						return false;
 					return true;
 
 				case CardGameCommand.Reject:
-					if (RejectChallenge(command,messageBuilder,alertTargetMessage))
-						FChatApi.EnqueueMessage(alertTargetMessage);
+					if (RejectChallenge(commandTokens,messageBuilder,alertTargetMessage))
+							FChatApi.EnqueueMessage(alertTargetMessage);
 					return true;
 
 				case CardGameCommand.CgImportStats:
@@ -165,8 +134,8 @@ public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IF
 				
 				default:
 					messageBuilder
-						.WithRecipient(command.Message.Author.Name)
-						.WithMention(command.Message.Author.Mention)
+						.WithRecipient(commandTokens.Source.Author.Name)
+						.WithMention(commandTokens.Source.Author.Mention)
 						.WithMessage("--> That is not a valid command!");
 					return true;
 			}
@@ -187,9 +156,9 @@ public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IF
 			messageBuilder.WithMessage(
 				disallowedCommand.Reason switch
 				{
-					CommandState.InsufficientPermission    => $"{command.Message.Author.Mention}, you don't have permission to do that!",
-					CommandState.AwaitingResponse          => $"{command.Message.Author.Mention}, you still have a challenge!",
-					CommandState.ResponseRequired          => $"{command.Message.Author.Mention}, you need to respond to {IncomingChallenges[command.Message.Author].Challenger.Mention}'s challenge first!",
+					CommandState.InsufficientPermission    => $"{commandTokens.Source.Author.Mention}, you don't have permission to do that!",
+					CommandState.AwaitingResponse          => $"{commandTokens.Source.Author.Mention}, you still have a challenge!",
+					CommandState.ResponseRequired          => $"{commandTokens.Source.Author.Mention}, you need to respond to {IncomingChallenges[commandTokens.Source.Author].Challenger.Mention}'s challenge first!",
 					_ => throw new ArgumentOutOfRangeException(nameof(disallowedCommand.Reason), $"Unexpected {typeof(CommandState)} value: {disallowedCommand.Reason}")
 				}
 			);

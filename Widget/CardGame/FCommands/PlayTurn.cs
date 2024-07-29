@@ -11,7 +11,7 @@ using ModularPlugins.Interfaces;
 
 namespace CardGame;
 
-public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IFChatPlugin
+public partial class FChatTournamentOrganiser
 {
 	private bool SummonAction(CommandTokens command,FChatMessageBuilder messageBuilder,BoardState boardState,out string lastGameAction)
 	{
@@ -69,17 +69,23 @@ public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IF
 		return true;
 	}
 
-	private bool AttackAction(CommandTokens command,FChatMessageBuilder messageBuilder,BoardState boardState,out string lastGameAction)
+	private bool AttackAction(Dictionary<string,string> parameters,FChatMessageBuilder messageBuilder,BoardState boardState,out string gameActionMessage)
 	{
+		gameActionMessage	= string.Empty;
+		if (parameters.Count == 0)
+		{
+			return false;
+		}
 		var activePlayer	= boardState.GetActivePlayer();
 		var nonActivePlayer	= boardState.GetNonActivePlayer();
-		lastGameAction		= string.Empty;
 		StringBuilder sb 	= new StringBuilder();
 
 		//////////
 
 		int slotNonActivePlayer;
-		if (command.Parameters.Length > 0 && Int32.TryParse(command.Parameters[0],out int slotActivePlayer))
+		if (parameters.TryGet("",out int )
+
+		if (command.Parameters.Count > 0 && Int32.TryParse(command.Parameters[0],out int slotActivePlayer))
 		{
 			--slotActivePlayer;
 			if (slotActivePlayer < 0 || slotActivePlayer > 2)
@@ -206,34 +212,34 @@ public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IF
 		
 		//////////
 		
-		lastGameAction = sb.ToString();
+		gameActionMessage = sb.ToString();
 
 		return true;
 	}
 
 	private void TakeGameAction(CommandTokens command,FChatMessageBuilder messageBuilder,CardGameCommand gameAction)
 	{
-		var match = OngoingMatches.FirstOrDefault(m => m.Channel == command.Message.Channel);
+		var match = OngoingMatches.FirstOrDefault(m => m.Channel == command.Source.Channel);
 		messageBuilder
-			.WithChannel(command.Message.Channel)
+			.WithChannel(command.Source.Channel)
 			.WithMessageType(FChatMessageType.Basic);
 		
 		if (match == null)
 		{
 			messageBuilder
-				.WithMessage($"{command.Message.Author.Mention}, you're not part of any ongoing games!");
+				.WithMessage($"{command.Source.Author.Mention}, you're not part of any ongoing games!");
 			return; // no valid game 
 		}
 		else if (!match.IsGameChannelValid())
 		{
 			messageBuilder
-				.WithMessage($"{command.Message.Author.Mention}, both players need to be present for game actions to be made!");
+				.WithMessage($"{command.Source.Author.Mention}, both players need to be present for game actions to be made!");
 			return; // all players need to be present
 		}
-		else if (match.GetActivePlayer().User != command.Message.Author)
+		else if (match.GetActivePlayer().User != command.Source.Author)
 		{
 			messageBuilder
-				.WithMessage($"{command.Message.Author.Mention}, it's not your turn!");
+				.WithMessage($"{command.Source.Author.Mention}, it's not your turn!");
 			return; // not your turn
 		}
 		

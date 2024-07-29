@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using FChatApi.Core;
 using FChatApi.Objects;
 
-namespace LevelGame.Interfaces;
+namespace RoleplayingGame.Interfaces;
 
 internal interface IPendingAction
 {

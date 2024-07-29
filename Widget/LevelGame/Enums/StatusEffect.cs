@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace LevelGame.Enums;
+namespace RoleplayingGame.Enums;
 
 public enum StatusEffect
 {

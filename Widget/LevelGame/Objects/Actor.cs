@@ -1,12 +1,12 @@
 using FChatApi.Attributes;
-using LevelGame.Attributes;
-using LevelGame.Enums;
-using LevelGame.Effects;
-using LevelGame.SheetComponents;
-using LevelGame.Statistics;
-using LevelGame.Interfaces;
+using RoleplayingGame.Attributes;
+using RoleplayingGame.Enums;
+using RoleplayingGame.Effects;
+using RoleplayingGame.SheetComponents;
+using RoleplayingGame.Statistics;
+using RoleplayingGame.Interfaces;
 
-namespace LevelGame.Objects;
+namespace RoleplayingGame.Objects;
 
 public class Actor : GameObject
 {

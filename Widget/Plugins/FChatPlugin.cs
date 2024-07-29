@@ -4,6 +4,9 @@ using FChatApi.Enums;
 using Plugins.Tokenizer;
 
 using ModularPlugins.Interfaces;
+using FChatApi.Attributes;
+using Plugins.Attributes;
+using Plugins.Enums;
 
 namespace ModularPlugins;
 
@@ -16,25 +19,25 @@ namespace ModularPlugins;
 /// <param name="api"></param>
 /// <param name="commandChar">the symbol that wakes the module up</param>
 /// <param name="updateInterval">how often this module runs Update().<br/>defaults to: Never</param>
-public class FChatPlugin<TCommand>(ApiConnection api, TimeSpan updateInterval) : PluginBase(updateInterval), IFChatPlugin
+public class FChatPlugin<TCommand>(ApiConnection api, TimeSpan updateInterval) : PluginBase(updateInterval), IFChatPlugin where TCommand : struct, Enum
 {
 	/// <summary>our api connection</summary>
-	public ApiConnection FChatApi { get; } = api;
+	public ApiConnection FChatApi { get; }									= api;
 
 	/// <summary>the channels in which this module is active</summary>
-	public Dictionary<string, Channel> ActiveChannels { get; } = [];
+	public Dictionary<string, Channel> ActiveChannels { get; }				= [];
 
 	/// <summary>commands which can only be used in <c>ActiveChannels</c></summary>
-	public List<TCommand> ChannelLockedCommands { get; } = [];
+	public List<TCommand> ChannelLockedCommands { get; }					= [];
 
 	/// <summary>commands which can only be used in whispers</summary>
-	public List<TCommand> WhispersLockedCommands { get; } = [];
+	public List<TCommand> WhispersLockedCommands { get; }					= [];
 
 	/// <summary>the operators </summary>
-	public Dictionary<string, Privilege> Operators { get; } = [];
+	public Dictionary<string, Privilege> Operators { get; }					= [];
 
 	/// <summary>the operators </summary>
-	public static Dictionary<string, Privilege> GlobalOperators { get; } = [];
+	public static Dictionary<string, Privilege> GlobalOperators { get; }	= [];
 
 	/// <summary>
 	/// how we should handle a recieved message
@@ -97,9 +100,21 @@ public class FChatPlugin<TCommand>(ApiConnection api, TimeSpan updateInterval) :
 
     public override void Shutdown() { }
 
-    void IFChatPlugin.HandleRecievedMessage(CommandTokens command)
+    void IFChatPlugin.HandleRecievedMessage(CommandTokens commandTokens)
     {
-        HandleRecievedMessage(command);
+		if (Enum.TryParse(commandTokens.Command,true,out TCommand command))
+		{
+			if (
+				command.GetEnumAttribute<TCommand,UsageScopeAttribute>().Scope == CommandScope.Anywhere ||
+				(command.GetEnumAttribute<TCommand,UsageScopeAttribute>().Scope == CommandScope.Whisper &&
+				commandTokens.Source.MessageType == FChatMessageType.Whisper) ||
+				(command.GetEnumAttribute<TCommand,UsageScopeAttribute>().Scope == CommandScope.AnyChannel &&
+				commandTokens.Source.MessageType == FChatMessageType.Basic) ||
+				(command.GetEnumAttribute<TCommand,UsageScopeAttribute>().Scope == CommandScope.ActiveChannel &&
+				ActiveChannels.ContainsValue(commandTokens.Source.Channel))
+			)
+        		HandleRecievedMessage(commandTokens);
+		}
     }
 
     void IFChatPlugin.HandleJoinedChannel(ChannelEventArgs @event)

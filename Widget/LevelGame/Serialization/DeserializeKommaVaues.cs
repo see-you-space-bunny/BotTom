@@ -4,11 +4,11 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using CsvHelper;
-using LevelGame.Effects;
-using LevelGame.Enums;
-using LevelGame.SheetComponents;
+using RoleplayingGame.Effects;
+using RoleplayingGame.Enums;
+using RoleplayingGame.SheetComponents;
 
-namespace LevelGame.Serialization
+namespace RoleplayingGame.Serialization
 {
     public class DeserializeKommaVaues
     {

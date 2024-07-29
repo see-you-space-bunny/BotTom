@@ -1,6 +1,6 @@
-using LevelGame.Enums;
+using RoleplayingGame.Enums;
 
-namespace LevelGame.Attributes;
+namespace RoleplayingGame.Attributes;
 
 [AttributeUsage(AttributeTargets.All)]
 sealed class DerivedAbilityInfoAttribute : Attribute

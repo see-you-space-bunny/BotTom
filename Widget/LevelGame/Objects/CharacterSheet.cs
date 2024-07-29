@@ -1,7 +1,7 @@
-using LevelGame.Enums;
-using LevelGame.Statistics;
+using RoleplayingGame.Enums;
+using RoleplayingGame.Statistics;
 
-namespace LevelGame.Objects;
+namespace RoleplayingGame.Objects;
 
 public class CharacterSheet : Actor
 {

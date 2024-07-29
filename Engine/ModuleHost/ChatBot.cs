@@ -5,6 +5,7 @@ using ModularPlugins.Interfaces;
 using System.ComponentModel;
 using FChatApi.Attributes;
 using FChatApi.Core;
+using Plugins.Tokenizer;
 
 namespace Engine.ModuleHost;
 
@@ -16,7 +17,7 @@ public partial class ChatBot
 	/// <summary>
 	/// our list of active plugins
 	/// </summary>
-	private Dictionary<BotModule,IFChatPlugin> FChatPlugins { get; }
+	private Dictionary<Type,IFChatPlugin> FChatPlugins { get; }
 
 	/// <summary>
 	/// constructor, inits plugins
@@ -24,14 +25,13 @@ public partial class ChatBot
 	public ChatBot()
 	{
 		FChatPlugins = [];
-		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute>(typeof(BotModule));
 	}
 
 	/// <summary>
 	/// Adds a plugin to the list of active plugins
 	/// </summary>
 	/// <param name="plugin"></param>
-	public ChatBot AddPlugin(BotModule type,IFChatPlugin plugin)
+	public ChatBot AddPlugin(Type type,IFChatPlugin plugin)
 	{
 		if (FChatPlugins.ContainsKey(type))
 		{
@@ -47,7 +47,7 @@ public partial class ChatBot
 	/// </summary>
 	/// <param name="type">type to return</param>
 	/// <returns>plugin if found, otherwise null</returns>
-	public IFChatPlugin GetPlugin<TPlugin>(BotModule value)
+	public IFChatPlugin GetPlugin(Type value)
 	{
 		return FChatPlugins.FirstOrDefault(p => p.Key == value).Value;
 	}
