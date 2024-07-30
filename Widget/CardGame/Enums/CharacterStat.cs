@@ -8,16 +8,11 @@ namespace CardGame.Enums;
 
 public enum CharacterStat
 {
-	[Description("")]
-	[StatAlias(["Nothing"])]
-	[StatDecoration("❌",BBCodeColor.white)]
-	[StatGroup(CharacterStatGroup.Untyped)]
 	NON = 0xFF,
 
 	[Description("")]
 	[StatAlias(["Level","Lv"])]
-	[StatDecoration("🔼",BBCodeColor.white)]
-	[StatGroup(CharacterStatGroup.Untyped)]
+	[StatGroup]
 	LVL = 0x01,
 
 	[Description("")]

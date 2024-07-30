@@ -21,6 +21,8 @@ public abstract class PluginBase
 		UpdateInterval  = updateInterval ?? Timeout.InfiniteTimeSpan;
 	}
 
+	public virtual void Initialize() { }
+
 	/// <summary>
 	/// do periodically executed update stuff here
 	/// </summary>

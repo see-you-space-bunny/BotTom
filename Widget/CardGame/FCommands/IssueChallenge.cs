@@ -1,6 +1,7 @@
 using System.Text;
 
 using FChatApi.Objects;
+using FChatApi.Enums;
 using Plugins.Tokenizer;
 
 using ModularPlugins;
@@ -15,60 +16,46 @@ namespace CardGame;
 
 public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>
 {
-	private bool IssueChallenge(CommandTokens command,FChatMessageBuilder commandResponse,FChatMessageBuilder targetAlertResponse)
+	private bool IssueChallenge(CommandTokens commandTokens,FChatMessageBuilder commandResponse,FChatMessageBuilder targetAlertResponse)
 	{
 		StringBuilder responseBuilder   = new();
 		StringBuilder alertBuilder      = new();
-		
-		CharacterStat stat1 = default;
-		if (command.Parameters.Length < 2)
-		{
-			commandResponse
-				.WithMessage("You need to specify at least one stat with which to build your deck.");
-			return false;
-		}
-		else if (!Enum.TryParse(command.Parameters[0],true,out stat1))
-		{
-			commandResponse
-				.WithMessage($"{command.Parameters[0].ToUpper()} is not a recognised stat.");
-			return false;
-		}
 
-		CharacterStat stat2 = default;
-		if (command.Parameters.Length > 2)
-		{
-			if (!Enum.TryParse(command.Parameters[1],true,out stat2) && command.Parameters.Length > 3)
-			{
-				commandResponse
-					.WithMessage($"{command.Parameters[1].ToUpper()} is not a recognised stat.");
-				return false;
-			}
-		}
-		else
+		//////////
+		
+		if (!commandTokens.Parameters.TryGetValue("Stat1",out string ?stat1Raw) ||
+			!Enum.TryParse(stat1Raw,true,out CharacterStat stat1))
 		{
 			commandResponse
-				.WithMessage($"Too few arguments! You need to specify who your are challenging.");
+				.WithMessage($"{stat1Raw} is not a recognised stat.");
 			return false;
 		}
 		
-		if (command.Parameters.Length < 2)
+		if (!commandTokens.Parameters.TryGetValue("Stat2",out string ?stat2Raw) ||
+			!Enum.TryParse(stat2Raw,true,out CharacterStat stat2))
+		{
+			commandResponse
+				.WithMessage($"{stat2Raw} is not a recognised stat.");
+			return false;
+		}
+		
+		if (!commandTokens.Parameters.TryGetAs("CardName",out User challengeTarget))
 		{
 			commandResponse
 				.WithMessage($"You have to specify a user to challenge.");
 			return false;
 		}
+		else if (challengeTarget.PrivilegeLevel < Privilege.RegisteredUser)
+		{
+			commandResponse
+				.WithMessage($"You cannot challenge a user that is not registered.");
+			return false;
+		}
+		AdoptOrCreateCharacter(challengeTarget);
 
-		string target;
-		string remainingParameters = string.Join(' ',command.Parameters[(stat2 == default ? 1 : 2)..]);
-		var m = Regex.Match(remainingParameters,CommandStringInterpreter.UserPatternComplete);
-		if (m.Groups.TryGetValue(CommandStringInterpreter.Player,out Group? group))
-			target = group.Value;
-		else
-			target = remainingParameters;
+		var errMessage = ValidateIssueChallenge(commandTokens.Source.Author,challengeTarget);
 
-		var (exitEarly, errMessage, player) = ValidateIssueChallenge(command.Message.Author,target);
-
-		if (exitEarly)
+		if (!string.IsNullOrWhiteSpace(errMessage))
 		{
 			commandResponse
 				.WithMessage(errMessage);
@@ -79,13 +66,13 @@ public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>
 
 		responseBuilder
 			.Append("You have challenged ")
-			.Append(player.Name)
+			.Append(challengeTarget.Name)
 			.Append(" to a [b]Duel[/b]! [sup]Awaiting response.[/sup]");
 
 		alertBuilder
-			.Append(command.Message.Author.Mention)
+			.Append(commandTokens.Source.Author.Mention)
 			.Append(" has challenged you to a [b]Duel[/b]! ")
-			.Append("[i]Hint:[/i] To accept this challenge, use the command \"tom!xcg accept [i]stat1[/i] [i]stat2[/i]\"");
+			.Append("[i]Hint:[/i] To accept this challenge, use the command \"tom!xcg accept stat1 stat2\"");
 		
 		//////////
 
@@ -93,29 +80,31 @@ public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>
 			.WithMessage(responseBuilder.ToString());
 
 		targetAlertResponse
-			.WithRecipient(player.Name)
+			.WithRecipient(challengeTarget.Name)
 			.WithMessage(alertBuilder.ToString());
 		
 		//////////
 
 		IncomingChallenges.Add(
-			player,
+			challengeTarget,
 			new MatchChallenge(
-				command.Message.Author,
-				PlayerCharacters[command.Message.Author].CreateMatchPlayer(stat1,stat2),
-				player
+				commandTokens.Source.Author,
+				PlayerCharacters[commandTokens.Source.Author]
+					.CreateMatchPlayer(stat1,stat2),
+				challengeTarget
 			)
 		);
-		IncomingChallenges[player].AdvanceState(MatchChallenge.Event.Initiate);
+		IncomingChallenges[challengeTarget].AdvanceState(MatchChallenge.Event.Initiate);
 		return true;
 	}
 
-	private (bool exitEarly,string message,User target) ValidateIssueChallenge(User challenger,string target)
+	private string ValidateIssueChallenge(User challenger,User challengeTarget)
 	{
-		if (!ApiConnection.Users.TrySingleByName(target,out User challengeTarget))
+		if (!challengeTarget.IsRegistered)
 		{
-			return (true,"You can't challenge a user that is not registered.",null!);
+			return "You can't challenge a user that is not registered.";
 		}
+
 		if (!PlayerCharacters.ContainsKey(challenger))
 			PlayerCharacters.Add(challenger,new PlayerCharacter(challenger));
 
@@ -124,20 +113,20 @@ public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>
 
 		if (challengeTarget == challenger)
 		{
-			return (true,"You can't challenge yourself.",challengeTarget);
+			return "You can't challenge yourself.";
 		}
 		else if (OutgoingChallenges.ContainsKey(challenger))
 		{
-			return (true,"You can't have more than one pending challenge.",challengeTarget);
+			return "You can't have more than one pending challenge.";
 		}
 		else if (!PlayerCharacters.ContainsKey(challengeTarget))
 		{
-			return (true,"That player is already being challenged by you.",challengeTarget);
+			return "That player is already being challenged by you.";
 		}
 		else if (IncomingChallenges.TryGetValue(challengeTarget, out MatchChallenge? value))
 		{
-			return (true,$"That player is already being challenged by {(value.Challenger == challenger ? "you" : "someone")}.",challengeTarget);
+			return $"That player is already being challenged by {(value.Challenger == challenger ? "you" : "someone")}.";
 		}
-		return (false,string.Empty,challengeTarget);
+		return string.Empty;
 	}
 }

@@ -25,8 +25,14 @@ namespace CardGame;
 public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IFChatPlugin
 {
 	private const string GameChannelName = "ครtгคl ςђค๓קเ๏ภร";
+	private static string _cacheURL					= "sessioncache";
+	private static string _cardGameURI				= "cardgame";
+	public static string CacheRoot { get; set; }	= Environment.CurrentDirectory;
+	public static string CacheURL { get=>Path.Combine(CacheRoot,_cacheURL); set=>_cacheURL=value; }
+	public static string CacheCardGameURI { get => Path.Combine(CacheRoot,_cacheURL,_cardGameURI); set=>_cardGameURI=value; }
 
 	public Dictionary<User,PlayerCharacter	> PlayerCharacters { get; }
+	public Dictionary<string,PlayerCharacter> OrphanCharacters { get; }
 
 	public Dictionary<User,MatchChallenge	> IncomingChallenges { get; }
 	public Dictionary<User,MatchChallenge	> OutgoingChallenges => IncomingChallenges.ToOutgoing();
@@ -40,24 +46,9 @@ public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IF
 	public FChatTournamentOrganiser(ApiConnection api,TimeSpan updateInterval) : base(api,updateInterval)
 	{
 		PlayerCharacters		= [];
+		OrphanCharacters		= [];
 		IncomingChallenges      = [];
 		OngoingMatches          = [];
-		RegisterCommandRestrictions();
-	}
-
-	private void RegisterCommandRestrictions()
-	{
-		ChannelLockedCommands.Add(CardGameCommand.Summon);
-		ChannelLockedCommands.Add(CardGameCommand.Attack);
-		ChannelLockedCommands.Add(CardGameCommand.Special);
-		ChannelLockedCommands.Add(CardGameCommand.Confirm);
-		ChannelLockedCommands.Add(CardGameCommand.Target);
-		ChannelLockedCommands.Add(CardGameCommand.Info);
-
-		WhispersLockedCommands.Add(CardGameCommand.CgImportStats);
-		WhispersLockedCommands.Add(CardGameCommand.Challenge);
-		WhispersLockedCommands.Add(CardGameCommand.Accept);
-		WhispersLockedCommands.Add(CardGameCommand.Reject);
 	}
 
 	private static void PreProcessEnumAttributes()
@@ -89,11 +80,14 @@ public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IF
 		messageBuilder = new FChatMessageBuilder();
 		//////////////
 		
-		if (!commandTokens.TryGetParameters(out CardGameCommand command, out Dictionary<string,string> parameters))
+		if (!commandTokens.TryGetParameters(out CardGameCommand command))
 			return false;
 		
-		if (commandTokens.Source.Author.PrivilegeLevel<command.GetEnumAttribute<CardGameCommand,MinimumPrivilegeAttribute>().Privilege)
+		if (command.HasEnumAttribute<CardGameCommand,MinimumPrivilegeAttribute>() &&
+			commandTokens.Source.Author.PrivilegeLevel < command.GetEnumAttribute<CardGameCommand,MinimumPrivilegeAttribute>().Privilege)
 			return false;
+		
+		AdoptOrCreateCharacter(commandTokens.Source.Author);
 			
 		//////////////
 		try
@@ -130,6 +124,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IF
 					return true;
 
 				case CardGameCommand.CgImportStats:
+					ImportStats(commandTokens,messageBuilder);
 					return false;
 				
 				default:
@@ -166,12 +161,76 @@ public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IF
 		return false;
 	}
 
+	private void AdoptOrCreateCharacter(User user)
+	{
+		if (!PlayerCharacters.ContainsKey(user))
+		{
+			if (OrphanCharacters.ContainsKey(user.Name))
+			{
+				PlayerCharacters.Add(user,OrphanCharacters[user.Name]);
+			}
+			else
+			{
+				PlayerCharacters.Add(user,new PlayerCharacter(user));
+			}
+		}
+	}
+
+	public override void Initialize()
+	{
+		if (!File.Exists(CacheCardGameURI))
+			return;
+
+		using (var reader = new BinaryReader(File.OpenRead(CacheCardGameURI)))
+		for (int n=0;n<2;n++)
+			for (int i=0;i<reader.ReadUInt32();i++)
+			{
+				var playerCharacter = PlayerCharacter.Deserialize(reader);
+				if (ApiConnection.Users.TrySingleByName(playerCharacter.Key,out User user))
+				{
+					PlayerCharacters.Add(user,playerCharacter);
+				}
+				else
+				{
+					OrphanCharacters.Add(playerCharacter.Key,playerCharacter);
+				}
+			}
+		base.Shutdown();
+	}
+
 	public override void Update()
 	{
 		foreach(User key in OutgoingChallenges.Where((kvp)=>kvp.Value.AtTerminalStage).Select((kvp)=>kvp.Key))
 			OutgoingChallenges.Remove(key);
 
 		base.Update();
+	}
+
+	public override void Shutdown()
+	{
+		if (!Directory.Exists(CacheURL))
+			Directory.CreateDirectory(CacheURL);
+
+		if (PlayerCharacters.Count == 0)
+		{
+			File.Delete(CacheCardGameURI);
+			return;
+		}
+
+		using (var writer = new BinaryWriter(File.OpenWrite(CacheCardGameURI)))
+		{
+			writer.Write((uint)	PlayerCharacters.Count);
+			foreach (PlayerCharacter playerCharacter in PlayerCharacters.Values)
+			{
+				playerCharacter.Serialize(writer);
+			}
+			writer.Write((uint)	OrphanCharacters.Count);
+			foreach (PlayerCharacter orphanCharacter in OrphanCharacters.Values)
+			{
+				orphanCharacter.Serialize(writer);
+			}
+		}
+		base.Shutdown();
 	}
 
 	public override void HandleJoinedChannel(ChannelEventArgs @event)
@@ -204,11 +263,19 @@ public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IF
 	}
 
 
+#region IFChatPlugin
     void IFChatPlugin.HandleRecievedMessage(CommandTokens command) => HandleRecievedMessage(command);
 
     void IFChatPlugin.HandleJoinedChannel(ChannelEventArgs @event) => HandleJoinedChannel(@event);
 
     void IFChatPlugin.HandleCreatedChannel(ChannelEventArgs @event) => HandleCreatedChannel(@event);
+
+    void IFChatPlugin.Initialize() => Initialize();
+
+    void IFChatPlugin.Update() => Update();
+	
+    void IFChatPlugin.Shutdown() => Shutdown();
+#endregion
 
 	static FChatTournamentOrganiser()
 	{

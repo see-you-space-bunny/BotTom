@@ -13,17 +13,17 @@ namespace CardGame;
 
 public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>
 {
-	private bool RejectChallenge(CommandTokens command,FChatMessageBuilder commandResponse,FChatMessageBuilder challengerAlertResponse)
+	private bool RejectChallenge(CommandTokens commandTokens,FChatMessageBuilder commandResponse,FChatMessageBuilder challengerAlertResponse)
 	{
 		//////////
 			
 		var responseBuilder = new StringBuilder()
 			.Append("You have rejected ")
-			.Append(IncomingChallenges[command.Message.Author].Challenger.Mention)
+			.Append(IncomingChallenges[commandTokens.Source.Author].Challenger.Mention)
 			.Append("'s challenge!");
 
 		var alertBuilder    = new StringBuilder()
-			.Append(command.Message.Author.Mention)
+			.Append(commandTokens.Source.Author.Mention)
 			.Append(" has rejected your challenge!");
 		
 		//////////
@@ -34,12 +34,12 @@ public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>
 
 		challengerAlertResponse
 			.WithMessage(alertBuilder.ToString())
-			.WithRecipient(IncomingChallenges[command.Message.Author].Challenger.Name)
+			.WithRecipient(IncomingChallenges[commandTokens.Source.Author].Challenger.Name)
 			.WithMessageType(FChatMessageType.Whisper);
 		
 		//////////
 
-		IncomingChallenges[command.Message.Author].AdvanceState(MatchChallenge.Event.Cancel);
+		IncomingChallenges[commandTokens.Source.Author].AdvanceState(MatchChallenge.Event.Cancel);
 		return true;
 	}
 }

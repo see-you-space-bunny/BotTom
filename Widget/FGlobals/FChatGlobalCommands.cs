@@ -25,18 +25,7 @@ public partial class FChatGlobalCommands : FChatPlugin<GlobalCommand>, IFChatPlu
 #endif
 
 	public FChatGlobalCommands(ApiConnection api, TimeSpan updateInterval) : base(api, updateInterval)
-	{
-		RegisterCommandRestrictions();
-	}
-
-	private void RegisterCommandRestrictions()
-	{
-		ChannelLockedCommands.Add(GlobalCommand.ChInvite);
-		WhispersLockedCommands.Add(GlobalCommand.ChCreate);
-		WhispersLockedCommands.Add(GlobalCommand.Register);
-		WhispersLockedCommands.Add(GlobalCommand.UnRegister);
-		WhispersLockedCommands.Add(GlobalCommand.Whoami);
-	}
+	{ }
 
 	private static void PreProcessEnumAttributes()
 	{
@@ -49,7 +38,7 @@ public partial class FChatGlobalCommands : FChatPlugin<GlobalCommand>, IFChatPlu
 	{
 		//////////////
 		
-		if (!commandTokens.TryGetParameters(out GlobalCommand command, out Dictionary<string,string> parameters))
+		if (!commandTokens.TryGetParameters(out GlobalCommand command))
 			return;
 		
 		if (commandTokens.Source.Author.PrivilegeLevel < command.GetEnumAttribute<GlobalCommand, MinimumPrivilegeAttribute>().Privilege)
@@ -71,22 +60,16 @@ public partial class FChatGlobalCommands : FChatPlugin<GlobalCommand>, IFChatPlu
 		{
 			#region Register
 			case GlobalCommand.Register:
-				if (commandTokens.Source.Author is not null)
-				{                  
-					if (!ApiConnection.Users.RegisteredUsers.ContainsKey(commandTokens.Source.Author.Name))
+				if (commandTokens.Source.Author is not null && !commandTokens.Source.Author.IsRegistered)
+				{
+					commandTokens.Source.Author.Register();
+					if (GlobalOperators.TryGetValue(commandTokens.Source.Author.Name, out Privilege globalPrivilege))
 					{
-						commandTokens.Source.Author.Register();
-						if (GlobalOperators.TryGetValue(commandTokens.Source.Author.Name, out Privilege globalPrivilege))
-						{
-							commandTokens.Source.Author.PrivilegeLevel = globalPrivilege;
-						}
-						else if (Operators.TryGetValue(commandTokens.Source.Author.Name, out Privilege opPrivilege))
-						{
-							commandTokens.Source.Author.PrivilegeLevel = opPrivilege;
-						}
+						commandTokens.Source.Author.PrivilegeLevel = globalPrivilege;
 					}
-					else
+					else if (Operators.TryGetValue(commandTokens.Source.Author.Name, out Privilege opPrivilege))
 					{
+						commandTokens.Source.Author.PrivilegeLevel = opPrivilege;
 					}
 				}
 				break;
@@ -107,7 +90,7 @@ public partial class FChatGlobalCommands : FChatPlugin<GlobalCommand>, IFChatPlu
 				ApiConnection.Mod_SetChannelUserStatus(
 					ApiConnection.Channels.GetList(ChannelType.Private).Values
 						.FirstOrDefault(c => c.CreatedByApi),
-					ApiConnection.Users.SingleByName(parameters["User"]),
+					ApiConnection.Users.SingleByName(commandTokens.Parameters["User"]),
 					UserRoomStatus.Invited
 				);
 				respondWithMessage = false;
@@ -116,7 +99,7 @@ public partial class FChatGlobalCommands : FChatPlugin<GlobalCommand>, IFChatPlu
 
 			#region ChCreate
 			case GlobalCommand.ChCreate:
-				ApiConnection.User_CreateChannel(parameters["ChannelName"]);
+				ApiConnection.User_CreateChannel(commandTokens.Parameters["ChannelName"]);
 				respondWithMessage = false;
 				break;
 			#endregion

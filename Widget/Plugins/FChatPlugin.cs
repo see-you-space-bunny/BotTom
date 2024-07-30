@@ -27,12 +27,6 @@ public class FChatPlugin<TCommand>(ApiConnection api, TimeSpan updateInterval) :
 	/// <summary>the channels in which this module is active</summary>
 	public Dictionary<string, Channel> ActiveChannels { get; }				= [];
 
-	/// <summary>commands which can only be used in <c>ActiveChannels</c></summary>
-	public List<TCommand> ChannelLockedCommands { get; }					= [];
-
-	/// <summary>commands which can only be used in whispers</summary>
-	public List<TCommand> WhispersLockedCommands { get; }					= [];
-
 	/// <summary>the operators </summary>
 	public Dictionary<string, Privilege> Operators { get; }					= [];
 
@@ -87,6 +81,8 @@ public class FChatPlugin<TCommand>(ApiConnection api, TimeSpan updateInterval) :
 		}
 	}
 
+	public override void Initialize()=> base.Initialize();
+
 	/// <summary>
 	/// do periodically executed update stuff here
 	/// </summary>
@@ -98,7 +94,7 @@ public class FChatPlugin<TCommand>(ApiConnection api, TimeSpan updateInterval) :
 		base.Update();
 	}
 
-    public override void Shutdown() { }
+    public override void Shutdown() => base.Shutdown();
 
     void IFChatPlugin.HandleRecievedMessage(CommandTokens commandTokens)
     {

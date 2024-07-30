@@ -13,6 +13,7 @@ using ModularPlugins.Interfaces;
 using RoleplayingGame.Serialization;
 using FChatApi.Objects;
 using RoleplayingGame.Effects;
+using Plugins.Tokenizer;
 
 namespace RoleplayingGame;
 
@@ -132,5 +133,18 @@ public partial class FRoleplayMC : FChatPlugin<LevelGameCommand>, IFChatPlugin
 		if (!Directory.Exists(CsvDirectory))
 			Directory.CreateDirectory(CsvDirectory);
 	}
+#endregion
+
+
+#region IFChatPlugin
+    void IFChatPlugin.HandleRecievedMessage(CommandTokens command) => HandleRecievedMessage(command);
+
+    void IFChatPlugin.HandleJoinedChannel(ChannelEventArgs @event) => HandleJoinedChannel(@event);
+
+    void IFChatPlugin.HandleCreatedChannel(ChannelEventArgs @event) => HandleCreatedChannel(@event);
+
+    void IFChatPlugin.Update() => Update();
+	
+    void IFChatPlugin.Shutdown() => Shutdown();
 #endregion
 }

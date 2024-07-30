@@ -5,6 +5,27 @@ using Plugins.Attributes;
 
 namespace FGlobals.Enums;
 
+//	Begin / End case-insensitive matching
+//		(?i) / (?-i)
+
+//	"Command"
+//		((?'Command'[a-zA-Z]{1,24})(\s+|\]|$))
+
+//	"Word"
+//		((?'Word'[a-zA-Z\-_0-9]{1,24})(\s+|\]|$))
+
+//	"WordArray"
+//		((?'WordArray'[a-zA-Z\-_0-9]{1,24}([\,\+]{1}\s*[a-zA-Z]{1,24})*)(\s+|\]|$))
+
+//	"WordNumberArray"
+//		((?'WordNumberArray'(?'Word'[a-zA-Z\-_0-9]{1,24})\s(?'Number'[0-9]{1,4}[\,\+]{0,1}))+(\s+|\]|$))
+
+//	"Number"
+//		((?'Number'[0-9]{1,7}[\.\,]{0,1}[0-9]{1,4})(\s+|\]|$))
+
+//	"Player"
+//		((\[user\]){0,1}((?'Player'[a-zA-Z\-_\s0-9]{1,32})(\[\/user\]){0,1})(\s+|\]|$))
+
 public enum GlobalCommand
 {
 	[Description("")]

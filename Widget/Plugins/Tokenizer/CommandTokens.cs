@@ -9,21 +9,43 @@ public class CommandTokens(FChatMessage fChatMessage, string command, string par
 {
 	public FChatMessage Source { get; }		= fChatMessage;
 	public string Command { get; }			= command;
-	public string _parameters { get; }		= parameters;
-	public bool TryGetParameters<TCommand>(out TCommand command, out Dictionary<string,string> parameters) where TCommand : struct, Enum
+	private string _parameters				= parameters;
+	public Dictionary<string,string> Parameters { get; private set; } = new (StringComparer.InvariantCultureIgnoreCase);
+	public bool TryGetParameters<TCommand>(out TCommand command) where TCommand : struct, Enum
 	{
-		parameters = new (StringComparer.InvariantCultureIgnoreCase);
-		if (Enum.TryParse(Command,true,out command))
+		Parameters.Clear();
+		if (Enum.TryParse(Command,true,out command) || TryParseByAlias(Command,out command))
 		{
+			if (!command.HasEnumAttribute<TCommand,CommandPatternAttribute>())
+				return true;
 			var pattern	= command.GetEnumAttribute<TCommand,CommandPatternAttribute>().Pattern;
 			var groups	= pattern.Match(_parameters).Groups;
 			foreach (string groupname in pattern.GetGroupNames())
 			{
-				parameters.Add(groupname,groups[groupname].Value);
+				Parameters.Add(groupname,groups[groupname].Value);
 			}
 			return true;
 		}
 		return false;
+	}
+
+	protected static bool TryParseByAlias<TCommand>(string value, out TCommand result) where TCommand : struct, Enum =>
+		AssembleAliasReference<TCommand>().TryGetValue(value,out result);
+
+	protected static Dictionary<string,TCommand> AssembleAliasReference<TCommand>() where TCommand : struct, Enum
+	{
+		Dictionary<string,TCommand> result = new (StringComparer.InvariantCultureIgnoreCase);
+		foreach (TCommand command in Enum.GetValues<TCommand>().Cast<TCommand>())
+		{
+			if (command.HasEnumAttribute<TCommand,CommandAliasAttribute>())
+			{
+				foreach (string alias in command.GetEnumAttribute<TCommand,CommandAliasAttribute>().Values)
+				{
+					result.AddOrUpdate(alias,command);
+				}
+			}
+		}
+		return result;
 	}
 }
 

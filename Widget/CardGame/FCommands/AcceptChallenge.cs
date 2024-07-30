@@ -15,43 +15,34 @@ namespace CardGame;
 
 public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>
 {
-	private bool AcceptChallenge(CommandTokens command,FChatMessageBuilder commandResponse)
+	private bool AcceptChallenge(CommandTokens commandTokens,FChatMessageBuilder commandResponse)
 	{
-		CharacterStat stat1 = default;
-		if (command.Parameters.Length < 1)
+		if (!commandTokens.Parameters.TryGetValue("Stat1",out string ?stat1Raw) ||
+			!Enum.TryParse(stat1Raw,true,out CharacterStat stat1))
 		{
 			commandResponse
-				.WithMessage("You need to specify at least one stat with which to build your deck.");
+				.WithMessage($"{stat1Raw} is not a recognised stat.");
 			return false;
 		}
-		else if (!Enum.TryParse(command.Parameters[0],true,out stat1))
+		
+		if (!commandTokens.Parameters.TryGetValue("Stat2",out string ?stat2Raw) ||
+			!Enum.TryParse(stat2Raw,true,out CharacterStat stat2))
 		{
 			commandResponse
-				.WithMessage($"{command.Parameters[0].ToUpper()} is not a recognised stat.");
+				.WithMessage($"{stat2Raw} is not a recognised stat.");
 			return false;
-		}
-
-		CharacterStat stat2 = default;
-		if (command.Parameters.Length > 1)
-		{
-			if (!Enum.TryParse(command.Parameters[1],true,out stat2))
-			{
-				commandResponse
-					.WithMessage($"{command.Parameters[1].ToUpper()} is not a recognised stat.");
-				return false;
-			}
 		}
 		
 		//////////
 
-		IncomingChallenges[command.Message.Author].AdvanceState(MatchChallenge.Event.Confirm);
+		IncomingChallenges[commandTokens.Source.Author].AdvanceState(MatchChallenge.Event.Confirm);
 		
 		//////////
 
 		OngoingMatches.Add(
 			new BoardState(
-				IncomingChallenges[command.Message.Author].Player1,
-				PlayerCharacters[command.Message.Author].CreateMatchPlayer(stat1,stat2)
+				IncomingChallenges[commandTokens.Source.Author].Player1,
+				PlayerCharacters[commandTokens.Source.Author].CreateMatchPlayer(stat1,stat2)
 		));
 		
 		//////////

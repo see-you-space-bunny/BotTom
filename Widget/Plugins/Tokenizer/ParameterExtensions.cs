@@ -5,41 +5,48 @@ using System.Threading.Tasks;
 using FChatApi.Core;
 using FChatApi.Objects;
 
-namespace Plugins.Tokenizer
+namespace Plugins.Tokenizer;
+
+public static class ParameterExtensions
 {
-    public static class ParameterExtensions
-    {
-        public static bool TryGetAs<TKey>(this Dictionary<TKey,string> dict,TKey key,out int result) where TKey : notnull
+	public static void AddOrUpdate<TKey,TValue>(this IDictionary<TKey,TValue> dict,TKey key,TValue value) where TKey : notnull
+	{
+		if (!dict.TryAdd(key,value))
 		{
-			if (dict.TryGetValue(key,out string value))
-			{
-				if (!string.IsNullOrWhiteSpace(value) && int.TryParse(value,out result))
-					return true;
-			}
-			result = int.MinValue;
-			return false;
+			dict[key] = value;
 		}
+	}
 
-        public static bool TryGetAs<TKey>(this Dictionary<TKey,string> dict,TKey key,out float result) where TKey : notnull
+	public static bool TryGetAs<TKey>(this IDictionary<TKey,string> dict,TKey key,out int result) where TKey : notnull
+	{
+		if (dict.TryGetValue(key,out string ?value))
 		{
-			if (dict.TryGetValue(key,out string value))
-			{
-				if (!string.IsNullOrWhiteSpace(value) && float.TryParse(value,out result))
-					return true;
-			}
-			result = float.MinValue;
-			return false;
+			if (!string.IsNullOrWhiteSpace(value) && int.TryParse(value,out result))
+				return true;
 		}
+		result = int.MinValue;
+		return false;
+	}
 
-        public static bool TryGetAs<TKey>(this Dictionary<TKey,string> dict,TKey key,out User result) where TKey : notnull
+	public static bool TryGetAs<TKey>(this IDictionary<TKey,string> dict,TKey key,out float result) where TKey : notnull
+	{
+		if (dict.TryGetValue(key,out string ?value))
 		{
-			if (dict.TryGetValue(key,out string value))
-			{
-				if (!string.IsNullOrWhiteSpace(value) && ApiConnection.Users.TrySingleByName(value,out result))
-					return true;
-			}
-			result = null!;
-			return false;
+			if (!string.IsNullOrWhiteSpace(value) && float.TryParse(value,out result))
+				return true;
 		}
-    }
+		result = float.MinValue;
+		return false;
+	}
+
+	public static bool TryGetAs<TKey>(this IDictionary<TKey,string> dict,TKey key,out User result) where TKey : notnull
+	{
+		if (dict.TryGetValue(key,out string ?value))
+		{
+			if (!string.IsNullOrWhiteSpace(value) && ApiConnection.Users.TrySingleByName(value,out result))
+				return true;
+		}
+		result = null!;
+		return false;
+	}
 }
