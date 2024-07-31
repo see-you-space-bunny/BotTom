@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reflection.Metadata.Ecma335;
 using RoleplayingGame.Attributes;
 using RoleplayingGame.Enums;
@@ -5,9 +6,16 @@ using RoleplayingGame.Objects;
 
 namespace RoleplayingGame.SheetComponents;
 
-public class CharacterResource : ResourceBase
+public class AbilityScore : ResourceBase
 {
-	protected float _baseValue;
+#region Constants
+	private const float StatusEffectMultiplierPositive	= 0.85f;
+	private const float StatusEffectMultiplierNegative	= 1.35f;
+	private const float ModifiersMultiplierPositive		= 0.85f;
+	private const float ModifiersMultiplierNegative		= 1.35f;
+#endregion
+
+	private readonly Ability _ability;
 
 #region Recordkeeping
 	private readonly List<(DateTime When,ulong Id,int Value,int Actual)> _lifetimeModifiersPvP = [];
@@ -18,19 +26,19 @@ public class CharacterResource : ResourceBase
 	public void Modify(DateTime when,ulong source,int value)
 	{
 		int actual = value;
-		if (HasHardLimit)
-			actual = (value+CurrentTotal > 0 ?
-				Math.Min(value+CurrentTotal,HardLimit) : 
-					Math.Max(value+CurrentTotal,HardLimit)) - CurrentTotal;
+		if (base.HasHardLimit)
+			actual = (value + CurrentTotal > 0 ?
+				Math.Min(value + CurrentTotal, ModifierHardLimitHigh) :
+					Math.Max(value + CurrentTotal, ModifierHardLimitLow)) - CurrentTotal;
 		_currentModifiersPvP.Add((when,source,value,actual));
 	}
 	public void Modify(DateTime when,EnvironmentSource source,int value)
 	{
 		int actual = value;
-		if (HasHardLimit)
-			actual = (value+CurrentTotal > 0 ?
-				Math.Min(value+CurrentTotal,HardLimit) : 
-					Math.Max(value+CurrentTotal,HardLimit)) - CurrentTotal;
+		if (base.HasHardLimit)
+			actual = (value + CurrentTotal > 0 ?
+				Math.Min(value + CurrentTotal, ModifierHardLimitHigh) :
+					Math.Max(value + CurrentTotal, ModifierHardLimitLow)) - CurrentTotal;
 		_currentModifiersPvE.Add((when,source,value,actual));
 	}
 
@@ -41,29 +49,52 @@ public class CharacterResource : ResourceBase
 	public int CurrentGain	=> _currentModifiersPvP.Sum(li=>li.Actual > 0 ? li.Actual : 0);
 	public int CurrentLoss	=> _currentModifiersPvP.Sum(li=>li.Actual < 0 ? li.Actual : 0);
 	public int CurrentTotal	=> _currentModifiersPvP.Sum(li=>li.Actual);
-	public int GetValue(bool softLimited = true) => softLimited && HasSoftLimit ? Math.Min(SoftLimit,CurrentTotal) : CurrentTotal;
 #endregion
 
-#region OutwardFacing
-	public float BaseValue {
-		get => _baseValue;
-		set => _baseValue = HasHardLimit && value > HardLimit ?
-			HardLimit : value;
-	}
+#region Partial Values
+	public float ClassValue => _parent.ClassLevels.Values.Sum(cl=>cl.Class.AbilityGrowth[_ability] * cl.Level);
 
-	public int Current {
-		get => HasSoftLimit && CurrentNoSoftLimit > SoftLimit ?
-			SoftLimit : CurrentNoSoftLimit;
-	}
+	public float Modifiers => CurrentTotal * (CurrentTotal > 0 ? ModifiersMultiplierPositive : ModifiersMultiplierNegative);
 
-	public int CurrentNoSoftLimit { get=>(int)((_baseValue + SumOfModifiers)*CombinedMultipliers); }
+	public float StatusAdjustment {
+		get {
+			float statusAdjustment = _parent.SumStatusAdjustmentByAbility(_ability);
+			return statusAdjustment * (statusAdjustment > 0 ? StatusEffectMultiplierPositive : StatusEffectMultiplierNegative);
+		}
+	}
+#endregion
+
+#region Values
+	private int ActualValue => Math.Min(SoftLimit,ActualValueNoSoftLimit);
+	private int ActualValueNoSoftLimit => HasHardLimit ? Math.Min(HardLimit,ActualValueRaw) : ActualValueRaw;
+	private int ActualValueRaw => (int)(ClassValue+Modifiers+StatusAdjustment);
+	public int GetActualValue(bool softLimited = true) => softLimited && HasSoftLimit ? ActualValue : ActualValueNoSoftLimit;
+
+	private int DisplayValue => Math.Min(SoftLimit,DisplayValueNoSoftLimit);
+	private int DisplayValueNoSoftLimit => HasHardLimit ? Math.Min(HardLimit,DisplayValueRaw) : ActualValueRaw;
+	private int DisplayValueRaw => (int)(ClassValue+CurrentTotal+_parent.SumStatusAdjustmentByAbility(_ability));
+	public int GetDisplayValue(bool softLimited = true) => softLimited && HasSoftLimit ? DisplayValue : DisplayValueNoSoftLimit;
 #endregion
 
 #region Limits
-	public override bool IsAtSoftLimit => HasSoftLimit && _baseValue >= SoftLimit;
-	public override bool IsAtHardLimit => HasHardLimit && _baseValue == HardLimit;
+	private int ModifierSoftLimit		=> (CurrentTotal > 0 ? ModifierSoftLimitHigh : -ModifierSoftLimitLow);
+	private int ModifierSoftLimitHigh	=> (int)(SoftLimit - ClassValue);
+	private int ModifierSoftLimitLow	=> (int)-(SoftLimit + ClassValue);
+	private int ModifierHardLimit		=> (CurrentTotal > 0 ? ModifierHardLimitHigh : -ModifierHardLimitLow);
+	private int ModifierHardLimitHigh	=> (int)(HardLimit - ClassValue);
+	private int ModifierHardLimitLow	=> (int)-(HardLimit + ClassValue);
 	
-	public override bool IsOverSoftLimit => _baseValue > SoftLimit;
+	public override bool IsAtSoftLimit => HasSoftLimit && DisplayValue >= SoftLimit;
+	public override bool IsAtHardLimit => HasHardLimit && DisplayValue == HardLimit;
+	
+	public override bool IsOverSoftLimit => DisplayValue > SoftLimit;
+#endregion
+
+#region Rng
+	public void Roll(int dieCount = 1,int dieSize = 100)
+	{
+		int result = DisplayValue+new int[dieCount].Sum(i=>FRoleplayMC.Rng.Next(1,dieSize+1));
+	}
 #endregion
 
 #region Serialization
@@ -96,9 +127,9 @@ public class CharacterResource : ResourceBase
 			reader.ReadInt32()
 		);
 
-	public static CharacterResource Deserialize(BinaryReader reader,Actor parent)
+	public static AbilityScore Deserialize(BinaryReader reader,Actor parent)
 	{
-		CharacterResource result = new (parent);
+		AbilityScore result = new (parent,(Ability)reader.ReadUInt16());
 
 		for (uint i=0;i<reader.ReadUInt32();i++)
 		{
@@ -146,6 +177,7 @@ public class CharacterResource : ResourceBase
 
 	public void Serialize(BinaryWriter writer)
 	{
+		writer.Write((ushort)	_ability);
 		writer.Write((uint)		_currentModifiersPvE.Count);
 		foreach (var modifier in _currentModifiersPvE)
 		{
@@ -171,14 +203,14 @@ public class CharacterResource : ResourceBase
 #endregion
 
 #region Constructor
-	internal CharacterResource(Actor parent,ResourceDefaultValuesAttribute defaults) :
-		this(parent,defaults.BaseValue,defaults.HardLimit,defaults.SoftLimit,defaults.MoreIsBetter)
+	internal AbilityScore(Actor parent,Ability ability,ResourceDefaultValuesAttribute defaults) :
+		this(parent,ability,defaults.HardLimit,defaults.SoftLimit,defaults.MoreIsBetter)
 	{ }
 
-	public CharacterResource(Actor parent,int baseValue = 0,int hardLimit = -1,int softLimit = -1,bool moreIsBetter = true)
+	public AbilityScore(Actor parent,Ability ability,int hardLimit = -1,int softLimit = -1,bool moreIsBetter = true)
 		: base(parent,hardLimit,softLimit,moreIsBetter)
 	{
-		_baseValue	= baseValue;
+		_ability	= ability;
 	}
 #endregion
 }

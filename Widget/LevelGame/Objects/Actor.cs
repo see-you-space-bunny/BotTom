@@ -22,7 +22,7 @@ public class Actor : GameObject
 #region (#) Fields
 	protected ClassName _activeClass;
 	protected Dictionary<ClassName,ClassLevels> _classLevels;
-	protected Dictionary<Ability,CharacterResource> _abilities;
+	protected Dictionary<Ability,AbilityScore> _abilities;
 	protected Dictionary<GameAction,SkillAction> _actions;
 	protected Dictionary<Resource,CharacterResource> _resources;
 	protected List<ActiveStatusEffect> _statusEffects;
@@ -32,8 +32,9 @@ public class Actor : GameObject
 	public CharacterResource Health		=>	_resources[Resource.Health];
 	public CharacterResource Protection	=>	_resources[Resource.Protection];
 	public CharacterResource Evasion	=>	_resources[Resource.Evasion];
-	public Dictionary<Ability,CharacterResource> Abilities => _abilities.Where(k=>k.Key!=Ability.Level).ToDictionary();
-	public new CharacterResource Level	=>	_abilities[Ability.Level];
+	public Dictionary<Ability,AbilityScore> Abilities => _abilities.Where(k=>k.Key!=Ability.Level).ToDictionary();
+	public new AbilityScore Level	=>	_abilities[Ability.Level];
+	public Dictionary<ClassName,ClassLevels> ClassLevels => _classLevels;
 #endregion
 
 #region (+P) Meta
@@ -92,10 +93,7 @@ public class Actor : GameObject
 	{
 		foreach (ActiveStatusEffect effect in _statusEffects)
 		{
-			foreach ((Ability ability,float baseValue) in effect.AffectsAbilities)
-			{
-				_abilities[ability].SumOfModifiers += baseValue * effect.Intensity;
-			}
+
 		}
 		return this;
 	}
@@ -108,7 +106,7 @@ public class Actor : GameObject
 
 	private void ReCalculateResourceLimits()
 	{
-		foreach (var resource in _resources.Where(r=>r.Value.IsHardLimited || r.Value.IsSoftLimited))
+		foreach (var resource in _resources.Where(r=>r.Value.HasHardLimit || r.Value.HasSoftLimit))
 		{
 			ReCalculateResourceLimit(resource);
 		}
@@ -126,12 +124,12 @@ public class Actor : GameObject
 			highestBaseValue	= Math.Max(highestBaseValue,(int)classLevels.Class.ResourceModifiers[resource.Key][ResourceModifier.BaseValue]);
 			CalcResourceLimits(classLevels,resource);
 		}
-		if (resource.Value.IsSoftLimited)
+		if (resource.Value.HasSoftLimit)
 		{
 			resource.Value.SoftLimit += highestBaseValue;
 			resource.Value.SoftLimit = Math.Max(resource.Value.SoftLimit,highestMinimumValue);
 		}
-		if (resource.Value.IsHardLimited)
+		if (resource.Value.HasHardLimit)
 		{
 			resource.Value.HardLimit += highestBaseValue;
 			resource.Value.HardLimit = Math.Max(resource.Value.HardLimit,highestMinimumValue);
@@ -142,8 +140,8 @@ public class Actor : GameObject
 
 	private void CalcResourceLimits(ClassLevels classLevels,KeyValuePair<Resource, CharacterResource> resource)
 	{
-		resource.Value.SoftLimit = resource.Value.IsSoftLimited ? (int)CalcResourceLimit(classLevels, resource.Key,ResourceModifier.SoftLimit) : -1;
-		resource.Value.HardLimit = resource.Value.IsHardLimited ? (int)CalcResourceLimit(classLevels, resource.Key,ResourceModifier.HardLimit) : -1;
+		resource.Value.SoftLimit = resource.Value.HasSoftLimit ? (int)CalcResourceLimit(classLevels, resource.Key,ResourceModifier.SoftLimit) : -1;
+		resource.Value.HardLimit = resource.Value.HasHardLimit ? (int)CalcResourceLimit(classLevels, resource.Key,ResourceModifier.HardLimit) : -1;
 	}
 	
 /// <summary>
@@ -157,8 +155,26 @@ public class Actor : GameObject
 		classLevels.Class.ResourceModifiers[resource][limit] * (
 			classLevels.Level * classLevels.Class.ResourceAbilityScales[resource][Ability.Level] +
 			Abilities.Keys
-				.Sum(k =>Abilities[k].Current * classLevels.Class.ResourceAbilityScales[resource][k])
+				.Sum(k =>Abilities[k].GetActualValue() * classLevels.Class.ResourceAbilityScales[resource][k])
 		);
+#endregion
+
+#region Status Effects
+
+	internal float SumStatusAdjustmentByAbility(Ability value)
+	{
+		float result = 0.0f;
+		foreach (ActiveStatusEffect statusEffect in _statusEffects)
+		{
+			foreach ((Ability ability,float adjustment) in statusEffect.AffectsAbilities)
+			{
+				if (ability == value)
+					result += adjustment;
+			}
+		}
+		return result;
+	}
+
 #endregion
 
 #region Actor Extensions
@@ -182,7 +198,6 @@ public class Actor : GameObject
 	{
 		if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
 		{
-			GrowAbilities(_classLevels[_activeClass],null,false);
 			levels = (int)Math.Round(activeClassLevels.Class.AbilityGrowth[Ability.Level] * levels);
 			levels = levels == 0 ? 1 : levels;
 			activeClassLevels.Level += levels;
@@ -195,25 +210,7 @@ public class Actor : GameObject
 			@class.Level += levels;
 		    _classLevels.Add(_activeClass,@class);
 		}
-		Level.BaseValue += levels;
-		GrowAbilities(_classLevels[_activeClass],0);
-		return this;
-	}
-
-/// <summary>
-/// 
-/// </summary>
-/// <param name="class">the class levels</param>
-/// <param name="levels">when null, removes all current abilities gained from this class' levels</param>
-/// <returns>this Actor</returns>
-	private Actor GrowAbilities(ClassLevels classLevels,int? levels,bool recalculate = true)
-	{
-		foreach ((Ability key, CharacterResource ability) in Abilities)
-		{
-			ability.BaseValue += classLevels.Class.AbilityGrowth[key] * (classLevels.Level + levels ?? -classLevels.Level);
-		}
-		if (recalculate)
-			ReCalculateDerivedStatistics();
+		Level.Modify(DateTime.Now,EnvironmentSource.World,levels);
 		return this;
 	}
 
@@ -222,9 +219,9 @@ public class Actor : GameObject
 /// </summary>
 /// <param name="value"></param>
 /// <returns>this Actor</returns>
-	public Actor AdjustAllAbilities(int value,bool recalculate = true)
+	public Actor AdjustAllAbilities(int value,EnvironmentSource source = EnvironmentSource.World,bool recalculate = true)
 	{
-		AdjustAbilities([.. Abilities.Keys], value,false);
+		AdjustAbilities([.. Abilities.Keys],value,source,recalculate: false);
 		if (recalculate)
 			ReCalculateDerivedStatistics();
 		return this;
@@ -236,11 +233,11 @@ public class Actor : GameObject
 /// <param name="abilities"></param>
 /// <param name="value"></param>
 /// <returns>this Actor</returns>
-	public Actor AdjustAbilities(Ability[] abilities,int value,bool recalculate = true)
+	public Actor AdjustAbilities(Ability[] abilities,int value,EnvironmentSource source = EnvironmentSource.World,bool recalculate = true)
 	{
 		foreach (Ability ability in abilities)
 		{
-			AdjustAbility(ability,value,false);
+			AdjustAbility(ability,value,source,recalculate: false);
 		}
 		if (recalculate)
 			ReCalculateDerivedStatistics();
@@ -253,9 +250,9 @@ public class Actor : GameObject
 /// <param name="ability"></param>
 /// <param name="value"></param>
 /// <returns>this Actor</returns>
-	public Actor AdjustAbility(Ability ability,int value,bool recalculate = true)
+	public Actor AdjustAbility(Ability ability,int value,EnvironmentSource source = EnvironmentSource.World,bool recalculate = true)
 	{
-		Abilities[ability].BaseValue += value;
+		Abilities[ability].Modify(DateTime.Now,source,value);
 		if (recalculate)
 			ReCalculateDerivedStatistics();
 		return this;
@@ -270,15 +267,13 @@ public class Actor : GameObject
 	{
 		if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
 		{
-			GrowAbilities(_classLevels[_activeClass],null,false);
 			activeClassLevels.Level -= levels;
 		}
 		else
 		{
             _classLevels.Add(_activeClass, new ClassLevels(FRoleplayMC.CharacterClasses[_activeClass], -levels));
 		}
-		Level.BaseValue -= levels;
-		GrowAbilities(_classLevels[_activeClass],-levels);
+		Level.Modify(DateTime.Now,EnvironmentSource.World,-levels);
 		ReCalculateDerivedStatistics();
 		return this;
 	}
@@ -290,11 +285,11 @@ public class Actor : GameObject
 		{
 			if (resource.Key.GetEnumAttribute<Resource,GameFlagsAttribute>().RefilledByFullRecovery)
 			{
-				if (resource.Value.IsSoftLimited)
+				if (resource.Value.HasSoftLimit)
 				{
 					resource.Value.BaseValue = resource.Value.SoftLimit;
 				}
-				else if (resource.Value.IsHardLimited)
+				else if (resource.Value.HasHardLimit)
 				{
 					resource.Value.BaseValue = resource.Value.HardLimit;
 				}
@@ -335,13 +330,13 @@ public class Actor : GameObject
 		_abilities = [];
 		foreach(Ability ability in Enum.GetValues(typeof(Ability)).Cast<Ability>().Where(a=>a != Ability.None))
 		{
-			_abilities.Add(ability,new CharacterResource());
+			_abilities.Add(ability,new AbilityScore(this,ability));
 		}
 
 		_resources = [];
 		foreach(Resource resource in Enum.GetValues(typeof(Resource)).Cast<Resource>().Where(a=>a != Resource.None))
 		{
-			_resources.Add(resource,new CharacterResource(resource.GetEnumAttribute<Resource,ResourceDefaultValuesAttribute>()));
+			_resources.Add(resource,new CharacterResource(this,resource.GetEnumAttribute<Resource,ResourceDefaultValuesAttribute>()));
 		}
 
 		_statusEffects = [];

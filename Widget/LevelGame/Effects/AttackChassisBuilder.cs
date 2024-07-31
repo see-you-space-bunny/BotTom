@@ -11,7 +11,8 @@ public class AttackChassisBuilder
 {
 	private AttackType _attackType;
 	private readonly Dictionary<Ability,float> _accuracyScales;
-	private readonly Dictionary<Ability,float> _damageScales;
+	private readonly Dictionary<Ability,float> _impactScales;
+	private readonly Dictionary<Ability,float> _harmScales;
     private readonly List<StatusEffect> _carriedEffects;
 
 	#region csv-Name
@@ -31,18 +32,32 @@ public class AttackChassisBuilder
     public float Accuracy	{ private get; set; }
 	#endregion
 
-	#region csv-DamageScales
-	public float DmgPerLVL	{ set => AddOrUpdate(_damageScales,Ability.Level		,value); }
-	public float DmgPerPOW	{ set => AddOrUpdate(_damageScales,Ability.Power		,value); }
-	public float DmgPerBOD	{ set => AddOrUpdate(_damageScales,Ability.Body			,value); }
-	public float DmgPerREF	{ set => AddOrUpdate(_damageScales,Ability.Reflex		,value); }
-	public float DmgPerFOC	{ set => AddOrUpdate(_damageScales,Ability.Focus		,value); }
-	public float DmgPerWIL	{ set => AddOrUpdate(_damageScales,Ability.Will			,value); }
-	public float DmgPerWIT	{ set => AddOrUpdate(_damageScales,Ability.Wit			,value); }
-	public float DmgPerCHA	{ set => AddOrUpdate(_damageScales,Ability.Charm		,value); }
-	public float DmgPerINT	{ set => AddOrUpdate(_damageScales,Ability.Integrity	,value); }
-	public float DmgPerPRS	{ set => AddOrUpdate(_damageScales,Ability.Presence		,value); }
-	public float DmgPerLUK	{ set => AddOrUpdate(_damageScales,Ability.Luck			,value); }
+	#region csv-HarmScales
+	public float HrmPerLVL	{ set => AddOrUpdate(_harmScales,Ability.Level			,value); }
+	public float HrmPerPOW	{ set => AddOrUpdate(_harmScales,Ability.Power			,value); }
+	public float HrmPerBOD	{ set => AddOrUpdate(_harmScales,Ability.Body			,value); }
+	public float HrmPerREF	{ set => AddOrUpdate(_harmScales,Ability.Reflex			,value); }
+	public float HrmPerFOC	{ set => AddOrUpdate(_harmScales,Ability.Focus			,value); }
+	public float HrmPerWIL	{ set => AddOrUpdate(_harmScales,Ability.Will			,value); }
+	public float HrmPerWIT	{ set => AddOrUpdate(_harmScales,Ability.Wit			,value); }
+	public float HrmPerCHA	{ set => AddOrUpdate(_harmScales,Ability.Charm			,value); }
+	public float HrmPerINT	{ set => AddOrUpdate(_harmScales,Ability.Integrity		,value); }
+	public float HrmPerPRS	{ set => AddOrUpdate(_harmScales,Ability.Presence		,value); }
+	public float HrmPerLUK	{ set => AddOrUpdate(_harmScales,Ability.Luck			,value); }
+	#endregion
+
+	#region csv-ImpactScales
+	public float ImpPerLVL	{ set => AddOrUpdate(_impactScales,Ability.Level		,value); }
+	public float ImpPerPOW	{ set => AddOrUpdate(_impactScales,Ability.Power		,value); }
+	public float ImpPerBOD	{ set => AddOrUpdate(_impactScales,Ability.Body			,value); }
+	public float ImpPerREF	{ set => AddOrUpdate(_impactScales,Ability.Reflex		,value); }
+	public float ImpPerFOC	{ set => AddOrUpdate(_impactScales,Ability.Focus		,value); }
+	public float ImpPerWIL	{ set => AddOrUpdate(_impactScales,Ability.Will			,value); }
+	public float ImpPerWIT	{ set => AddOrUpdate(_impactScales,Ability.Wit			,value); }
+	public float ImpPerCHA	{ set => AddOrUpdate(_impactScales,Ability.Charm		,value); }
+	public float ImpPerINT	{ set => AddOrUpdate(_impactScales,Ability.Integrity	,value); }
+	public float ImpPerPRS	{ set => AddOrUpdate(_impactScales,Ability.Presence		,value); }
+	public float ImpPerLUK	{ set => AddOrUpdate(_impactScales,Ability.Luck			,value); }
 	#endregion
 
 	#region csv-AccuracyScales
@@ -74,8 +89,9 @@ public class AttackChassisBuilder
 			Harm,
 			Impact,
 			Accuracy,
+			_harmScales,
+			_impactScales,
 			_accuracyScales,
-			_damageScales,
             [.. _carriedEffects]
         );
     }
@@ -88,7 +104,8 @@ public class AttackChassisBuilder
         Impact				= 0.0f;
         Accuracy			= 0.0f;
 		_accuracyScales		= [];
-		_damageScales		= [];
+		_impactScales		= [];
+		_harmScales			= [];
         _carriedEffects		= [];
     }
 }

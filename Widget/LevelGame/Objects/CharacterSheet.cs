@@ -1,4 +1,5 @@
 using RoleplayingGame.Enums;
+using RoleplayingGame.SheetComponents;
 using RoleplayingGame.Statistics;
 
 namespace RoleplayingGame.Objects;
@@ -86,11 +87,10 @@ public class CharacterSheet : Actor
 			characterSheet.LevelUp((int) reader.ReadInt32());
 		}
 		characterSheet.ChangeClass((ClassName)	reader.ReadUInt32());
-		characterSheet.Level.BaseValue = characterSheet._classLevels.Values.Sum((cl)=>cl.Level);
 
 		for (int i=0;i<reader.ReadUInt32();i++)
 		{
-			characterSheet._abilities[(Ability) reader.ReadUInt16()].BaseValue = reader.ReadInt32();
+			characterSheet._abilities[(Ability) reader.ReadUInt16()] = AbilityScore.Deserialize(reader,characterSheet);
 		}
 
 		for (int i=0;i<reader.ReadUInt32();i++)
@@ -128,8 +128,7 @@ public class CharacterSheet : Actor
 		writer.Write((uint) 	Abilities.Count);
 		foreach (var ability in Abilities)
 		{
-			writer.Write((ushort)	ability.Key);
-			writer.Write((int)		ability.Value.BaseValue);
+			ability.Value.Serialize(writer);
 		}
 
 		writer.Write((uint) 	_resources.Count);
