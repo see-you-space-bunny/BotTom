@@ -3,7 +3,6 @@ using FChatApi.Enums;
 using Plugins.Tokenizer;
 
 using Engine.ModuleHost;
-using Engine.ModuleHost.Enums;
 
 using ModularPlugins;
 using ModularPlugins.Interfaces;

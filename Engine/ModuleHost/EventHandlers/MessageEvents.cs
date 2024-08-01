@@ -1,4 +1,3 @@
-using Engine.ModuleHost.Enums;
 using Plugins.Tokenizer;
 
 namespace Engine.ModuleHost;
@@ -14,6 +13,9 @@ public partial class ChatBot
 	/// <param name="command">command being sent, if any</param>
 	public void HandleMessage(CommandTokens command)
 	{
-		FChatPlugins[module].HandleRecievedMessage(command);
+		foreach (var module in FChatPlugins.Values)
+		{
+			module.HandleRecievedMessage(command);
+		}
 	}
 }

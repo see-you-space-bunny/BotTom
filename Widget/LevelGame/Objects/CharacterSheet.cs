@@ -6,139 +6,153 @@ namespace RoleplayingGame.Objects;
 
 public class CharacterSheet : Actor
 {
-	#region Fields(-)
-	private ulong _userId;
+#region Fields(-)
 	private string _uniqueCharacterName;
-	private string? _characterNickname;
+	private string _characterNickname;
 	private bool _useOnlyNickname;
-	#endregion
+#endregion
 
-	#region Properties (+)
+#region Properties (+)
 	public new string CharacterName => _characterNickname != null ? (_useOnlyNickname ? _characterNickname : $"{_characterNickname} ({_characterName})") : _characterName;
 	public bool CharacterNameIsIdentifier { get; internal set; }
-	#endregion
+#endregion
 
-	#region Private Constructor
+#region Private Constructor
 	private CharacterSheet() : base(string.Empty)
 	{
-		_userId                 = 0;
+		_userId                 = 0uL;
 		_uniqueCharacterName    = string.Empty;
-
+		_characterNickname		= string.Empty;
 		_useOnlyNickname        = false;
 	}
-	#endregion
+#endregion
 
-	#region Constructor
-	public CharacterSheet(string uniqueCharacterName, string? characterName = null) : this()
-	{
-		_uniqueCharacterName        = uniqueCharacterName;
-		_characterName              = characterName ?? uniqueCharacterName;
-		CharacterNameIsIdentifier   = true;
-	}
-
-	public CharacterSheet(ulong userId, string? characterName = null) : this()
-	{
-		_userId                     = userId;
-		_characterName              = characterName ?? string.Empty;
-		CharacterNameIsIdentifier   = false;
-	}
-	#endregion
-
-
-
-	#region Assignment Methods
+#region Assignment Methods
 	public CharacterSheet ClearNickname()
 	{
-		_characterNickname = null;
+		_characterNickname	= string.Empty;
+		_useOnlyNickname	= false;
 		return this;
 	}
-	public CharacterSheet WithNickname(string? nickname, bool? useOnlyNickname = null)
+	public CharacterSheet WithNickname(string nickname)
 	{
 		_characterNickname = nickname;
-		if (useOnlyNickname != null)
-			_useOnlyNickname = (bool)useOnlyNickname;
 		return this;
 	}
-	#endregion
+#endregion
 
-	#region Toggle Mothods
+#region Toggle Mothods
 	public CharacterSheet ToggleUsingOnlyNickname()
 	{
 		_useOnlyNickname = !_useOnlyNickname;
 		return this;
 	}
-	#endregion
+#endregion
 
-	#region Serialization
+#region Serialization
 	public static CharacterSheet Deserialize(BinaryReader reader)
 	{
+/////	Identifying Information
 		var characterSheet = new CharacterSheet(
 			reader.ReadString(),
+			reader.ReadUInt64(),
 			reader.ReadBoolean() ? null : reader.ReadString()
 		);
 
+/////	Nickname
 		if (reader.ReadBoolean())
-			characterSheet
-				.WithNickname(useOnlyNickname:reader.ReadBoolean(), nickname:reader.ReadString());
+		{
+			characterSheet._useOnlyNickname = reader.ReadBoolean();
+			characterSheet.WithNickname(nickname:reader.ReadString());
+		}
 
+/////	Class Levels
+		characterSheet._levelCap = reader.ReadUInt32();
 		for (int i=0;i<reader.ReadUInt32();i++)
 		{
-			characterSheet.ChangeClass((ClassName) reader.ReadUInt32());
-			characterSheet.LevelUp((int) reader.ReadInt32());
+			ClassLevels classLevels = SheetComponents.ClassLevels.Deserialize(reader,characterSheet);
+			characterSheet.ClassLevels.Add(classLevels.Class.Name,classLevels);
 		}
 		characterSheet.ChangeClass((ClassName)	reader.ReadUInt32());
 
+/////	Abilities
 		for (int i=0;i<reader.ReadUInt32();i++)
 		{
-			characterSheet._abilities[(Ability) reader.ReadUInt16()] = AbilityScore.Deserialize(reader,characterSheet);
+			AbilityScore abilityScore = AbilityScore.Deserialize(reader,characterSheet);
+			characterSheet._abilities[abilityScore.Key] = abilityScore;
 		}
 
+/////	Resources
 		for (int i=0;i<reader.ReadUInt32();i++)
 		{
-			characterSheet._resources[(Resource) reader.ReadUInt16()].BaseValue = reader.ReadInt32();
+			CharacterResource resource = CharacterResource.Deserialize(reader,characterSheet);
+			characterSheet._resources[resource.Key] = resource;
 		}
 
+/////	Statistics
 		characterSheet.Statistics = ActorStatistics.Deserialize(reader);
+
+/////	End
 		return characterSheet;
 	}
 
 	public void Serialize(BinaryWriter writer)
 	{
+/////	Identifying Information
 		writer.Write((string)	_uniqueCharacterName);
-
+		writer.Write((ulong)	_userId);
 		writer.Write((bool)		_uniqueCharacterName.Equals(_characterName));
 		if (!_uniqueCharacterName.Equals(_characterName))
 			writer.Write((string)	_characterName);
 
-		writer.Write((bool)		(_characterNickname is not null));
-		if (_characterNickname is not null)
+/////	Nickname
+		writer.Write((bool)		!string.IsNullOrWhiteSpace(_characterNickname));
+		if (!string.IsNullOrWhiteSpace(_characterNickname))
 		{
 			writer.Write((bool)		_useOnlyNickname);
 			writer.Write((string)	_characterNickname);
 		}
 
+/////	Class Levels
+		writer.Write((uint) 	LevelCap);
 		writer.Write((uint) 	_classLevels.Count);
 		foreach (var classLevel in _classLevels)
 		{
-			writer.Write((uint)		classLevel.Key);
-			writer.Write((int)		classLevel.Value.Level);
+			classLevel.Value.Serialize(writer);
 		}
 		writer.Write((uint)		_activeClass);
 
+/////	Abilities
 		writer.Write((uint) 	Abilities.Count);
 		foreach (var ability in Abilities)
 		{
 			ability.Value.Serialize(writer);
 		}
 
+/////	Resources
 		writer.Write((uint) 	_resources.Count);
 		foreach (var resource in _resources)
 		{
-			writer.Write((ushort)	resource.Key);
-			writer.Write((int)		resource.Value.CurrentNoSoftLimit);
+			resource.Value.Serialize(writer);
 		}
+
+/////	Statistics
 		Statistics.Serialize(writer);
 	}
+#endregion
 
-	#endregion
+#region Constructor
+	public CharacterSheet(string uniqueCharacterName, string? characterName = null)
+		: this()
+	{
+		_uniqueCharacterName        = uniqueCharacterName;
+		_characterName              = characterName ?? uniqueCharacterName;
+	}
+
+	public CharacterSheet(string uniqueCharacterName, ulong userId, string? characterName = null)
+		: this(uniqueCharacterName,characterName)
+	{
+		_userId                     = userId;
+	}
+#endregion
 }

@@ -1,4 +1,5 @@
 using System.Reflection.Metadata.Ecma335;
+using FChatApi.Attributes;
 using RoleplayingGame.Attributes;
 using RoleplayingGame.Enums;
 using RoleplayingGame.Objects;
@@ -7,7 +8,13 @@ namespace RoleplayingGame.SheetComponents;
 
 public class CharacterResource : ResourceBase
 {
-	protected float _baseValue;
+	private const float OverallResourceScaling		= 1.0f;
+	private const float OverallResorceExponentBase	= 1.3851f;
+	private const float LevelScaleDivisor			= 1.0f;
+
+	private float _baseValue;
+	private Resource _resource;
+	public Resource Key => _resource;
 
 #region Recordkeeping
 	private readonly List<(DateTime When,ulong Id,int Value,int Actual)> _lifetimeModifiersPvP = [];
@@ -34,13 +41,14 @@ public class CharacterResource : ResourceBase
 		_currentModifiersPvE.Add((when,source,value,actual));
 	}
 
-	public int LifetimeGain	=> _lifetimeModifiersPvP.Sum(li=>li.Actual > 0 ? li.Actual : 0);
-	public int LifetimeLoss	=> _lifetimeModifiersPvP.Sum(li=>li.Actual < 0 ? li.Actual : 0);
-	public int LifetimeTotal=> _lifetimeModifiersPvP.Sum(li=>li.Actual);
+	public int LifetimeGain	=> _lifetimeModifiersPvP.Sum(li=>li.Actual > 0 ? li.Actual : 0) + _lifetimeModifiersPvE.Sum(li=>li.Actual > 0 ? li.Actual : 0);
+	public int LifetimeLoss	=> _lifetimeModifiersPvP.Sum(li=>li.Actual < 0 ? li.Actual : 0) + _lifetimeModifiersPvE.Sum(li=>li.Actual < 0 ? li.Actual : 0);
+	public int LifetimeTotal=> _lifetimeModifiersPvP.Sum(li=>li.Actual) + _lifetimeModifiersPvE.Sum(li=>li.Actual);
 
-	public int CurrentGain	=> _currentModifiersPvP.Sum(li=>li.Actual > 0 ? li.Actual : 0);
-	public int CurrentLoss	=> _currentModifiersPvP.Sum(li=>li.Actual < 0 ? li.Actual : 0);
-	public int CurrentTotal	=> _currentModifiersPvP.Sum(li=>li.Actual);
+	public int CurrentGain	=> _currentModifiersPvP.Sum(li=>li.Actual > 0 ? li.Actual : 0) + _currentModifiersPvE.Sum(li=>li.Actual > 0 ? li.Actual : 0);
+	public int CurrentLoss	=> _currentModifiersPvP.Sum(li=>li.Actual < 0 ? li.Actual : 0) + _currentModifiersPvE.Sum(li=>li.Actual < 0 ? li.Actual : 0);
+	public int CurrentTotal	=> _currentModifiersPvP.Sum(li=>li.Actual) + _currentModifiersPvE.Sum(li=>li.Actual);
+
 	public int GetValue(bool softLimited = true) => softLimited && HasSoftLimit ? Math.Min(SoftLimit,CurrentTotal) : CurrentTotal;
 #endregion
 
@@ -56,14 +64,64 @@ public class CharacterResource : ResourceBase
 			SoftLimit : CurrentNoSoftLimit;
 	}
 
-	public int CurrentNoSoftLimit { get=>(int)((_baseValue + SumOfModifiers)*CombinedMultipliers); }
+	public int CurrentNoSoftLimit => (int)((_baseValue + SumOfModifiers)*CombinedMultipliers);
 #endregion
 
 #region Limits
-	public override bool IsAtSoftLimit => HasSoftLimit && _baseValue >= SoftLimit;
-	public override bool IsAtHardLimit => HasHardLimit && _baseValue == HardLimit;
+	public override bool IsAtSoftLimit => HasSoftLimit && Math.Abs(CurrentNoSoftLimit) >= SoftLimit;
+	public override bool IsAtHardLimit => HasHardLimit && Math.Abs(CurrentNoSoftLimit) == HardLimit;
 	
-	public override bool IsOverSoftLimit => _baseValue > SoftLimit;
+	public override bool IsOverSoftLimit => Math.Abs(CurrentNoSoftLimit) > SoftLimit;
+
+	public void ReCalculateLimits()
+	{
+		int previousSoftLimit	= SoftLimit;
+		int previousHardLimit	= HardLimit;
+		int highestBaseValue	= int.MinValue;
+		int highestMinimumValue	= int.MinValue;
+		foreach(ClassLevels classLevels in _parent.ClassLevels.Values.Where((cl)=>cl.CurrentLevel>0))
+		{
+			highestMinimumValue	= Math.Max(highestBaseValue,(int)classLevels.Class.ResourceModifiers[Key][ResourceModifier.MinimumValue]);
+			highestBaseValue	= Math.Max(highestBaseValue,(int)classLevels.Class.ResourceModifiers[Key][ResourceModifier.BaseValue]);
+			var debugpowval	= (double)(classLevels.Class.ResourceAbilityScales[Key].Keys.Sum(k =>(k == Ability.Level ? 0 : _parent.Abilities[k].GetActualValue()) * classLevels.Class.ResourceAbilityScales[Key][k])/ classLevels.CurrentLevel);
+			SoftLimit = HasSoftLimit ?
+				(int)(OverallResourceScaling
+					* classLevels.Class.ResourceModifiers[Key][ResourceModifier.SoftLimit]
+					* (classLevels.Class.ResourceAbilityScales[Key][Ability.Level]
+						* classLevels.CurrentLevel
+						/ LevelScaleDivisor
+				* (float)Math.Pow(
+					OverallResorceExponentBase,
+					(double)(classLevels.Class.ResourceAbilityScales[Key].Keys.Sum(k =>(k == Ability.Level ? 0 : _parent.Abilities[k].GetActualValue()) * classLevels.Class.ResourceAbilityScales[Key][k])
+						/ classLevels.CurrentLevel)
+				)))
+					: -1;
+			HardLimit = HasHardLimit ?
+				(int)(OverallResourceScaling
+					* classLevels.Class.ResourceModifiers[Key][ResourceModifier.HardLimit]
+					* (classLevels.Class.ResourceAbilityScales[Key][Ability.Level]
+						* classLevels.CurrentLevel
+						/ LevelScaleDivisor
+				* (float)Math.Pow(
+					OverallResorceExponentBase,
+					(double)(classLevels.Class.ResourceAbilityScales[Key].Keys.Sum(k =>(k == Ability.Level ? 0 : _parent.Abilities[k].GetActualValue()) * classLevels.Class.ResourceAbilityScales[Key][k])
+						/ classLevels.CurrentLevel)
+				)))
+					: -1;
+		}
+		if (HasSoftLimit)
+		{
+			SoftLimit += highestBaseValue;
+			SoftLimit = Math.Max(SoftLimit,highestMinimumValue);
+		}
+		if (HasHardLimit)
+		{
+			HardLimit += highestBaseValue;
+			HardLimit = Math.Max(HardLimit,highestMinimumValue);
+		}
+		if (Key.GetEnumAttribute<Resource,GameFlagsAttribute>().ScalesOnLimitChange)
+			BaseValue *= Math.Max(Math.Max(SoftLimit / Math.Max(previousSoftLimit,1), HardLimit / Math.Max(previousHardLimit,1)),1);
+	}
 #endregion
 
 #region Serialization
@@ -98,7 +156,7 @@ public class CharacterResource : ResourceBase
 
 	public static CharacterResource Deserialize(BinaryReader reader,Actor parent)
 	{
-		CharacterResource result = new (parent);
+		CharacterResource result = new (parent,(Resource)reader.ReadUInt16());
 
 		for (uint i=0;i<reader.ReadUInt32();i++)
 		{
@@ -146,6 +204,7 @@ public class CharacterResource : ResourceBase
 
 	public void Serialize(BinaryWriter writer)
 	{
+		writer.Write((ushort)	_resource);
 		writer.Write((uint)		_currentModifiersPvE.Count);
 		foreach (var modifier in _currentModifiersPvE)
 		{
@@ -171,14 +230,15 @@ public class CharacterResource : ResourceBase
 #endregion
 
 #region Constructor
-	internal CharacterResource(Actor parent,ResourceDefaultValuesAttribute defaults) :
-		this(parent,defaults.BaseValue,defaults.HardLimit,defaults.SoftLimit,defaults.MoreIsBetter)
+	internal CharacterResource(Actor parent,Resource resource,ResourceDefaultValuesAttribute defaults) :
+		this(parent,resource,defaults.BaseValue,defaults.HardLimit,defaults.SoftLimit,defaults.MoreIsBetter)
 	{ }
 
-	public CharacterResource(Actor parent,int baseValue = 0,int hardLimit = -1,int softLimit = -1,bool moreIsBetter = true)
+	public CharacterResource(Actor parent,Resource resource,int baseValue = 0,int hardLimit = -1,int softLimit = -1,bool moreIsBetter = true)
 		: base(parent,hardLimit,softLimit,moreIsBetter)
 	{
 		_baseValue	= baseValue;
+		_resource	= resource;
 	}
 #endregion
 }

@@ -11,8 +11,9 @@ namespace RoleplayingGame.Effects;
 
 public class AttackChassis
 {
-	private const float OverallDamageScaling		= 250f;
+	private const float OverallDamageScaling		= 5.5f;
 	private const float OverallDamageExponentBase	= 1.3851f;
+	private const float LevelScaleDivisor			= 1000.0f;
 
 	public AttackType AttackType;
 	private string _textName;
@@ -30,9 +31,36 @@ public class AttackChassis
 			source,
 			environmentSource,
 			target,
-			_harm		* (float)Math.Pow(OverallDamageExponentBase,(double)_harmScales		.Keys.Sum(k =>(k == Ability.Level ? source.Level.GetActualValue() : source.Abilities[k].GetActualValue()) * _harmScales		[k]) ) * OverallDamageScaling,
-			_impact		* (float)Math.Pow(OverallDamageExponentBase,(double)_impactScales	.Keys.Sum(k =>(k == Ability.Level ? source.Level.GetActualValue() : source.Abilities[k].GetActualValue()) * _impactScales	[k]) ) * OverallDamageScaling,
-			_accuracy	* (float)Math.Pow(OverallDamageExponentBase,(double)_accuracyScales	.Keys.Sum(k =>(k == Ability.Level ? source.Level.GetActualValue() : source.Abilities[k].GetActualValue()) * _accuracyScales	[k]) ) * OverallDamageScaling
+			OverallDamageScaling
+				* _harm
+				* (_harmScales[Ability.Level]
+					* source.Level.GetActualValue()
+					/ LevelScaleDivisor
+				+ (float)Math.Pow(
+					OverallDamageExponentBase,
+					(double)(_harmScales.Keys.Sum(k =>(k == Ability.Level ? 0 : source.Abilities[k].GetActualValue()) * _harmScales[k])
+						/ source.Level.GetActualValue())
+				)),
+			OverallDamageScaling
+				* _impact
+				* (_harmScales[Ability.Level]
+					* source.Level.GetActualValue()
+					/ LevelScaleDivisor
+				+ (float)Math.Pow(
+					OverallDamageExponentBase,
+					(double)(_impactScales.Keys.Sum(k =>(k == Ability.Level ? 0 : source.Abilities[k].GetActualValue()) * _impactScales[k])
+						/ source.Level.GetActualValue())
+				)),
+			OverallDamageScaling
+				* _accuracy
+				* (_accuracyScales[Ability.Level]
+					* source.Level.GetActualValue()
+					/ LevelScaleDivisor
+				+ (float)Math.Pow(
+					OverallDamageExponentBase,
+					(double)(_accuracyScales.Keys.Sum(k =>(k == Ability.Level ? 0 : source.Abilities[k].GetActualValue()) * _accuracyScales[k])
+						/ source.Level.GetActualValue())
+				))
 		);
 	}
 

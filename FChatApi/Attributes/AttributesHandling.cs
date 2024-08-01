@@ -19,7 +19,7 @@ public static class AttributeExtensions
 	/// A dictionary indexed by EnumType + AttributeType pairs as Keys and
 	/// EnumConstValue + AttributeValue[] Values.
 	/// </summary>
-	static readonly Dictionary<Tuple<Type, Type>, Dictionary<Enum, Attribute[]>> _staticEnumAttributeArrayLookup;
+	//static readonly Dictionary<Tuple<Type, Type>, Dictionary<Enum, Attribute[]>> _staticEnumAttributeArrayLookup;
 
 	/// <summary>
 	/// A dictionary indexed by ClassType + AttributeType pairs as Keys and

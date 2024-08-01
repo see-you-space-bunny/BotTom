@@ -23,9 +23,10 @@ public class Actor : GameObject
 	protected ClassName _activeClass;
 	protected Dictionary<ClassName,ClassLevels> _classLevels;
 	protected Dictionary<Ability,AbilityScore> _abilities;
-	protected Dictionary<GameAction,SkillAction> _actions;
 	protected Dictionary<Resource,CharacterResource> _resources;
 	protected List<ActiveStatusEffect> _statusEffects;
+	protected uint _levelCap;
+	protected ulong _userId;
 #endregion
 
 #region (+P)
@@ -35,6 +36,8 @@ public class Actor : GameObject
 	public Dictionary<Ability,AbilityScore> Abilities => _abilities.Where(k=>k.Key!=Ability.Level).ToDictionary();
 	public new AbilityScore Level	=>	_abilities[Ability.Level];
 	public Dictionary<ClassName,ClassLevels> ClassLevels => _classLevels;
+	public uint LevelCap	=> _levelCap;
+	public ulong UserId		=> _userId;
 #endregion
 
 #region (+P) Meta
@@ -106,61 +109,14 @@ public class Actor : GameObject
 
 	private void ReCalculateResourceLimits()
 	{
-		foreach (var resource in _resources.Where(r=>r.Value.HasHardLimit || r.Value.HasSoftLimit))
+		foreach (var resource in _resources.Values.Where(r=>r.HasHardLimit || r.HasSoftLimit))
 		{
-			ReCalculateResourceLimit(resource);
+			resource.ReCalculateLimits();
 		}
 	}
-
-	private void ReCalculateResourceLimit(KeyValuePair<Resource, CharacterResource> resource)
-	{
-		int previousSoftLimit	= resource.Value.SoftLimit;
-		int previousHardLimit	= resource.Value.HardLimit;
-		int highestBaseValue	= int.MinValue;
-		int highestMinimumValue	= int.MinValue;
-		foreach(ClassLevels classLevels in _classLevels.Values.Where((cl)=>cl.Level>0))
-		{
-			highestMinimumValue	= Math.Max(highestBaseValue,(int)classLevels.Class.ResourceModifiers[resource.Key][ResourceModifier.MinimumValue]);
-			highestBaseValue	= Math.Max(highestBaseValue,(int)classLevels.Class.ResourceModifiers[resource.Key][ResourceModifier.BaseValue]);
-			CalcResourceLimits(classLevels,resource);
-		}
-		if (resource.Value.HasSoftLimit)
-		{
-			resource.Value.SoftLimit += highestBaseValue;
-			resource.Value.SoftLimit = Math.Max(resource.Value.SoftLimit,highestMinimumValue);
-		}
-		if (resource.Value.HasHardLimit)
-		{
-			resource.Value.HardLimit += highestBaseValue;
-			resource.Value.HardLimit = Math.Max(resource.Value.HardLimit,highestMinimumValue);
-		}
-		if (resource.Key.GetEnumAttribute<Resource,GameFlagsAttribute>().ScalesOnLimitChange)
-			resource.Value.BaseValue *= Math.Max(Math.Max(resource.Value.SoftLimit / Math.Max(previousSoftLimit,1), resource.Value.HardLimit / Math.Max(previousHardLimit,1)),1);
-	}
-
-	private void CalcResourceLimits(ClassLevels classLevels,KeyValuePair<Resource, CharacterResource> resource)
-	{
-		resource.Value.SoftLimit = resource.Value.HasSoftLimit ? (int)CalcResourceLimit(classLevels, resource.Key,ResourceModifier.SoftLimit) : -1;
-		resource.Value.HardLimit = resource.Value.HasHardLimit ? (int)CalcResourceLimit(classLevels, resource.Key,ResourceModifier.HardLimit) : -1;
-	}
-	
-/// <summary>
-/// SoftLimit formula: (int) ClassLevel * ClassLevelScales + SumOfEach(Ability * ClassAbilityScales)
-/// </summary>
-/// <param name="classLevels">the class for which we are calculating the limit</param>
-/// <param name="resource">the resource whose limit is being calculated</param>
-/// <param name="limit">the soft of hard limit being calculated</param>
-/// <returns>the resource's calculated limit</returns>
-	private float CalcResourceLimit(ClassLevels classLevels, Resource resource,ResourceModifier limit) =>
-		classLevels.Class.ResourceModifiers[resource][limit] * (
-			classLevels.Level * classLevels.Class.ResourceAbilityScales[resource][Ability.Level] +
-			Abilities.Keys
-				.Sum(k =>Abilities[k].GetActualValue() * classLevels.Class.ResourceAbilityScales[resource][k])
-		);
 #endregion
 
 #region Status Effects
-
 	internal float SumStatusAdjustmentByAbility(Ability value)
 	{
 		float result = 0.0f;
@@ -174,7 +130,6 @@ public class Actor : GameObject
 		}
 		return result;
 	}
-
 #endregion
 
 #region Actor Extensions
@@ -183,9 +138,20 @@ public class Actor : GameObject
 /// The <c>LevelUp</c> method is subject to growth-scales.
 /// </summary>
 /// <returns>this Actor</returns>
-	public Actor LevelUpRoll()
+	public Actor LevelUpRoll(ushort @base,ushort dice,EnvironmentSource source = EnvironmentSource.World)
 	{
-        LevelUp(15 + FRoleplayMC.Rng.Next(1,7) + FRoleplayMC.Rng.Next(1,7) + FRoleplayMC.Rng.Next(1,7));
+        LevelUp(@base + new int[dice].Sum(d=>FRoleplayMC.Rng.Next(1,7)),source);
+		return this;
+	}
+	
+/// <summary>
+/// Generates a random number between 18 and 33 and calls the <c>LevelUp</c> method.<br/>
+/// The <c>LevelUp</c> method is subject to growth-scales.
+/// </summary>
+/// <returns>this Actor</returns>
+	public Actor LevelUpRoll(ushort @base,ushort dice,Actor source)
+	{
+        LevelUp(@base + new int[dice].Sum(d=>FRoleplayMC.Rng.Next(1,7)),source);
 		return this;
 	}
 
@@ -194,23 +160,48 @@ public class Actor : GameObject
 /// </summary>
 /// <param name="levels">the number of levels to add, subject to growth-scales</param>
 /// <returns>this Actor</returns>
-	public Actor LevelUp(int levels = 1)
+	public Actor LevelUp(int levels,EnvironmentSource source)
 	{
 		if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
 		{
 			levels = (int)Math.Round(activeClassLevels.Class.AbilityGrowth[Ability.Level] * levels);
 			levels = levels == 0 ? 1 : levels;
-			activeClassLevels.Level += levels;
+			activeClassLevels.Modify(DateTime.Now,source,levels);
 		}
 		else
 		{
-            ClassLevels @class = new (FRoleplayMC.CharacterClasses[_activeClass],0);
+            ClassLevels @class = new (this,FRoleplayMC.CharacterClasses[_activeClass]);
 			levels = (int)Math.Round(@class.Class.AbilityGrowth[Ability.Level] * levels);
 			levels = levels == 0 ? 1 : levels;
-			@class.Level += levels;
+			@class.Modify(DateTime.Now,source,levels);
 		    _classLevels.Add(_activeClass,@class);
 		}
-		Level.Modify(DateTime.Now,EnvironmentSource.World,levels);
+		//Level.Modify(DateTime.Now,source,levels);
+		return this;
+	}
+
+/// <summary>
+/// Adds a number of levels to this Actor's currently active class.
+/// </summary>
+/// <param name="levels">the number of levels to add, subject to growth-scales</param>
+/// <returns>this Actor</returns>
+	public Actor LevelUp(int levels,Actor source)
+	{
+		if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
+		{
+			levels = (int)Math.Round(activeClassLevels.Class.AbilityGrowth[Ability.Level] * levels);
+			levels = levels == 0 ? 1 : levels;
+			activeClassLevels.Modify(DateTime.Now,source.UserId,levels);
+		}
+		else
+		{
+            ClassLevels @class = new (this,FRoleplayMC.CharacterClasses[_activeClass]);
+			levels = (int)Math.Round(@class.Class.AbilityGrowth[Ability.Level] * levels);
+			levels = levels == 0 ? 1 : levels;
+			@class.Modify(DateTime.Now,source.UserId,levels);
+		    _classLevels.Add(_activeClass,@class);
+		}
+		//Level.Modify(DateTime.Now,source.UserId,levels);
 		return this;
 	}
 
@@ -219,7 +210,7 @@ public class Actor : GameObject
 /// </summary>
 /// <param name="value"></param>
 /// <returns>this Actor</returns>
-	public Actor AdjustAllAbilities(int value,EnvironmentSource source = EnvironmentSource.World,bool recalculate = true)
+	public Actor AdjustAllAbilities(int value,EnvironmentSource source,bool recalculate = true)
 	{
 		AdjustAbilities([.. Abilities.Keys],value,source,recalculate: false);
 		if (recalculate)
@@ -233,7 +224,7 @@ public class Actor : GameObject
 /// <param name="abilities"></param>
 /// <param name="value"></param>
 /// <returns>this Actor</returns>
-	public Actor AdjustAbilities(Ability[] abilities,int value,EnvironmentSource source = EnvironmentSource.World,bool recalculate = true)
+	public Actor AdjustAbilities(Ability[] abilities,int value,EnvironmentSource source,bool recalculate = true)
 	{
 		foreach (Ability ability in abilities)
 		{
@@ -250,7 +241,7 @@ public class Actor : GameObject
 /// <param name="ability"></param>
 /// <param name="value"></param>
 /// <returns>this Actor</returns>
-	public Actor AdjustAbility(Ability ability,int value,EnvironmentSource source = EnvironmentSource.World,bool recalculate = true)
+	public Actor AdjustAbility(Ability ability,int value,EnvironmentSource source,bool recalculate = true)
 	{
 		Abilities[ability].Modify(DateTime.Now,source,value);
 		if (recalculate)
@@ -263,17 +254,41 @@ public class Actor : GameObject
 /// </summary>
 /// <param name="levels">the levels to remove, unaffected by growth scales</param>
 /// <returns>this Actor</returns>
-	public Actor RemoveLevels(int levels)
+	public Actor RemoveLevels(int levels,EnvironmentSource source)
 	{
 		if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
 		{
-			activeClassLevels.Level -= levels;
+			activeClassLevels.Modify(DateTime.Now,source,-levels);
 		}
 		else
 		{
-            _classLevels.Add(_activeClass, new ClassLevels(FRoleplayMC.CharacterClasses[_activeClass], -levels));
+			activeClassLevels = new ClassLevels(this,FRoleplayMC.CharacterClasses[_activeClass]);
+			activeClassLevels.Modify(DateTime.Now,source,-levels);
+            _classLevels.Add(_activeClass, activeClassLevels);
 		}
-		Level.Modify(DateTime.Now,EnvironmentSource.World,-levels);
+		//Level.Modify(DateTime.Now,source,-levels);
+		ReCalculateDerivedStatistics();
+		return this;
+	}
+
+/// <summary>
+/// Remove an amount of levels from this Actor's currently active class.
+/// </summary>
+/// <param name="levels">the levels to remove, unaffected by growth scales</param>
+/// <returns>this Actor</returns>
+	public Actor RemoveLevels(int levels,Actor source)
+	{
+		if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
+		{
+			activeClassLevels.Modify(DateTime.Now,source.UserId,-levels);
+		}
+		else
+		{
+			activeClassLevels = new ClassLevels(this,FRoleplayMC.CharacterClasses[_activeClass]);
+			activeClassLevels.Modify(DateTime.Now,source.UserId,-levels);
+            _classLevels.Add(_activeClass, activeClassLevels);
+		}
+		//Level.Modify(DateTime.Now,source.UserId,-levels);
 		ReCalculateDerivedStatistics();
 		return this;
 	}
@@ -320,12 +335,9 @@ public class Actor : GameObject
 #region (+) Constructor
 	public Actor(string name) : base(0)
 	{
-		_characterName = name;
-		_actions = [];
-		foreach(GameAction gameAction in Enum.GetValues(typeof(GameAction)).Cast<GameAction>().Where(a=>a != GameAction.None))
-		{
-			_actions.Add(gameAction,new SkillAction(gameAction.GetEnumAttribute<GameAction,ActionDefaultValuesAttribute>()));
-		}
+		_characterName	= name;
+		_userId			= Convert.ToUInt64(new Guid().ToString("N"));
+		_levelCap		= 500u;
 
 		_abilities = [];
 		foreach(Ability ability in Enum.GetValues(typeof(Ability)).Cast<Ability>().Where(a=>a != Ability.None))
@@ -336,7 +348,31 @@ public class Actor : GameObject
 		_resources = [];
 		foreach(Resource resource in Enum.GetValues(typeof(Resource)).Cast<Resource>().Where(a=>a != Resource.None))
 		{
-			_resources.Add(resource,new CharacterResource(this,resource.GetEnumAttribute<Resource,ResourceDefaultValuesAttribute>()));
+			_resources.Add(resource,new CharacterResource(this,resource,resource.GetEnumAttribute<Resource,ResourceDefaultValuesAttribute>()));
+		}
+
+		_statusEffects = [];
+
+		_classLevels = [];
+
+		Statistics = new ActorStatistics();
+	}
+	public Actor(string name,ulong userId) : base(0)
+	{
+		_characterName	= name;
+		_userId			= userId;
+		_levelCap		= 500u;
+
+		_abilities = [];
+		foreach(Ability ability in Enum.GetValues(typeof(Ability)).Cast<Ability>().Where(a=>a != Ability.None))
+		{
+			_abilities.Add(ability,new AbilityScore(this,ability));
+		}
+
+		_resources = [];
+		foreach(Resource resource in Enum.GetValues(typeof(Resource)).Cast<Resource>().Where(a=>a != Resource.None))
+		{
+			_resources.Add(resource,new CharacterResource(this,resource,resource.GetEnumAttribute<Resource,ResourceDefaultValuesAttribute>()));
 		}
 
 		_statusEffects = [];

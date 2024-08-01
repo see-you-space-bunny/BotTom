@@ -16,6 +16,7 @@ public class AbilityScore : ResourceBase
 #endregion
 
 	private readonly Ability _ability;
+	public Ability Key => _ability;
 
 #region Recordkeeping
 	private readonly List<(DateTime When,ulong Id,int Value,int Actual)> _lifetimeModifiersPvP = [];
@@ -26,7 +27,7 @@ public class AbilityScore : ResourceBase
 	public void Modify(DateTime when,ulong source,int value)
 	{
 		int actual = value;
-		if (base.HasHardLimit)
+		if (HasHardLimit)
 			actual = (value + CurrentTotal > 0 ?
 				Math.Min(value + CurrentTotal, ModifierHardLimitHigh) :
 					Math.Max(value + CurrentTotal, ModifierHardLimitLow)) - CurrentTotal;
@@ -35,24 +36,24 @@ public class AbilityScore : ResourceBase
 	public void Modify(DateTime when,EnvironmentSource source,int value)
 	{
 		int actual = value;
-		if (base.HasHardLimit)
+		if (HasHardLimit)
 			actual = (value + CurrentTotal > 0 ?
 				Math.Min(value + CurrentTotal, ModifierHardLimitHigh) :
 					Math.Max(value + CurrentTotal, ModifierHardLimitLow)) - CurrentTotal;
 		_currentModifiersPvE.Add((when,source,value,actual));
 	}
 
-	public int LifetimeGain	=> _lifetimeModifiersPvP.Sum(li=>li.Actual > 0 ? li.Actual : 0);
-	public int LifetimeLoss	=> _lifetimeModifiersPvP.Sum(li=>li.Actual < 0 ? li.Actual : 0);
-	public int LifetimeTotal=> _lifetimeModifiersPvP.Sum(li=>li.Actual);
+	public int LifetimeGain	=> _lifetimeModifiersPvP.Sum(li=>li.Actual > 0 ? li.Actual : 0) + _lifetimeModifiersPvE.Sum(li=>li.Actual > 0 ? li.Actual : 0);
+	public int LifetimeLoss	=> _lifetimeModifiersPvP.Sum(li=>li.Actual < 0 ? li.Actual : 0) + _lifetimeModifiersPvE.Sum(li=>li.Actual < 0 ? li.Actual : 0);
+	public int LifetimeTotal=> _lifetimeModifiersPvP.Sum(li=>li.Actual) + _lifetimeModifiersPvE.Sum(li=>li.Actual);
 
-	public int CurrentGain	=> _currentModifiersPvP.Sum(li=>li.Actual > 0 ? li.Actual : 0);
-	public int CurrentLoss	=> _currentModifiersPvP.Sum(li=>li.Actual < 0 ? li.Actual : 0);
-	public int CurrentTotal	=> _currentModifiersPvP.Sum(li=>li.Actual);
+	public int CurrentGain	=> _currentModifiersPvP.Sum(li=>li.Actual > 0 ? li.Actual : 0) + _currentModifiersPvE.Sum(li=>li.Actual > 0 ? li.Actual : 0);
+	public int CurrentLoss	=> _currentModifiersPvP.Sum(li=>li.Actual < 0 ? li.Actual : 0) + _currentModifiersPvE.Sum(li=>li.Actual < 0 ? li.Actual : 0);
+	public int CurrentTotal	=> _currentModifiersPvP.Sum(li=>li.Actual) + _currentModifiersPvE.Sum(li=>li.Actual);
 #endregion
 
 #region Partial Values
-	public float ClassValue => _parent.ClassLevels.Values.Sum(cl=>cl.Class.AbilityGrowth[_ability] * cl.Level);
+	public float ClassValue => _parent.ClassLevels.Values.Sum(cl=>cl.Class.AbilityGrowth[_ability] * cl.CurrentLevel);
 
 	public float Modifiers => CurrentTotal * (CurrentTotal > 0 ? ModifiersMultiplierPositive : ModifiersMultiplierNegative);
 

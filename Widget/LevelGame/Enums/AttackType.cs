@@ -5,4 +5,6 @@ public enum AttackType
 	None,
 	
 	Basic,
+
+	Precise,
 }

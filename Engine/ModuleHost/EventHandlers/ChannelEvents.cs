@@ -2,7 +2,6 @@ using System.Reactive.Concurrency;
 using Discord.WebSocket;
 using FChatApi.Core;
 using FChatApi.Objects;
-using Engine.ModuleHost.Enums;
 using FChatApi.Enums;
 using Plugins.Tokenizer;
 
