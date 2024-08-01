@@ -1,4 +1,4 @@
-namespace ModularPlugins;
+namespace Plugins.Core;
 
 /// <summary>
 /// Our base plugin for others to derive off of

@@ -1,7 +1,7 @@
 using Plugins.Tokenizer;
 using FChatApi.Objects;
 
-namespace ModularPlugins.Interfaces;
+namespace Plugins.Interfaces;
 
 public interface IFChatPlugin
 {

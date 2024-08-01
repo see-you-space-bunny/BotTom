@@ -4,14 +4,14 @@ using FChatApi.Objects;
 using FChatApi.Enums;
 using Plugins.Tokenizer;
 
-using ModularPlugins;
+using Plugins;
 
 using CardGame.Enums;
 using CardGame.Commands;
 
 namespace CardGame;
 
-public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>
+public partial class FChatTournamentOrganiser
 {
 	private bool RejectChallenge(CommandTokens commandTokens,FChatMessageBuilder commandResponse,FChatMessageBuilder challengerAlertResponse)
 	{

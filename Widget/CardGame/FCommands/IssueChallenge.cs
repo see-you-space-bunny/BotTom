@@ -3,8 +3,7 @@ using System.Text;
 using FChatApi.Objects;
 using FChatApi.Enums;
 using Plugins.Tokenizer;
-
-using ModularPlugins;
+using Plugins.Core;
 
 using CardGame.Enums;
 using CardGame.Commands;
@@ -14,7 +13,7 @@ using System.Text.RegularExpressions;
 
 namespace CardGame;
 
-public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>
+public partial class FChatTournamentOrganiser
 {
 	private bool IssueChallenge(CommandTokens commandTokens,FChatMessageBuilder commandResponse,FChatMessageBuilder targetAlertResponse)
 	{

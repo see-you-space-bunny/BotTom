@@ -3,15 +3,13 @@ using System.Text;
 using FChatApi.Objects;
 using FChatApi.Enums;
 using Plugins.Tokenizer;
-
-using ModularPlugins;
+using Plugins.Core;
 
 using CardGame.Enums;
-using CardGame.Commands;
 
 namespace CardGame;
 
-public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>
+public partial class FChatTournamentOrganiser
 {
 	private void ImportStats(CommandTokens commandTokens,FChatMessageBuilder response)
 	{

@@ -4,8 +4,8 @@ using Plugins.Tokenizer;
 
 using Engine.ModuleHost;
 
-using ModularPlugins;
-using ModularPlugins.Interfaces;
+using Plugins;
+using Plugins.Interfaces;
 
 using FGlobals;
 using CardGame;

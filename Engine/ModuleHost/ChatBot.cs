@@ -1,6 +1,6 @@
 using System.Reactive.Concurrency;
 using FChatApi.Objects;
-using ModularPlugins.Interfaces;
+using Plugins.Interfaces;
 using System.ComponentModel;
 using FChatApi.Attributes;
 using FChatApi.Core;

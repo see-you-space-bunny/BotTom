@@ -7,12 +7,13 @@ using FChatApi.Objects;
 using Plugins.Tokenizer;
 using FChatApi.Attributes;
 
-using ModularPlugins;
-using ModularPlugins.Interfaces;
+using Plugins;
+using Plugins.Interfaces;
 
 using FGlobals.Enums;
 using Plugins.Attributes;
 using System.Text.RegularExpressions;
+using Plugins.Core;
 
 namespace FGlobals;
 

@@ -7,7 +7,7 @@ using FChatApi.Enums;
 using FChatApi.Attributes;
 using Plugins.Tokenizer;
 
-using ModularPlugins;
+using Plugins;
 
 using CardGame.Enums;
 using CardGame.Commands;
@@ -17,7 +17,7 @@ using CardGame.MatchEntities;
 using CardGame.DataStructures;
 using CardGame.PersistentEntities;
 
-using ModularPlugins.Interfaces;
+using Plugins.Interfaces;
 using Plugins.Attributes;
 
 namespace CardGame;

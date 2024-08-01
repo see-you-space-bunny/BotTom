@@ -8,12 +8,13 @@ using RoleplayingGame.Interfaces;
 using RoleplayingGame.Objects;
 using RoleplayingGame.SheetComponents;
 using FChatApi.Core;
-using ModularPlugins;
-using ModularPlugins.Interfaces;
+using Plugins;
+using Plugins.Interfaces;
 using RoleplayingGame.Serialization;
 using FChatApi.Objects;
 using RoleplayingGame.Effects;
 using Plugins.Tokenizer;
+using Plugins.Core;
 
 namespace RoleplayingGame;
 

@@ -88,16 +88,6 @@ public class Actor : GameObject
 	public Actor ReCalculateAll()
 	{
 		ReCalculateDerivedStatistics();
-		ReCalculateStatusEffects();
-		return this;
-	}
-
-	public Actor ReCalculateStatusEffects()
-	{
-		foreach (ActiveStatusEffect effect in _statusEffects)
-		{
-
-		}
 		return this;
 	}
 
@@ -295,7 +285,7 @@ public class Actor : GameObject
 
 	public Actor FullRecovery()
 	{
-		ReCalculateResourceLimits();
+		ReCalculateAll();
 		foreach (var resource in _resources)
 		{
 			if (resource.Key.GetEnumAttribute<Resource,GameFlagsAttribute>().RefilledByFullRecovery)

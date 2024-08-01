@@ -3,12 +3,12 @@ using FChatApi.Objects;
 using FChatApi.Enums;
 using Plugins.Tokenizer;
 
-using ModularPlugins.Interfaces;
+using Plugins.Interfaces;
 using FChatApi.Attributes;
 using Plugins.Attributes;
 using Plugins.Enums;
 
-namespace ModularPlugins;
+namespace Plugins.Core;
 
 /// <summary>
 /// our fchat plugin for others to derive off of
