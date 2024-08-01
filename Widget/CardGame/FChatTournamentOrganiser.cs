@@ -19,12 +19,13 @@ using CardGame.PersistentEntities;
 
 using Plugins.Interfaces;
 using Plugins.Attributes;
+using Plugins.Core;
 
 namespace CardGame;
 
 public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IFChatPlugin
 {
-	private const string GameChannelName = "ครtгคl ςђค๓קเ๏ภร";
+	private const string GameChannelName			= "ครtгคl ςђค๓קเ๏ภร";
 	private static string _cacheURL					= "sessioncache";
 	private static string _cardGameURI				= "cardgame";
 	public static string CacheRoot { get; set; }	= Environment.CurrentDirectory;
@@ -195,7 +196,7 @@ public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IF
 					OrphanCharacters.Add(playerCharacter.Key,playerCharacter);
 				}
 			}
-		base.Shutdown();
+		base.Initialize();
 	}
 
 	public override void Update()

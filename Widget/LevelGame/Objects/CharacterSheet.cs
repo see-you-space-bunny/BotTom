@@ -20,7 +20,7 @@ public class CharacterSheet : Actor
 #region Private Constructor
 	private CharacterSheet() : base(string.Empty)
 	{
-		_userId                 = 0uL;
+		_actorId                 = 0uL;
 		_uniqueCharacterName    = string.Empty;
 		_characterNickname		= string.Empty;
 		_useOnlyNickname        = false;
@@ -100,7 +100,7 @@ public class CharacterSheet : Actor
 	{
 /////	Identifying Information
 		writer.Write((string)	_uniqueCharacterName);
-		writer.Write((ulong)	_userId);
+		writer.Write((ulong)	_actorId);
 		writer.Write((bool)		_uniqueCharacterName.Equals(_characterName));
 		if (!_uniqueCharacterName.Equals(_characterName))
 			writer.Write((string)	_characterName);
@@ -152,7 +152,7 @@ public class CharacterSheet : Actor
 	public CharacterSheet(string uniqueCharacterName, ulong userId, string? characterName = null)
 		: this(uniqueCharacterName,characterName)
 	{
-		_userId                     = userId;
+		_actorId                     = userId;
 	}
 #endregion
 }

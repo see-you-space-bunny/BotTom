@@ -171,7 +171,9 @@ partial class Program
 				.SetOperators(F_Owner,		Privilege.OwnerOperator)
 				.SetOperators(F_GlobalOps,	Privilege.GlobalOperator));
 #endif
-////////////// End Plugin Adding ///////////////////////////////////////////////////
+////////////// Initialize All Plugins //////////////////////////////////////////////
+			_ = F_Bot.Initialize();
+////////////// End Plugin Operations ///////////////////////////////////////////////
 
 			F_CharacterName							= characterName;
 

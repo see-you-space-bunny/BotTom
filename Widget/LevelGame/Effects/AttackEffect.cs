@@ -11,7 +11,7 @@ using RoleplayingGame.SheetComponents;
 
 namespace RoleplayingGame.Effects;
 
-public class AttackEffect : IPendingAction
+public class AttackEvent : IPendingEvent
 {
 	private const float MinimumStaminaRatio = 0.15f;
 	private const float RemainingHealthMultiplier = 2.5f;
@@ -141,11 +141,11 @@ public class AttackEffect : IPendingAction
 		_impactRatio		= 0;
 	}
 
-	public AttackEffect(Actor source,Actor target,float harm,float impact,float accuracy,ActiveStatusEffect[]? carriedEffects = null)
+	public AttackEvent(Actor source,Actor target,float harm,float impact,float accuracy,ActiveStatusEffect[]? carriedEffects = null)
 		: this(source,EnvironmentSource.None,target,harm,impact,accuracy,carriedEffects)
 	{ }
 
-	public AttackEffect(Actor source,EnvironmentSource environmentSource,Actor target,float harm,float impact,float accuracy,ActiveStatusEffect[]? carriedEffects = null)
+	public AttackEvent(Actor source,EnvironmentSource environmentSource,Actor target,float harm,float impact,float accuracy,ActiveStatusEffect[]? carriedEffects = null)
 	{
 		_responder			= default!;
 		Source				= source;
@@ -160,22 +160,24 @@ public class AttackEffect : IPendingAction
 #region IPendingAction
 	User _responder;
 	Channel? _channel;
-	User IPendingAction.Responder => _responder;
-	Channel? IPendingAction.Channel => _channel;
+	User IPendingEvent.Responder => _responder;
+	Channel? IPendingEvent.Channel => _channel;
 
-	IPendingAction IPendingAction.WithResponder(User value)
+	RoleplayingGameCommand[] IPendingEvent.ExpectedResponses => [RoleplayingGameCommand.Defend];
+
+	IPendingEvent IPendingEvent.WithResponder(User value)
 	{
 		_responder = value;
 		return this;
 	}
 
-	IPendingAction IPendingAction.WithChannel(Channel value)
+	IPendingEvent IPendingEvent.WithChannel(Channel value)
 	{
 		_channel = value;
 		return this;
 	}
 
-	IPendingAction IPendingAction.ExecuteEffect()
+	IPendingEvent IPendingEvent.ExecuteEffect()
 	{
 		if (!TryToHit(Target.Evasion,Target.Health))
 		{ }
@@ -201,7 +203,7 @@ public class AttackEffect : IPendingAction
 		return this;
 	}
 
-	IPendingAction IPendingAction.EnqueueMessage(ApiConnection api)
+	IPendingEvent IPendingEvent.EnqueueMessage(ApiConnection api)
 	{
 		var message = new FChatMessageBuilder();
 

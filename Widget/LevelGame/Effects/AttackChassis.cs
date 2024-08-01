@@ -25,41 +25,41 @@ public class AttackChassis
 	protected readonly Dictionary<Ability,float> _harmScales;
 	protected readonly StatusEffect[] _carriedEffects;
 
-	public AttackEffect BuildAttack(Actor target,Actor source,EnvironmentSource environmentSource = EnvironmentSource.None)
+	public AttackEvent BuildAttack(Actor target,Actor source,EnvironmentSource environmentSource = EnvironmentSource.None)
 	{
-		return new AttackEffect(
+		return new AttackEvent(
 			source,
 			environmentSource,
 			target,
 			OverallDamageScaling
 				* _harm
 				* (_harmScales[Ability.Level]
-					* source.Level.GetActualValue()
+					* source.Level
 					/ LevelScaleDivisor
 				+ (float)Math.Pow(
 					OverallDamageExponentBase,
 					(double)(_harmScales.Keys.Sum(k =>(k == Ability.Level ? 0 : source.Abilities[k].GetActualValue()) * _harmScales[k])
-						/ source.Level.GetActualValue())
+						/ source.Level)
 				)),
 			OverallDamageScaling
 				* _impact
 				* (_harmScales[Ability.Level]
-					* source.Level.GetActualValue()
+					* source.Level
 					/ LevelScaleDivisor
 				+ (float)Math.Pow(
 					OverallDamageExponentBase,
 					(double)(_impactScales.Keys.Sum(k =>(k == Ability.Level ? 0 : source.Abilities[k].GetActualValue()) * _impactScales[k])
-						/ source.Level.GetActualValue())
+						/ source.Level)
 				)),
 			OverallDamageScaling
 				* _accuracy
 				* (_accuracyScales[Ability.Level]
-					* source.Level.GetActualValue()
+					* source.Level
 					/ LevelScaleDivisor
 				+ (float)Math.Pow(
 					OverallDamageExponentBase,
 					(double)(_accuracyScales.Keys.Sum(k =>(k == Ability.Level ? 0 : source.Abilities[k].GetActualValue()) * _accuracyScales[k])
-						/ source.Level.GetActualValue())
+						/ source.Level)
 				))
 		);
 	}

@@ -5,7 +5,7 @@ using RoleplayingGame.Objects;
 
 namespace Widget.Tests.Theories;
 
-public class @LevelGame(ITestOutputHelper output)
+public class @RoleplayingGame(ITestOutputHelper output)
 {
 	private readonly ITestOutputHelper _output = output;
 	

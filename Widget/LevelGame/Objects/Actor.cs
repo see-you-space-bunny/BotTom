@@ -26,18 +26,18 @@ public class Actor : GameObject
 	protected Dictionary<Resource,CharacterResource> _resources;
 	protected List<ActiveStatusEffect> _statusEffects;
 	protected uint _levelCap;
-	protected ulong _userId;
+	protected ulong _actorId;
 #endregion
 
 #region (+P)
-	public CharacterResource Health		=>	_resources[Resource.Health];
-	public CharacterResource Protection	=>	_resources[Resource.Protection];
-	public CharacterResource Evasion	=>	_resources[Resource.Evasion];
-	public Dictionary<Ability,AbilityScore> Abilities => _abilities.Where(k=>k.Key!=Ability.Level).ToDictionary();
-	public new AbilityScore Level	=>	_abilities[Ability.Level];
-	public Dictionary<ClassName,ClassLevels> ClassLevels => _classLevels;
-	public uint LevelCap	=> _levelCap;
-	public ulong UserId		=> _userId;
+	public CharacterResource Health							=>	_resources[Resource.Health];
+	public CharacterResource Protection						=>	_resources[Resource.Protection];
+	public CharacterResource Evasion						=>	_resources[Resource.Evasion];
+	public Dictionary<Ability,AbilityScore> Abilities		=>	_abilities.Where(k=>k.Key!=Ability.Level).ToDictionary();
+	public new int Level									=>	_classLevels.Values.Sum(cl=>cl.CurrentLevel);
+	public Dictionary<ClassName,ClassLevels> ClassLevels	=>	_classLevels;
+	public uint LevelCap	=>	_levelCap;
+	public ulong ActorId	=>	_actorId;
 #endregion
 
 #region (+P) Meta
@@ -50,7 +50,7 @@ public class Actor : GameObject
 		return this;
 	}
 
-	public Actor ApplyAttackEffect(AttackEffect attack)
+	public Actor ApplyAttackEffect(AttackEvent attack)
 	{
 		if (!attack.TryToHit(Evasion,Health))
 		{ }
@@ -166,7 +166,6 @@ public class Actor : GameObject
 			@class.Modify(DateTime.Now,source,levels);
 		    _classLevels.Add(_activeClass,@class);
 		}
-		//Level.Modify(DateTime.Now,source,levels);
 		return this;
 	}
 
@@ -181,17 +180,16 @@ public class Actor : GameObject
 		{
 			levels = (int)Math.Round(activeClassLevels.Class.AbilityGrowth[Ability.Level] * levels);
 			levels = levels == 0 ? 1 : levels;
-			activeClassLevels.Modify(DateTime.Now,source.UserId,levels);
+			activeClassLevels.Modify(DateTime.Now,source.ActorId,levels);
 		}
 		else
 		{
             ClassLevels @class = new (this,FRoleplayMC.CharacterClasses[_activeClass]);
 			levels = (int)Math.Round(@class.Class.AbilityGrowth[Ability.Level] * levels);
 			levels = levels == 0 ? 1 : levels;
-			@class.Modify(DateTime.Now,source.UserId,levels);
+			@class.Modify(DateTime.Now,source.ActorId,levels);
 		    _classLevels.Add(_activeClass,@class);
 		}
-		//Level.Modify(DateTime.Now,source.UserId,levels);
 		return this;
 	}
 
@@ -270,12 +268,12 @@ public class Actor : GameObject
 	{
 		if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
 		{
-			activeClassLevels.Modify(DateTime.Now,source.UserId,-levels);
+			activeClassLevels.Modify(DateTime.Now,source.ActorId,-levels);
 		}
 		else
 		{
 			activeClassLevels = new ClassLevels(this,FRoleplayMC.CharacterClasses[_activeClass]);
-			activeClassLevels.Modify(DateTime.Now,source.UserId,-levels);
+			activeClassLevels.Modify(DateTime.Now,source.ActorId,-levels);
             _classLevels.Add(_activeClass, activeClassLevels);
 		}
 		//Level.Modify(DateTime.Now,source.UserId,-levels);
@@ -326,7 +324,7 @@ public class Actor : GameObject
 	public Actor(string name) : base(0)
 	{
 		_characterName	= name;
-		_userId			= Convert.ToUInt64(new Guid().ToString("N"));
+		_actorId			= Convert.ToUInt64(new Guid().ToString("N"));
 		_levelCap		= 500u;
 
 		_abilities = [];
@@ -350,11 +348,11 @@ public class Actor : GameObject
 	public Actor(string name,ulong userId) : base(0)
 	{
 		_characterName	= name;
-		_userId			= userId;
+		_actorId			= userId;
 		_levelCap		= 500u;
 
 		_abilities = [];
-		foreach(Ability ability in Enum.GetValues(typeof(Ability)).Cast<Ability>().Where(a=>a != Ability.None))
+		foreach(Ability ability in Enum.GetValues(typeof(Ability)).Cast<Ability>().Where(a=>a != Ability.None && a != Ability.Level))
 		{
 			_abilities.Add(ability,new AbilityScore(this,ability));
 		}

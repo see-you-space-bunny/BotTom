@@ -15,18 +15,26 @@ using FChatApi.Objects;
 using RoleplayingGame.Effects;
 using Plugins.Tokenizer;
 using Plugins.Core;
+using RoleplayingGame.Systems;
 
 namespace RoleplayingGame;
 
-public partial class FRoleplayMC : FChatPlugin<LevelGameCommand>, IFChatPlugin
+public partial class FRoleplayMC : FChatPlugin<RoleplayingGameCommand>, IFChatPlugin
 {
     private static readonly string CsvDirectory;
+	private static string _cacheURL					= "sessioncache";
+	private static string _cardGameURI				= "cardgame";
+	public static string CacheRoot { get; set; }	= Environment.CurrentDirectory;
+	public static string CacheURL { get=>Path.Combine(CacheRoot,_cacheURL); set=>_cacheURL=value; }
+	public static string RoleplayingGameURI { get => Path.Combine(CacheRoot,_cacheURL,_cardGameURI); set=>_cardGameURI=value; }
+
 	internal static readonly Random Rng;
     internal static readonly ConcurrentDictionary<ClassName,CharacterClass> CharacterClasses;
 	public static readonly ConcurrentDictionary<AttackType,AttackChassis> AttackPool;
-    internal static readonly ConcurrentDictionary<string,CharacterSheet> CharacterSheets;
+    public static CharacterTracker Characters;
 	internal static StatusEffectFactory StatusEffectFactory;
-	internal static List<IPendingAction> ActionQueue;
+	internal static List<IPendingEvent> ActionQueue;
+
 
 #region LoadAttacks
 	public static void LoadAttacks(string filePath) => LoadAttacks(CsvDirectory,filePath);
@@ -40,6 +48,7 @@ public partial class FRoleplayMC : FChatPlugin<LevelGameCommand>, IFChatPlugin
 	}
 #endregion
 	
+
 #region LoadClasses
 	public static void LoadClasses(string filePath) => LoadClasses(CsvDirectory,filePath);
 
@@ -52,9 +61,10 @@ public partial class FRoleplayMC : FChatPlugin<LevelGameCommand>, IFChatPlugin
 	}
 #endregion
 
+
 #region Apply Effect
 	public static void ApplyStatusEffect(StatusEffect statusEffect,User target,float intensity,User? source = null) =>
-		ApplyStatusEffect(statusEffect,CharacterSheets[target.Name],intensity,source is null ? null : CharacterSheets[source.Name]);
+		ApplyStatusEffect(statusEffect,Characters.SingleByUser(target),intensity,source is null ? null : Characters.SingleByUser(source));
 
 	public static void ApplyStatusEffect(StatusEffect statusEffect,Actor target,float intensity,Actor? source = null)
 	{
@@ -70,35 +80,6 @@ public partial class FRoleplayMC : FChatPlugin<LevelGameCommand>, IFChatPlugin
 	}
 #endregion
 
-#region Constructor
-    public FRoleplayMC(ApiConnection api, TimeSpan updateInterval) : base(api, updateInterval)
-    {
-		RegisterCommandRestrictions();
-	}
-
-    static FRoleplayMC()
-    {
-		CharacterClasses	= [];
-		AttackPool			= [];
-		CharacterSheets		= new ConcurrentDictionary<string, CharacterSheet>(StringComparer.InvariantCultureIgnoreCase);
-		CsvDirectory		= Path.Combine(Environment.CurrentDirectory,"csv");
-		Rng					= new Random();
-		StatusEffectFactory	= new StatusEffectFactory();
-		ActionQueue			= [];
-		DirectorySanityCheck();
-		PreProcessEnumAttributes();
-		LoadClasses("CharacterClasses - Export.csv");
-		LoadAttacks("CharacterClasses - Attacks.csv");
-	}
-#endregion
-
-#region Cmd Restrictions
-	private void RegisterCommandRestrictions()
-	{
-		//ChannelLockedCommands.Add(LevelGameCommand);
-		//WhispersLockedCommands.Add(LevelGameCommand);
-	}
-#endregion
 
 #region Attributes
 	private static void PreProcessEnumAttributes()
@@ -138,14 +119,36 @@ public partial class FRoleplayMC : FChatPlugin<LevelGameCommand>, IFChatPlugin
 
 
 #region IFChatPlugin
-    void IFChatPlugin.HandleRecievedMessage(CommandTokens command) => HandleRecievedMessage(command);
+    void IFChatPlugin.HandleRecievedMessage(CommandTokens command)	=> HandleRecievedMessage(command);
 
-    void IFChatPlugin.HandleJoinedChannel(ChannelEventArgs @event) => HandleJoinedChannel(@event);
+    void IFChatPlugin.HandleJoinedChannel(ChannelEventArgs @event)	=> HandleJoinedChannel(@event);
 
-    void IFChatPlugin.HandleCreatedChannel(ChannelEventArgs @event) => HandleCreatedChannel(@event);
+    void IFChatPlugin.HandleCreatedChannel(ChannelEventArgs @event)	=> HandleCreatedChannel(@event);
 
-    void IFChatPlugin.Update() => Update();
+    void IFChatPlugin.Update()		=> Update();
 	
-    void IFChatPlugin.Shutdown() => Shutdown();
+    void IFChatPlugin.Shutdown()	=> Shutdown();
+#endregion
+
+
+#region Constructor
+    public FRoleplayMC(ApiConnection api, TimeSpan updateInterval) : base(api, updateInterval)
+    { }
+
+    static FRoleplayMC()
+    {
+		CharacterClasses	= [];
+		AttackPool			= [];
+		Characters			= null!;
+
+		CsvDirectory		= Path.Combine(Environment.CurrentDirectory,"csv");
+		Rng					= new Random();
+		StatusEffectFactory	= new StatusEffectFactory();
+		ActionQueue			= [];
+		DirectorySanityCheck();
+		PreProcessEnumAttributes();
+		LoadClasses("CharacterClasses - Export.csv");
+		LoadAttacks("CharacterClasses - Attacks.csv");
+	}
 #endregion
 }

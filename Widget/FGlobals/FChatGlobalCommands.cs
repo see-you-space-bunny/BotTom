@@ -37,7 +37,7 @@ public partial class FChatGlobalCommands : FChatPlugin<GlobalCommand>, IFChatPlu
 
 	public override void HandleRecievedMessage(CommandTokens commandTokens)
 	{
-		//////////////
+//////////////
 		
 		if (!commandTokens.TryGetParameters(out GlobalCommand command))
 			return;
@@ -45,7 +45,7 @@ public partial class FChatGlobalCommands : FChatPlugin<GlobalCommand>, IFChatPlu
 		if (commandTokens.Source.Author.PrivilegeLevel < command.GetEnumAttribute<GlobalCommand, MinimumPrivilegeAttribute>().Privilege)
 			return;
 			
-		//////////////
+//////////////
 
 		bool respondWithMessage = true;
 		
@@ -55,11 +55,11 @@ public partial class FChatGlobalCommands : FChatPlugin<GlobalCommand>, IFChatPlu
 			.WithChannel(commandTokens.Source.Channel)
 			.WithMessageType(commandTokens.Source.Channel is not null ? FChatMessageType.Basic : FChatMessageType.Whisper);
 
-		////////////// DO STUFF HERE
+////////////// DO STUFF HERE
 		
 		switch (command)
 		{
-			#region Register
+#region Register
 			case GlobalCommand.Register:
 				if (commandTokens.Source.Author is not null && !commandTokens.Source.Author.IsRegistered)
 				{
@@ -74,19 +74,19 @@ public partial class FChatGlobalCommands : FChatPlugin<GlobalCommand>, IFChatPlu
 					}
 				}
 				break;
-			#endregion
+#endregion
 
-			#region UnRegister
+#region UnRegister
 			case GlobalCommand.UnRegister:
 				break;
-			#endregion
+#endregion
 
-			#region Whoami
+#region Whoami
 			case GlobalCommand.Whoami:
 				break;
-			#endregion
+#endregion
 
-			#region ChInvite
+#region ChInvite
 			case GlobalCommand.ChInvite:
 				ApiConnection.Mod_SetChannelUserStatus(
 					ApiConnection.Channels.GetList(ChannelType.Private).Values
@@ -96,28 +96,28 @@ public partial class FChatGlobalCommands : FChatPlugin<GlobalCommand>, IFChatPlu
 				);
 				respondWithMessage = false;
 				break;
-			#endregion
+#endregion
 
-			#region ChCreate
+#region ChCreate
 			case GlobalCommand.ChCreate:
 				ApiConnection.User_CreateChannel(commandTokens.Parameters["ChannelName"]);
 				respondWithMessage = false;
 				break;
-			#endregion
+#endregion
 
-			#region Shutdown
+#region Shutdown
 			case GlobalCommand.Shutdown:
 				ApiConnection.SetShutdownFlag();
 				ApiConnection.SerializeUsers();
 				break;
-			#endregion
+#endregion
 
 			default:
 				break;
 		}
 
 
-		////////////////////////////
+////////////////////////////
 
 		if (respondWithMessage)
 		{

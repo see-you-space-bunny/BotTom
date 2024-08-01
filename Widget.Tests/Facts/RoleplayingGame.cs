@@ -9,7 +9,7 @@ using RoleplayingGame.Enums;
 
 namespace Widget.Tests.Facts;
 
-public class @LevelGame(ITestOutputHelper output)
+public class @RoleplayingGame(ITestOutputHelper output)
 {
 	private readonly ITestOutputHelper _output = output;
 
@@ -50,7 +50,7 @@ public class @LevelGame(ITestOutputHelper output)
 		}
 	}
 
-	static @LevelGame()
+	static @RoleplayingGame()
 	{
 		CsvDirectory = Path.Combine(Environment.CurrentDirectory,"csv");
 		DirectorySanityCheck();

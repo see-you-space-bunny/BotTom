@@ -52,15 +52,23 @@ public partial class ChatBot
 	}
 
 	/// <summary>
+	/// initialize the bot and its plugins
+	/// </summary>
+	public async Task Initialize()
+	{
+		List<Task> tasks = [];
+		foreach (IFChatPlugin plugin in FChatPlugins.Values)
+		{
+			tasks.Add(Task.Run(() => plugin.Initialize()));
+		}
+		await Task.WhenAll([.. tasks]);
+	}
+
+	/// <summary>
 	/// update the bot's and its modules
 	/// </summary>
 	public async Task Update()
 	{
-		//if (_nextUserRefresh > DateTime.Now)
-		//	foreach (var regUser in Users.Keys)
-		//		if (Users.TryGetValue(regUser, out User? User) && ApiConnection.TryGetOnlineUserByName(regUser,out User user))
-		//			User.Update(user);
-
 		List<Task> tasks = [];
 		foreach (IFChatPlugin plugin in FChatPlugins.Values.Where(p => DateTime.Now >= p.NextUpdate))
 		{

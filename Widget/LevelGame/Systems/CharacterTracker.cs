@@ -1,0 +1,166 @@
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using FChatApi.Core;
+using FChatApi.Objects;
+using RoleplayingGame.Objects;
+
+namespace RoleplayingGame.Systems;
+
+public class CharacterTracker
+{
+#region Fields
+	private readonly ConcurrentDictionary<User,CharacterSheet> PlayerCharacters;
+	private readonly ConcurrentDictionary<string,CharacterSheet> OrphanCharacters;
+#endregion
+
+
+#region Properties
+	public int Count => PlayerCharacters.Count + OrphanCharacters.Count;
+#endregion
+
+
+#region Lookup > By User
+	public CharacterSheet SingleByUser(User value)
+	{
+		if (!PlayerCharacters.TryGetValue(value,out CharacterSheet ?result))
+		{
+			if (OrphanCharacters.TryGetValue(value.Name,out result!))
+			{
+				TryAdoptCharacter(value);
+			}
+		}
+		if (result is null || result == default)
+			throw new KeyNotFoundException();
+		return result;
+	}
+	public bool TrySingleByUser(User value,out CharacterSheet result)
+	{
+		if (PlayerCharacters.TryGetValue(value,out result!))
+		{
+			return true;
+		}
+		else if (OrphanCharacters.TryGetValue(value.Name,out result!))
+		{
+			TryAdoptCharacter(value);
+		}
+		return false;
+	}
+#endregion
+
+
+#region Lookup > By Name
+	public CharacterSheet SingleByName(string value)
+	{
+		var result = PlayerCharacters.Values.SingleOrDefault(pc=>pc.CharacterName == value);
+		if (result == default)
+		{
+			OrphanCharacters.TryGetValue(value,out result);
+			if (result is not null && result != default)
+			{
+				TryAdoptCharacter(ApiConnection.Users.SingleByName(value));
+			}
+		}
+		if (result is null || result == default)
+			throw new KeyNotFoundException();
+		return result;
+	}
+	public bool TrySingleByName(string value,out CharacterSheet result)
+	{
+		result = PlayerCharacters.Values.SingleOrDefault(pc=>pc.CharacterName == value)!;
+		if (result is not null && result != default)
+		{
+			return true;
+		}
+		else if (OrphanCharacters.TryGetValue(value,out result!))
+		{
+			TryAdoptCharacter(ApiConnection.Users.SingleByName(value));
+			return true;
+		}
+		return false;
+	}
+#endregion
+
+
+#region ContainsKey
+	public bool ContainsKey(User value) =>
+		PlayerCharacters.ContainsKey(value) || OrphanCharacters.ContainsKey(value.Name);
+
+	public bool ContainsKey(string value) =>
+		ApiConnection.Users.TrySingleByName(value,out User user) ? ContainsKey(user) : false;
+#endregion
+
+
+#region Adoption / Creation
+	public bool TryCreateCharacter(User user)
+	{
+		if (!PlayerCharacters.ContainsKey(user))
+		{
+			if (!TryAdoptCharacter(user))
+			{
+				PlayerCharacters.AddOrUpdate(user,(k)=>new CharacterSheet(user.Name),(k,v)=>new CharacterSheet(user.Name));
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private bool TryAdoptCharacter(User user)
+	{
+		if (OrphanCharacters.ContainsKey(user.Name))
+		{
+			OrphanCharacters.Remove(user.Name,out CharacterSheet ?adoptedCharacter);
+			PlayerCharacters.AddOrUpdate(user,(k)=>adoptedCharacter!,(k,v)=>adoptedCharacter!);
+			return true;
+		}
+		return false;
+	}
+#endregion
+
+
+#region Serialization
+	public static CharacterTracker Deserialize(BinaryReader reader)
+	{
+		CharacterTracker result = new ();
+		for (int n=0;n<2;n++)
+			for (int i=0;i<reader.ReadUInt32();i++)
+			{
+				var playerCharacter = CharacterSheet.Deserialize(reader);
+				if (ApiConnection.Users.TrySingleByName(playerCharacter.CharacterName,out User user))
+				{
+					result.PlayerCharacters.AddOrUpdate(user,(k)=>playerCharacter,(k,v)=>playerCharacter);
+				}
+				else
+				{
+					result.OrphanCharacters.AddOrUpdate(playerCharacter.CharacterName,(k)=>playerCharacter,(k,v)=>playerCharacter);
+				}
+			}
+		return result;
+	}
+
+	public void Serialize(BinaryWriter writer)
+	{
+		writer.Write((uint)	PlayerCharacters.Count);
+		foreach (CharacterSheet playerCharacter in PlayerCharacters.Values)
+		{
+			playerCharacter.Serialize(writer);
+		}
+		writer.Write((uint)	OrphanCharacters.Count);
+		foreach (CharacterSheet orphanCharacter in OrphanCharacters.Values)
+		{
+			orphanCharacter.Serialize(writer);
+		}
+	}
+#endregion
+
+
+#region Constructor
+	internal CharacterTracker()
+	{
+		PlayerCharacters	= new ConcurrentDictionary<User,CharacterSheet>();
+		OrphanCharacters	= new ConcurrentDictionary<string,CharacterSheet>(StringComparer.InvariantCultureIgnoreCase);
+	}
+#endregion
+}
