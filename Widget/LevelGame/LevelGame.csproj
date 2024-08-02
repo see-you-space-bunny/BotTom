@@ -7,8 +7,16 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<InternalsVisibleTo Include="Widget.Tests.Facts"/>
-		<InternalsVisibleTo Include="Widget.Tests.Theories"/>
+		<PackageReference Include="Meziantou.MSBuild.InternalsVisibleTo" Version="1.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="Widget.Tests"/>
+		<InternalsVisibleToSuffix  Include=".Facts"/>
+		<InternalsVisibleToSuffix  Include=".Theories"/>
 	</ItemGroup>
 
 	<ItemGroup>
