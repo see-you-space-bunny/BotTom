@@ -9,7 +9,7 @@ public class CommandTokens(FChatMessage fChatMessage, string command, string par
 {
 	public FChatMessage Source { get; }		= fChatMessage;
 	public string Command { get; }			= command;
-	private string _parameters				= parameters;
+	private readonly string _parameters		= parameters;
 	public Dictionary<string,string> Parameters { get; private set; } = new (StringComparer.InvariantCultureIgnoreCase);
 	public bool TryGetParameters<TCommand>(out TCommand command) where TCommand : struct, Enum
 	{

@@ -15,8 +15,10 @@ public class AbilityScore : ResourceBase
 	private const float ModifiersMultiplierNegative		= 1.35f;
 #endregion
 
+
 	private readonly Ability _ability;
 	public Ability Key => _ability;
+
 
 #region Recordkeeping
 	private readonly List<(DateTime When,ulong Id,int Value,int Actual)> _lifetimeModifiersPvP = [];
@@ -52,6 +54,7 @@ public class AbilityScore : ResourceBase
 	public int CurrentTotal	=> _currentModifiersPvP.Sum(li=>li.Actual) + _currentModifiersPvE.Sum(li=>li.Actual);
 #endregion
 
+
 #region Partial Values
 	public float ClassValue => _parent.ClassLevels.Values.Sum(cl=>cl.Class.AbilityGrowth[_ability] * cl.CurrentLevel);
 
@@ -65,6 +68,7 @@ public class AbilityScore : ResourceBase
 	}
 #endregion
 
+
 #region Values
 	private int ActualValue => Math.Min(SoftLimit,ActualValueNoSoftLimit);
 	private int ActualValueNoSoftLimit => HasHardLimit ? Math.Min(HardLimit,ActualValueRaw) : ActualValueRaw;
@@ -76,6 +80,7 @@ public class AbilityScore : ResourceBase
 	private int DisplayValueRaw => (int)(ClassValue+CurrentTotal+_parent.SumStatusAdjustmentByAbility(_ability));
 	public int GetDisplayValue(bool softLimited = true) => softLimited && HasSoftLimit ? DisplayValue : DisplayValueNoSoftLimit;
 #endregion
+
 
 #region Limits
 	private int ModifierSoftLimit		=> (CurrentTotal > 0 ? ModifierSoftLimitHigh : -ModifierSoftLimitLow);
@@ -91,12 +96,6 @@ public class AbilityScore : ResourceBase
 	public override bool IsOverSoftLimit => DisplayValue > SoftLimit;
 #endregion
 
-#region Rng
-	public void Roll(int dieCount = 1,int dieSize = 100)
-	{
-		int result = DisplayValue+new int[dieCount].Sum(i=>FRoleplayMC.Rng.Next(1,dieSize+1));
-	}
-#endregion
 
 #region Serialization
 	private static (DateTime When,ulong Id,int Value,int Actual) DeserializePvPModifier(BinaryReader reader)
@@ -202,6 +201,7 @@ public class AbilityScore : ResourceBase
 		}
 	}
 #endregion
+
 
 #region Constructor
 	internal AbilityScore(Actor parent,Ability ability,ResourceDefaultValuesAttribute defaults) :

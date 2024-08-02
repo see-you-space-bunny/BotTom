@@ -34,6 +34,8 @@ namespace RoleplayingGame.Enums;
 
 public enum RoleplayingGameCommand
 {
+	None,
+
 	[Description("")]
 	[CommandPattern(@"(?i)((?'Attack'[a-zA-Z\-_0-9]{1,24})\s+){0,1}(\[user\]){0,1}(?'Target'[a-zA-Z\-_\s0-9]{1,32})(\[\/user\]){0,1}")]
 	[MinimumPrivilege(Privilege.RegisteredUser)]

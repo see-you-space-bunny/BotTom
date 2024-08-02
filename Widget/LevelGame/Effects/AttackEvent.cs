@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FChatApi.Core;
+using FChatApi.Enums;
 using FChatApi.Objects;
 using RoleplayingGame.Enums;
 using RoleplayingGame.Interfaces;
@@ -13,6 +14,7 @@ namespace RoleplayingGame.Effects;
 
 public class AttackEvent : IPendingEvent
 {
+#region (-) Constants
 	private const float MinimumStaminaRatio = 0.15f;
 	private const float RemainingHealthMultiplier = 2.5f;
 	/// <summary>
@@ -24,33 +26,45 @@ public class AttackEvent : IPendingEvent
 	/// {5} = attack outcome
 	/// </summary>
 	private const string DefaultMessageFormat = "{0} attacked {1} {2} ({3}🎲 vs {4}🎲)\n{5}";
+#endregion
 
+
+#region (+) Fields
 	public readonly Actor Source;
 	public readonly EnvironmentSource EnvironmentSource;
 	public readonly Actor Target;
 	public readonly float Accuracy;
 	public readonly float Impact;
 	public readonly float Harm;
+#endregion
 
+
+#region (+) Fields
 	private ActiveStatusEffect[] CarriedEffects;
-	
-	protected float _remainingAccuracy;
-	protected float _remainingImpact;
-	protected float _remainingHarm;
+#endregion
 
-	protected float _appliedAccuracy;
-	protected float _appliedImpact;
-	protected float _appliedHarm;
-	protected float _appliedOverkill;
 
-	protected bool _hit;
-	protected bool _protBreak;
-	protected bool _kill;
+#region (#) Fields
+	protected float	_remainingAccuracy;
+	protected float	_remainingImpact;
+	protected float	_remainingHarm;
+	protected float	_appliedAccuracy;
+	protected float	_appliedImpact;
+	protected float	_appliedHarm;
+	protected float	_appliedOverkill;
+	protected bool	_hit;
+	protected bool	_protBreak;
+	protected bool	_kill;
+	protected float	_impactRatio;
+#endregion
 
-	protected float _accuracyRatio => Accuracy == 0 ? Math.Max(_remainingAccuracy / Accuracy,0) : -1;
 
-	protected float _impactRatio = 0;
+#region (#) Properties
+	protected float	_accuracyRatio	=> Accuracy == 0 ? Math.Max(_remainingAccuracy / Accuracy,0) : -1;
+#endregion
 
+
+#region Try To X
 /// <summary>
 /// 
 /// </summary>
@@ -122,10 +136,16 @@ public class AttackEvent : IPendingEvent
 		_appliedHarm = _remainingHarm - _appliedOverkill;
 		return _kill;
 	}
+#endregion
 
+
+#region AttackInfo
 	public (ulong,bool,ulong,bool,ulong,bool,ulong) AttackInfo() =>
 		((ulong)_appliedAccuracy,_hit,(ulong)_appliedImpact,_protBreak,(ulong)_appliedHarm,_kill,(ulong)_appliedOverkill);
+#endregion
 
+
+#region Refresh/Reset
 	private void RefreshRemainingDamage()
 	{
 		_remainingHarm		= Harm;
@@ -140,45 +160,42 @@ public class AttackEvent : IPendingEvent
 		_kill				= false;
 		_impactRatio		= 0;
 	}
+#endregion
 
-	public AttackEvent(Actor source,Actor target,float harm,float impact,float accuracy,ActiveStatusEffect[]? carriedEffects = null)
-		: this(source,EnvironmentSource.None,target,harm,impact,accuracy,carriedEffects)
-	{ }
 
-	public AttackEvent(Actor source,EnvironmentSource environmentSource,Actor target,float harm,float impact,float accuracy,ActiveStatusEffect[]? carriedEffects = null)
+#region With
+	internal AttackEvent WithInitiator(User value)
 	{
-		_responder			= default!;
-		Source				= source;
-		EnvironmentSource	= environmentSource;
-		Target				= target;
-		Harm				= harm;
-		Impact				= impact;
-		Accuracy			= accuracy;
-		CarriedEffects		= carriedEffects ?? [];
+		_initiator = value;
+		return this;
 	}
 
-#region IPendingAction
-	User _responder;
-	Channel? _channel;
-	User IPendingEvent.Responder => _responder;
-	Channel? IPendingEvent.Channel => _channel;
-
-	RoleplayingGameCommand[] IPendingEvent.ExpectedResponses => [RoleplayingGameCommand.Defend];
-
-	IPendingEvent IPendingEvent.WithResponder(User value)
+	internal AttackEvent WithResponder(User value)
 	{
 		_responder = value;
 		return this;
 	}
 
-	IPendingEvent IPendingEvent.WithChannel(Channel value)
+	internal AttackEvent WithChannel(Channel value)
 	{
 		_channel = value;
 		return this;
 	}
+#endregion
 
-	IPendingEvent IPendingEvent.ExecuteEffect()
+
+#region ExecuteEffect
+	internal AttackEvent ExecuteEffect(RoleplayingGameCommand command)
 	{
+		if (!_expectedResponses.Contains(command))
+			throw new ArgumentException($"{command} is an invalid response to an {RoleplayingGameCommand.Attack}",nameof(command));
+
+		switch (command)
+		{
+			default:
+				break;
+		}
+
 		if (!TryToHit(Target.Evasion,Target.Health))
 		{ }
 
@@ -187,7 +204,7 @@ public class AttackEvent : IPendingEvent
 
 		if (!TryToHarm(Target.Health))
 		{
-            FRoleplayMC.ApplyStatusEffect(StatusEffect.Defeated,Target,1.0f,null);
+            //	StatusEffect.Defeated
 		}
 
 		if (EnvironmentSource != EnvironmentSource.None)
@@ -202,8 +219,11 @@ public class AttackEvent : IPendingEvent
 		}
 		return this;
 	}
+#endregion
 
-	IPendingEvent IPendingEvent.EnqueueMessage(ApiConnection api)
+
+#region EnqueueMessage
+	internal AttackEvent EnqueueMessage(ApiConnection api)
 	{
 		var message = new FChatMessageBuilder();
 
@@ -211,13 +231,13 @@ public class AttackEvent : IPendingEvent
 		{
 			message
 				.WithChannel(_channel)
-				.WithMessageType(FChatApi.Enums.FChatMessageType.Basic);
+				.WithMessageType(FChatMessageType.Basic);
 		}
 		else
 		{
 			message
 				.WithRecipient(_responder)
-				.WithMessageType(FChatApi.Enums.FChatMessageType.Whisper);
+				.WithMessageType(FChatMessageType.Whisper);
 		}
 		
 		message.WithMessage(
@@ -235,5 +255,43 @@ public class AttackEvent : IPendingEvent
 		api.EnqueueMessage(message);
 		return this;
 	}
-	#endregion
+#endregion
+
+
+#region IPendingAction
+	readonly RoleplayingGameCommand[] _expectedResponses;
+	User _initiator;
+	User _responder;
+	Channel _channel;
+	User IPendingEvent.Initiator									=>	_initiator;
+	User IPendingEvent.Responder									=>	_responder;
+	Channel? IPendingEvent.Channel									=>	_channel;
+	RoleplayingGameCommand[] IPendingEvent.ExpectedResponses		=> _expectedResponses;
+	IPendingEvent IPendingEvent.WithInitiator(User value)			=>	WithInitiator(value);
+	IPendingEvent IPendingEvent.WithResponder(User value)			=>	WithResponder(value);
+	IPendingEvent IPendingEvent.WithChannel(Channel value)			=>	WithChannel(value);
+	IPendingEvent IPendingEvent.EnqueueMessage(ApiConnection api)	=>	EnqueueMessage(api);
+#endregion
+
+
+#region Constructor
+	public AttackEvent(Actor source,Actor target,float harm,float impact,float accuracy,ActiveStatusEffect[]? carriedEffects = null)
+		: this(source,EnvironmentSource.None,target,harm,impact,accuracy,carriedEffects)
+	{ }
+
+	public AttackEvent(Actor source,EnvironmentSource environmentSource,Actor target,float harm,float impact,float accuracy,ActiveStatusEffect[]? carriedEffects = null)
+	{
+		_expectedResponses	=	[RoleplayingGameCommand.Defend];
+		_initiator			=	default!;
+		_responder			=	default!;
+		_channel			=	default!;
+		Source				=	source;
+		EnvironmentSource	=	environmentSource;
+		Target				=	target;
+		Harm				=	harm;
+		Impact				=	impact;
+		Accuracy			=	accuracy;
+		CarriedEffects		=	carriedEffects ?? [];
+	}
+#endregion
 }

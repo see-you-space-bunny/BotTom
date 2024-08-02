@@ -19,12 +19,10 @@ public partial class FRoleplayMC
 //////////////
 		if (!commandTokens.TryGetParameters(out RoleplayingGameCommand command))
 			return;
-		
 		if (commandTokens.Source.Author.PrivilegeLevel < command.GetEnumAttribute<RoleplayingGameCommand, MinimumPrivilegeAttribute>().Privilege)
 			return;
-/////////////////////////////
-		bool respondWithMessage = true;
-		FChatMessageBuilder messageBuilder = new FChatMessageBuilder()
+/////////////// ERROR MESSAGE
+		FChatMessageBuilder errorMessageBuilder = new FChatMessageBuilder()
 			.WithAuthor(ApiConnection.CharacterName)
 			.WithRecipient(commandTokens.Source.Author.Name)
 			.WithChannel(commandTokens.Source.Channel)
@@ -34,16 +32,16 @@ public partial class FRoleplayMC
 		{
 #region Attack
 			case RoleplayingGameCommand.Attack:
-				if (ValidateAttackCommand(commandTokens,messageBuilder))
-					ExecuteAttackCommand(commandTokens,messageBuilder);
+				if (ValidateAttackCommand(commandTokens,errorMessageBuilder))
+					InitiateAttackCommand(commandTokens);
 				break;
 #endregion
 
 
 #region Defend
 			case RoleplayingGameCommand.Defend:
-				if (ValidateDefendCommand(commandTokens,messageBuilder))
-					ExecuteDefendCommand(commandTokens,messageBuilder);
+				if (ValidateDefendCommand(commandTokens,errorMessageBuilder))
+					ResolveAttackCommand(commandTokens,command);
 				break;
 #endregion
 
@@ -54,9 +52,9 @@ public partial class FRoleplayMC
 #endregion
 		}
 /////////////////////////////
-		if (respondWithMessage)
+		if (errorMessageBuilder.HasMessage)
 		{
-			FChatApi.EnqueueMessage(messageBuilder);
+			FChatApi.EnqueueMessage(errorMessageBuilder);
 		}
 //////////////
 	}

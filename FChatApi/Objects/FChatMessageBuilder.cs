@@ -140,6 +140,14 @@ public class FChatMessageBuilder()
 ////////////////////////////////////////////////
 
 
+#region HasMessage
+	public bool HasMessage => !string.IsNullOrWhiteSpace(Message);
+#endregion
+
+
+////////////////////////////////////////////////
+
+
 #region Build Method
 	public FChatMessage Build()
 	{
