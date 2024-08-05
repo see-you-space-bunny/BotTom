@@ -136,14 +136,6 @@ public class Actor : GameObject
 			levels = levels == 0 ? 1 : levels;
 			activeClassLevels.Modify(DateTime.Now,source,levels);
 		}
-		else
-		{
-            ClassLevels @class = new (this,FRoleplayMC.CharacterClasses[_activeClass]);
-			levels = (int)Math.Round(@class.Class.AbilityGrowth[Ability.Level] * levels);
-			levels = levels == 0 ? 1 : levels;
-			@class.Modify(DateTime.Now,source,levels);
-		    _classLevels.Add(_activeClass,@class);
-		}
 		return this;
 	}
 
@@ -159,14 +151,6 @@ public class Actor : GameObject
 			levels = (int)Math.Round(activeClassLevels.Class.AbilityGrowth[Ability.Level] * levels);
 			levels = levels == 0 ? 1 : levels;
 			activeClassLevels.Modify(DateTime.Now,source.ActorId,levels);
-		}
-		else
-		{
-            ClassLevels @class = new (this,FRoleplayMC.CharacterClasses[_activeClass]);
-			levels = (int)Math.Round(@class.Class.AbilityGrowth[Ability.Level] * levels);
-			levels = levels == 0 ? 1 : levels;
-			@class.Modify(DateTime.Now,source.ActorId,levels);
-		    _classLevels.Add(_activeClass,@class);
 		}
 		return this;
 	}
@@ -226,13 +210,6 @@ public class Actor : GameObject
 		{
 			activeClassLevels.Modify(DateTime.Now,source,-levels);
 		}
-		else
-		{
-			activeClassLevels = new ClassLevels(this,FRoleplayMC.CharacterClasses[_activeClass]);
-			activeClassLevels.Modify(DateTime.Now,source,-levels);
-            _classLevels.Add(_activeClass, activeClassLevels);
-		}
-		//Level.Modify(DateTime.Now,source,-levels);
 		ReCalculateDerivedStatistics();
 		return this;
 	}
@@ -248,13 +225,6 @@ public class Actor : GameObject
 		{
 			activeClassLevels.Modify(DateTime.Now,source.ActorId,-levels);
 		}
-		else
-		{
-			activeClassLevels = new ClassLevels(this,FRoleplayMC.CharacterClasses[_activeClass]);
-			activeClassLevels.Modify(DateTime.Now,source.ActorId,-levels);
-            _classLevels.Add(_activeClass, activeClassLevels);
-		}
-		//Level.Modify(DateTime.Now,source.UserId,-levels);
 		ReCalculateDerivedStatistics();
 		return this;
 	}
@@ -279,9 +249,14 @@ public class Actor : GameObject
 		return this;
 	}
 
-	public Actor ChangeClass(ClassName className)
+	public Actor ChangeClass(CharacterClass @class)
 	{
-		_activeClass = className;
+		if (!_classLevels.TryGetValue(_activeClass, out ClassLevels ?activeClassLevels))
+		{
+			activeClassLevels = new ClassLevels(this,@class);
+            _classLevels.Add(_activeClass, activeClassLevels);
+		}
+		_activeClass = @class.Name;
 		return this;
 	}
 
@@ -302,7 +277,7 @@ public class Actor : GameObject
 	public Actor(string name) : base(0)
 	{
 		_characterName	= name;
-		_actorId			= Convert.ToUInt64(new Guid().ToString("N"));
+		_actorId		= Convert.ToUInt64(new Guid().ToString("N"));
 		_levelCap		= 500u;
 
 		_abilities = [];
@@ -326,7 +301,7 @@ public class Actor : GameObject
 	public Actor(string name,ulong userId) : base(0)
 	{
 		_characterName	= name;
-		_actorId			= userId;
+		_actorId		= userId;
 		_levelCap		= 500u;
 
 		_abilities = [];

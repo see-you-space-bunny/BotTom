@@ -46,6 +46,13 @@ public partial class FRoleplayMC
 #endregion
 
 
+#region Defend
+			case RoleplayingGameCommand.Explore:
+				ResolveExploreCommand(commandTokens);
+				break;
+#endregion
+
+
 #region default
 			default:
 				break;

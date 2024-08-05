@@ -1,5 +1,6 @@
 using RoleplayingGame.Enums;
 using RoleplayingGame.Objects;
+using RoleplayingGame.Systems;
 
 namespace RoleplayingGame.SheetComponents;
 
@@ -71,9 +72,9 @@ public class ClassLevels(Actor parent,CharacterClass @class)
 			reader.ReadInt32()
 		);
 
-	public static ClassLevels Deserialize(BinaryReader reader,Actor parent)
+	internal static ClassLevels Deserialize(BinaryReader reader,CharacterClassTracker CharacterClasses,Actor parent)
 	{
-		ClassLevels result = new (parent,FRoleplayMC.CharacterClasses[(ClassName)reader.ReadUInt16()]);
+		ClassLevels result = new (parent,CharacterClasses.All[(ClassName)reader.ReadUInt16()]);
 
 		for (uint i=0;i<reader.ReadUInt32();i++)
 		{

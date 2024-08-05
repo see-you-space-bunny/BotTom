@@ -16,6 +16,7 @@ using RoleplayingGame.Effects;
 using Plugins.Tokenizer;
 using Plugins.Core;
 using RoleplayingGame.Systems;
+using RoleplayingGame.Contexts;
 
 namespace RoleplayingGame;
 
@@ -24,57 +25,46 @@ public partial class FRoleplayMC : FChatPlugin<RoleplayingGameCommand>, IFChatPl
 #region (-) Serialization
     private static readonly string _csvDirectory;
 	private static string _cacheURL;
-	private static string _cardGameURI;
+	private static string _roleplayingGameURI;
 #endregion
 
 
 #region (+) Serialization
 	public string CacheRoot { get; set; }	= Environment.CurrentDirectory;
 	public string CacheURL { get=>Path.Combine(CacheRoot,_cacheURL); set=>_cacheURL=value; }
-	public string RoleplayingGameURI { get => Path.Combine(CacheRoot,_cacheURL,_cardGameURI); set=>_cardGameURI=value; }
+	public string RoleplayingGameURI { get => Path.Combine(CacheRoot,_cacheURL,_roleplayingGameURI); set=>_roleplayingGameURI=value; }
 #endregion
 
 
 #region (~) Fields
-    internal static readonly ConcurrentDictionary<ClassName,CharacterClass> CharacterClasses;
 	internal static readonly ConcurrentDictionary<AttackType,AttackChassis> AttackPool;
+	internal static readonly Random Rng;
 #endregion
 
 
 #region (~) Fields
+    internal readonly CharacterClassTracker CharacterClasses;
 	internal readonly StatusEffectFactory StatusEffectFactory;
-	internal readonly List<IPendingEvent> ActionQueue;
+	internal readonly FoeFactory FoeFactory;
 #endregion
 
 
 #region (~) Properties
     internal CharacterTracker Characters { get; private set; }
     internal InteractionTracker Interactions { get; private set; }
+	internal EncounterTracker Encounters { get; private set; }
     internal DieRoller DieRoller { get; private set; }
 #endregion
 
 
 #region LoadAttacks
-	public void LoadAttacks(string filePath) => LoadAttacks(_csvDirectory,filePath);
+	public static void LoadAttacks(string filePath) => LoadAttacks(_csvDirectory,filePath);
 
-	public void LoadAttacks(string directory,string filePath)
+	public static void LoadAttacks(string directory,string filePath)
 	{
 		foreach (AttackChassis chassis in DeserializeKommaVaues.GetAttacks(Path.Combine(directory,filePath)))
 		{
 			AttackPool.AddOrUpdate(chassis.AttackType,(k)=>chassis,(k,v)=>chassis);
-		}
-	}
-#endregion
-	
-
-#region LoadClasses
-	public void LoadClasses(string filePath) => LoadClasses(_csvDirectory,filePath);
-
-	public void LoadClasses(string directory,string filePath)
-	{
-		foreach (CharacterClass @class in DeserializeKommaVaues.GetClasses(Path.Combine(directory,filePath)))
-		{
-			CharacterClasses.AddOrUpdate(@class.Name,(k)=>@class,(k,v)=>@class);
 		}
 	}
 #endregion
@@ -153,22 +143,23 @@ public partial class FRoleplayMC : FChatPlugin<RoleplayingGameCommand>, IFChatPl
 #region Constructor
     public FRoleplayMC(ApiConnection api, TimeSpan updateInterval) : base(api, updateInterval)
     {
-		ActionQueue			= [];
+		CharacterClasses	= new CharacterClassTracker();
+		Encounters			= new EncounterTracker();
 		Characters			= new CharacterTracker();
 		Interactions		= new InteractionTracker();
-		DieRoller			= new DieRoller();
 		StatusEffectFactory	= new StatusEffectFactory();
-		LoadClasses("CharacterClasses - Export.csv");
+		FoeFactory			= new FoeFactory();
+		DieRoller			= new DieRoller();
 		LoadAttacks("CharacterClasses - Attacks.csv");
 	}
 
     static FRoleplayMC()
     {
 		AttackPool			= [];
-		CharacterClasses	= [];
-		_cacheURL		= "sessioncache";
-		_cardGameURI	= "cardgame";
-		_csvDirectory	= Path.Combine(Environment.CurrentDirectory,"csv");
+		Rng					= new Random();
+		_cacheURL			= "sessioncache";
+		_roleplayingGameURI	= "roleplayinggame";
+		_csvDirectory		= Path.Combine(Environment.CurrentDirectory,"csv");
 		DirectorySanityCheck();
 		PreProcessEnumAttributes();
 	}

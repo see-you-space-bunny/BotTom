@@ -14,9 +14,12 @@ public class @RoleplayingGame(ITestOutputHelper output)
 	[InlineData("Adventurer"	,100	,1294	,1280	,1280	,0		)]
 	public void TestResourceScaling(string className,int levels,int health,int protection,int evasion,int abilityAdjustment)
 	{
+		FRoleplayMC fRoleplayMC = new (null!,new TimeSpan(0,0,5));
+		fRoleplayMC.Initialize();
+		
 		CharacterSheet character = new("Testo Telesto",0uL);
 		character
-			.ChangeClass(Enum.Parse<ClassName>(className))
+			.ChangeClass(fRoleplayMC.CharacterClasses.All[Enum.Parse<ClassName>(className)])
 			.LevelUp(levels,EnvironmentSource.World)
 			.AdjustAllAbilities(abilityAdjustment,EnvironmentSource.World,true)
 			.FullRecovery();
@@ -31,16 +34,19 @@ public class @RoleplayingGame(ITestOutputHelper output)
 	[InlineData("Adventurer"	,AttackType.Basic	,100	,0		,703	,711	,711	,0	)]
 	public void TestAttackScaling(string className,AttackType attackType,int levels,int levelgap,int accuracy,int impact,int harm,int abilityAdjustment)
 	{
+		FRoleplayMC fRoleplayMC = new (null!,new TimeSpan(0,0,5));
+		fRoleplayMC.Initialize();
+
 		CharacterSheet attacker = new("Alecto Attacko",0uL);
 		attacker
-			.ChangeClass(Enum.Parse<ClassName>(className))
+			.ChangeClass(fRoleplayMC.CharacterClasses.All[Enum.Parse<ClassName>(className)])
 			.LevelUp(levels,EnvironmentSource.World)
 			.AdjustAllAbilities(abilityAdjustment,EnvironmentSource.World,true)
 			.FullRecovery();
 
 		CharacterSheet defender = new("Domino Defendo",1uL);
 		defender
-			.ChangeClass(Enum.Parse<ClassName>(className))
+			.ChangeClass(fRoleplayMC.CharacterClasses.All[Enum.Parse<ClassName>(className)])
 			.LevelUp(levels-levelgap,EnvironmentSource.World)
 			.AdjustAllAbilities(abilityAdjustment,EnvironmentSource.World,true)
 			.FullRecovery();
@@ -54,4 +60,14 @@ public class @RoleplayingGame(ITestOutputHelper output)
 		Assert.Equal(harm,		(int)attack.Harm);
 
 	}
+	
+#pragma warning disable xUnit1026 // Theory methods should use all of their parameters
+	[Theory]
+	[InlineData("Goblin"	,100)]
+	public void TestEnemyCreation(string enemyName,int level)
+	{
+		FRoleplayMC fRoleplayMC = new (null!,new TimeSpan(0,0,5));
+		fRoleplayMC.Initialize();
+	}
+#pragma warning restore xUnit1026
 }

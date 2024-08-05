@@ -13,13 +13,16 @@ public partial class FRoleplayMC
 {
 	public override void Initialize()
 	{
+		CharacterClasses.InitializeFrom(Path.Combine(_csvDirectory,CharacterClasses.SourceFilePath));
+
 		if (!File.Exists(RoleplayingGameURI))
 			return;
 
 		using (var reader = new BinaryReader(File.OpenRead(RoleplayingGameURI)))
 		{
-			Characters = CharacterTracker.Deserialize(reader);
+			Characters = CharacterTracker.Deserialize(reader,CharacterClasses);
 		}
+
 		base.Initialize();
 	}
 
@@ -43,6 +46,7 @@ public partial class FRoleplayMC
 		{
 			Characters.Serialize(writer);
 		}
+
 		base.Shutdown();
 	}
 }

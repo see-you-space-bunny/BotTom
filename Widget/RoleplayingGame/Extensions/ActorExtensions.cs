@@ -1,12 +1,13 @@
 using RoleplayingGame.Enums;
 using RoleplayingGame.Objects;
+using RoleplayingGame.SheetComponents;
 
 namespace RoleplayingGame;
 
 public static class ActorExtensions
 {
 	#region Actor Extensions
-	public static T ChangeClass<T>(this T actor, ClassName className) where T : Actor
+	public static T ChangeClass<T>(this T actor, CharacterClass className) where T : Actor
 	{
 		actor.ChangeClass(className);
 		return actor;

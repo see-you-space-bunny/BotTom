@@ -89,7 +89,7 @@ public class CharacterTracker
 		PlayerCharacters.ContainsKey(value) || OrphanCharacters.ContainsKey(value.Name);
 
 	public bool ContainsKey(string value) =>
-		ApiConnection.Users.TrySingleByName(value,out User user) ? ContainsKey(user) : false;
+		ApiConnection.Users.TrySingleByName(value,out User user) && ContainsKey(user);
 #endregion
 
 
@@ -100,7 +100,7 @@ public class CharacterTracker
 		{
 			if (!TryAdoptCharacter(user))
 			{
-				PlayerCharacters.AddOrUpdate(user,(k)=>new CharacterSheet(user.Name),(k,v)=>new CharacterSheet(user.Name));
+				PlayerCharacters.AddOrUpdate(user,(k)=>new CharacterSheet(user),(k,v)=>new CharacterSheet(user));
 				return true;
 			}
 		}
@@ -112,7 +112,7 @@ public class CharacterTracker
 		if (OrphanCharacters.ContainsKey(user.Name))
 		{
 			OrphanCharacters.Remove(user.Name,out CharacterSheet ?adoptedCharacter);
-			PlayerCharacters.AddOrUpdate(user,(k)=>adoptedCharacter!,(k,v)=>adoptedCharacter!);
+			PlayerCharacters.AddOrUpdate(user,(k)=>adoptedCharacter?.BecomeAdopted(user)!,(k,v)=>adoptedCharacter?.BecomeAdopted(user)!);
 			return true;
 		}
 		return false;
@@ -121,13 +121,13 @@ public class CharacterTracker
 
 
 #region Serialization
-	public static CharacterTracker Deserialize(BinaryReader reader)
+	internal static CharacterTracker Deserialize(BinaryReader reader,CharacterClassTracker CharacterClasses)
 	{
 		CharacterTracker result = new ();
 		for (int n=0;n<2;n++)
 			for (int i=0;i<reader.ReadUInt32();i++)
 			{
-				var playerCharacter = CharacterSheet.Deserialize(reader);
+				var playerCharacter = CharacterSheet.Deserialize(reader,CharacterClasses);
 				if (ApiConnection.Users.TrySingleByName(playerCharacter.CharacterName,out User user))
 				{
 					result.PlayerCharacters.AddOrUpdate(user,(k)=>playerCharacter,(k,v)=>playerCharacter);

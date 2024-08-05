@@ -10,6 +10,7 @@ using Plugins.Attributes;
 using Plugins.Tokenizer;
 using RoleplayingGame.Effects;
 using RoleplayingGame.Enums;
+using RoleplayingGame.Objects;
 
 namespace RoleplayingGame;
 
@@ -59,6 +60,28 @@ public partial class FRoleplayMC
 		else if (Interactions.TryGetPendingEventsByResponder<AttackEvent>(ApiConnection.Users.SingleByName(targetName),out _))
 		{
 			messageBuilder.WithMessage($"{targetName} is already being attacked by someone.");
+			return false;
+		}
+/////////////////////////////
+		return true;
+	}
+#endregion
+
+
+#region ClassChange
+	private bool ValidateClassChangeCommand(CommandTokens commandTokens,FChatMessageBuilder messageBuilder)
+	{
+//////////////// Class //////
+		if (!Enum.TryParse<ClassName>(commandTokens.Parameters["Class"],out _))
+		{
+			messageBuilder.WithMessage($"\"{commandTokens.Parameters["Class"]}\" is not a valid class.");
+			return false;
+		}
+///////////////////////////// Is cooldown ready?
+		CharacterSheet characterSheet	=	Characters.SingleByUser(commandTokens.Source.Author);
+		if (!characterSheet.CanChangeClass)
+		{
+			messageBuilder.WithMessage($"You need to wait [color=yellow]{characterSheet.RemainingClassChangeCooldown}m[/color] before changing your class.");
 			return false;
 		}
 /////////////////////////////
