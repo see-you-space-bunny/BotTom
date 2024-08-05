@@ -32,7 +32,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Widget\CardGame\CardGame.csproj" />
 		<ProjectReference Include="..\Widget\FGlobals\FGlobals.csproj" />
-		<ProjectReference Include="..\Widget\LevelGame\LevelGame.csproj" />
+		<ProjectReference Include="..\Widget\RoleplayingGame\RoleplayingGame.csproj" />
 	</ItemGroup>
 
 </Project>

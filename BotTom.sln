@@ -21,7 +21,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CardGame", "Widget\CardGame
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FGlobals", "Widget\FGlobals\FGlobals.csproj", "{F3AF536E-AA58-4F3F-A31E-CEA0B5B6A491}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LevelGame", "Widget\LevelGame\LevelGame.csproj", "{559BDB24-2813-4E7E-98CE-A6A280661E51}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoleplayingGame", "Widget\RoleplayingGame\RoleplayingGame.csproj", "{559BDB24-2813-4E7E-98CE-A6A280661E51}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plugins", "Widget\Plugins\Plugins.csproj", "{C214FD08-58CD-4541-8B49-B03DBE081236}"
 EndProject

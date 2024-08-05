@@ -130,11 +130,6 @@ public class ActiveStatusEffectBuilder
         return this;
     }
 
-	public bool Proc() => Proc(_procChance);
-
-	private static bool Proc(float percentageChance) =>
-		FRoleplayMC.Rng.Next(1,10001) > percentageChance*10000.0f;
-
     public bool IsReadyToBuild() =>
 		_target is not null && _effectType != StatusEffect.None;
 

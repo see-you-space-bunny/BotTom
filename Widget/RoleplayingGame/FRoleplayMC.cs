@@ -36,8 +36,12 @@ public partial class FRoleplayMC : FChatPlugin<RoleplayingGameCommand>, IFChatPl
 
 
 #region (~) Fields
-    internal readonly ConcurrentDictionary<ClassName,CharacterClass> CharacterClasses;
-	internal readonly ConcurrentDictionary<AttackType,AttackChassis> AttackPool;
+    internal static readonly ConcurrentDictionary<ClassName,CharacterClass> CharacterClasses;
+	internal static readonly ConcurrentDictionary<AttackType,AttackChassis> AttackPool;
+#endregion
+
+
+#region (~) Fields
 	internal readonly StatusEffectFactory StatusEffectFactory;
 	internal readonly List<IPendingEvent> ActionQueue;
 #endregion
@@ -149,8 +153,6 @@ public partial class FRoleplayMC : FChatPlugin<RoleplayingGameCommand>, IFChatPl
 #region Constructor
     public FRoleplayMC(ApiConnection api, TimeSpan updateInterval) : base(api, updateInterval)
     {
-		CharacterClasses	= [];
-		AttackPool			= [];
 		ActionQueue			= [];
 		Characters			= new CharacterTracker();
 		Interactions		= new InteractionTracker();
@@ -162,6 +164,8 @@ public partial class FRoleplayMC : FChatPlugin<RoleplayingGameCommand>, IFChatPl
 
     static FRoleplayMC()
     {
+		AttackPool			= [];
+		CharacterClasses	= [];
 		_cacheURL		= "sessioncache";
 		_cardGameURI	= "cardgame";
 		_csvDirectory	= Path.Combine(Environment.CurrentDirectory,"csv");

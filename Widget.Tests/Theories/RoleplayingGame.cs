@@ -31,7 +31,6 @@ public class @RoleplayingGame(ITestOutputHelper output)
 	[InlineData("Adventurer"	,AttackType.Basic	,100	,0		,703	,711	,711	,0	)]
 	public void TestAttackScaling(string className,AttackType attackType,int levels,int levelgap,int accuracy,int impact,int harm,int abilityAdjustment)
 	{
-		var RoleplayMC = new FRoleplayMC(null!,new TimeSpan(0,0,5));
 		CharacterSheet attacker = new("Alecto Attacko",0uL);
 		attacker
 			.ChangeClass(Enum.Parse<ClassName>(className))
@@ -46,7 +45,7 @@ public class @RoleplayingGame(ITestOutputHelper output)
 			.AdjustAllAbilities(abilityAdjustment,EnvironmentSource.World,true)
 			.FullRecovery();
 
-		var attack = RoleplayMC
+		var attack = FRoleplayMC
 			.AttackPool[attackType]
 			.BuildAttack(defender,attacker);
 

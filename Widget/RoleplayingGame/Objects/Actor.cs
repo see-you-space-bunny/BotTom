@@ -60,7 +60,7 @@ public class Actor : GameObject
 
 		if (!attack.TryToHarm(Health))
 		{
-            FRoleplayMC.ApplyStatusEffect(StatusEffect.Defeated,this,1.0f,null);
+            //StatusEffect.Defeated
 		}
 
 		(ulong EvasionLoss,bool Hit,ulong ProtectionLoss,bool ProtBreak,ulong HealthLoss,bool Kill,ulong Overkill) = attack.AttackInfo();
@@ -123,28 +123,6 @@ public class Actor : GameObject
 #endregion
 
 #region Actor Extensions
-/// <summary>
-/// Generates a random number between 18 and 33 and calls the <c>LevelUp</c> method.<br/>
-/// The <c>LevelUp</c> method is subject to growth-scales.
-/// </summary>
-/// <returns>this Actor</returns>
-	public Actor LevelUpRoll(ushort @base,ushort dice,EnvironmentSource source = EnvironmentSource.World)
-	{
-        LevelUp(@base + new int[dice].Sum(d=>FRoleplayMC.Rng.Next(1,7)),source);
-		return this;
-	}
-	
-/// <summary>
-/// Generates a random number between 18 and 33 and calls the <c>LevelUp</c> method.<br/>
-/// The <c>LevelUp</c> method is subject to growth-scales.
-/// </summary>
-/// <returns>this Actor</returns>
-	public Actor LevelUpRoll(ushort @base,ushort dice,Actor source)
-	{
-        LevelUp(@base + new int[dice].Sum(d=>FRoleplayMC.Rng.Next(1,7)),source);
-		return this;
-	}
-
 /// <summary>
 /// Adds a number of levels to this Actor's currently active class.
 /// </summary>
