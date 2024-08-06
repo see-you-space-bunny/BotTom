@@ -40,22 +40,4 @@ sealed class AbilityInfoAttribute : Attribute
 		
 		// This is a named argument
 		/* public int NamedInt { get; set; } */
-
-		
-	public static string GetEnumDescription<T>(T enumerableItem)
-	{
-		try
-		{
-			var enumType = typeof(T);
-			var memberInfos = enumType.GetMember(enumerableItem!.ToString()!);
-			var enumValueMemberInfo = memberInfos.FirstOrDefault(m => m.DeclaringType == enumType);
-			var valueAttributes = enumValueMemberInfo!.GetCustomAttributes(typeof(ShortFormAttribute),false);
-			var description = ((ShortFormAttribute)valueAttributes[0]).Description;
-			return description;
-		}
-		catch
-		{
-			return (enumerableItem!.ToString()) ?? "null";
-		}
-	}
 }

@@ -9,7 +9,7 @@ namespace RoleplayingGame.Objects;
 
 public class CharacterSheet : Actor
 {
-#region Fields(-)
+#region (-) Fields
 	private User _user;
 	private string _uniqueCharacterName;
 	private string _characterNickname;
@@ -17,22 +17,18 @@ public class CharacterSheet : Actor
 #endregion
 
 
-#region (-) Fields
-	protected static readonly TimeSpan ClassChangeCooldown;
-	public DateTime _nextClassChange;
-#endregion
-
-
-#region Properties (+)
+#region (+) Properties 
 	public User User						=> _user;
 	public new string CharacterName			=> _characterNickname != null ? (_useOnlyNickname ? _characterNickname : $"{_characterNickname} ({_characterName})") : _characterName;
 	public bool CharacterNameIsIdentifier	{ get; internal set; }
 #endregion
 
-#region Properties (+)
-	public bool CanChangeClass				=>	DateTime.Now >= _nextClassChange;
-	public int RemainingClassChangeCooldown	=>	(int)Math.Max((_nextClassChange-DateTime.Now).TotalMinutes+1,0);
+
+#region (~) Properties
+	internal Dictionary<CharacterCooldown,Cooldown> Cooldowns;
+	internal InventoryManager Inventory;
 #endregion
+
 
 #region Assignment Methods
 	public CharacterSheet ClearNickname()
@@ -47,6 +43,7 @@ public class CharacterSheet : Actor
 		return this;
 	}
 #endregion
+
 
 #region Toggle Mothods
 	public CharacterSheet ToggleUsingOnlyNickname()
@@ -71,7 +68,7 @@ public class CharacterSheet : Actor
 	{
 		if (triggerCooldown)
 		{
-			_nextClassChange = DateTime.Now + ClassChangeCooldown;
+			Cooldowns[CharacterCooldown.ClassChange].Trigger();
 		}
 		base.ChangeClass(@class);
 		return this;
@@ -121,6 +118,9 @@ public class CharacterSheet : Actor
 			characterSheet._resources[resource.Key] = resource;
 		}
 
+/////	Inventory
+		// TODO
+
 /////	Statistics
 		characterSheet.Statistics = ActorStatistics.Deserialize(reader);
 
@@ -168,10 +168,14 @@ public class CharacterSheet : Actor
 			resource.Value.Serialize(writer);
 		}
 
+/////	Inventory
+		// TODO
+
 /////	Statistics
 		Statistics.Serialize(writer);
 	}
 #endregion
+
 
 #region Constructor
 	public CharacterSheet(string uniqueCharacterName, string? characterName = null)
@@ -195,6 +199,7 @@ public class CharacterSheet : Actor
 	}
 #endregion
 
+
 #region Private Constructor
 	private CharacterSheet() : base(string.Empty)
 	{
@@ -203,15 +208,15 @@ public class CharacterSheet : Actor
 		_characterNickname		= string.Empty;
 		_useOnlyNickname		= false;
 		_user					= default!;
-		_nextClassChange		= DateTime.Now;
+		Inventory				= default!;
+		Cooldowns				= [];
+		Cooldowns.Add(CharacterCooldown.ClassChange,new Cooldown(new TimeSpan(0,29,0)));
 	}
 #endregion
 
 
 #region Static Constructor
 	static CharacterSheet()
-	{
-		ClassChangeCooldown = new TimeSpan(0,29,0);
-	}
+	{ }
 #endregion
 }

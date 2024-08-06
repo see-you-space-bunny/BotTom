@@ -38,6 +38,14 @@ public partial class FRoleplayMC
 #endregion
 
 
+#region ClassChange
+			case RoleplayingGameCommand.ClassChange:
+				if (ValidateClassChangeCommand(commandTokens,errorMessageBuilder))
+					ResolveClassChangeCommand(commandTokens);
+				break;
+#endregion
+
+
 #region Defend
 			case RoleplayingGameCommand.Defend:
 				if (ValidateDefendCommand(commandTokens,errorMessageBuilder))
@@ -46,9 +54,10 @@ public partial class FRoleplayMC
 #endregion
 
 
-#region Defend
+#region Explore
 			case RoleplayingGameCommand.Explore:
-				ResolveExploreCommand(commandTokens);
+				if (ValidateExploreCommand(commandTokens,errorMessageBuilder))
+					ResolveExploreCommand(commandTokens);
 				break;
 #endregion
 

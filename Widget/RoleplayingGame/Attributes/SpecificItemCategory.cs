@@ -1,24 +1,27 @@
+using FChatApi.Enums;
+using RoleplayingGame.Enums;
+
 namespace RoleplayingGame.Attributes;
 
 [AttributeUsage(AttributeTargets.All)]
-sealed class ShortFormAttribute : Attribute
+sealed class SpecificItemCategoryAttribute : Attribute
 {
 		// See the attribute guidelines at
 		//  http://go.microsoft.com/fwlink/?LinkId=85236
-		readonly string _value;
+		readonly ItemCategory _value;
 		
 		// This is a positional argument
-		public ShortFormAttribute(string description)
+		public SpecificItemCategoryAttribute(ItemCategory value)
 		{
-				this._value = description;
+				this._value = value;
 				
 				// TODO: Implement code here
 				/* throw new System.NotImplementedException(); */
 		}
 		
-		public string Description
+		public ItemCategory Category
 		{
-				get { return _value; }
+			get { return this._value; }
 		}
 		
 		// This is a named argument

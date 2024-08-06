@@ -51,6 +51,43 @@ public class CharacterTracker
 #endregion
 
 
+#region Lookup > By Id
+	public CharacterSheet SingleById(ulong value)
+	{
+		CharacterSheet	result	=	PlayerCharacters.Values.FirstOrDefault(c=>c.ActorId==value)!;
+		if (result == default || result is null)
+		{
+			result	=	OrphanCharacters.Values.FirstOrDefault(c=>c.ActorId==value)!;
+			if (result != default || result is not null)
+			{
+				TryAdoptCharacter(result.User);
+			}
+		}
+		if (result is null || result == default)
+			throw new KeyNotFoundException();
+		return result;
+	}
+	public bool TrySingleById(ulong value,out CharacterSheet result)
+	{
+		result	=	PlayerCharacters.Values.FirstOrDefault(c=>c.ActorId==value)!;
+		if (result != default || result is not null)
+		{
+			return true;
+		}
+		if (result != default || result is not null)
+		{
+			result	=	OrphanCharacters.Values.FirstOrDefault(c=>c.ActorId==value)!;
+			if (result != default || result is not null)
+			{
+				TryAdoptCharacter(result.User);
+				return true;
+			}
+		}
+		return false;
+	}
+#endregion
+
+
 #region Lookup > By Name
 	public CharacterSheet SingleByName(string value)
 	{

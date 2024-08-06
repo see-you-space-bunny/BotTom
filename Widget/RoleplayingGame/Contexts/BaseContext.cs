@@ -5,14 +5,25 @@ using System.Threading.Tasks;
 using FChatApi.Core;
 using FChatApi.Objects;
 using RoleplayingGame.Enums;
+using RoleplayingGame.Interfaces;
 using RoleplayingGame.Objects;
 
 namespace RoleplayingGame.Contexts;
 
-public class BaseContext
+internal class BaseContext : IContext<BaseContext>
 {
-	protected List<Actor> _participants;
-	protected ContextState _state;
+#region (#) Fields
+	protected List<Actor>	_participants;
+	protected ContextState	_state;
+#endregion
+
+
+#region IContext
+	public bool HasParticipant(Actor value)	=>
+		_participants.Any(li=>li==value);
+	
+	public bool HasParticipant(User value)	=>
+		_participants.OfType<CharacterSheet>().Any(li=>li.User==value);
 
 	public BaseContext WithParticipant(Actor value)
 	{
@@ -29,18 +40,21 @@ public class BaseContext
 		return this;
 	}
 
-	
-	internal BaseContext EnqueueMessage(ApiConnection api)
+	public BaseContext EnqueueMessage(ApiConnection api)
 	{
 		var message = new FChatMessageBuilder();
 		
 		api.EnqueueMessage(message);
 		return this;
 	}
+#endregion
 
-	public BaseContext()
+
+#region Constructor
+	internal BaseContext()
 	{
 		_state			= ContextState.Initialized;
 		_participants	= [];
 	}
+#endregion
 }

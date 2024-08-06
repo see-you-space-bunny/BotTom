@@ -11,6 +11,7 @@ using Plugins.Tokenizer;
 using RoleplayingGame.Effects;
 using RoleplayingGame.Enums;
 using RoleplayingGame.Objects;
+using RoleplayingGame.SheetComponents;
 
 namespace RoleplayingGame;
 
@@ -78,10 +79,10 @@ public partial class FRoleplayMC
 			return false;
 		}
 ///////////////////////////// Is cooldown ready?
-		CharacterSheet characterSheet	=	Characters.SingleByUser(commandTokens.Source.Author);
-		if (!characterSheet.CanChangeClass)
+		Cooldown classChangeCooldown	=	Characters.SingleByUser(commandTokens.Source.Author).Cooldowns[CharacterCooldown.ClassChange];
+		if (!classChangeCooldown.Ready)
 		{
-			messageBuilder.WithMessage($"You need to wait [color=yellow]{characterSheet.RemainingClassChangeCooldown}m[/color] before changing your class.");
+			messageBuilder.WithMessage($"You need to wait [color=yellow]{classChangeCooldown.Remaining}m[/color] before changing your class.");
 			return false;
 		}
 /////////////////////////////
@@ -97,6 +98,27 @@ public partial class FRoleplayMC
 		if (!Interactions.TryGetPendingEventsByResponder<AttackEvent>(commandTokens.Source.Author,out _))
 		{
 			messageBuilder.WithMessage("There is nothing for you to defend against.");
+			return false;
+		}
+/////////////////////////////
+		return true;
+	}
+#endregion
+
+
+#region Explore
+	private bool ValidateExploreCommand(CommandTokens commandTokens,FChatMessageBuilder messageBuilder)
+	{
+//////////////// Location ///
+		if (!Enum.TryParse<EncounterZone>(commandTokens.Parameters["Location"],out _))
+		{
+			messageBuilder.WithMessage($"\"{commandTokens.Parameters["Location"]}\" is not a valid location.");
+			return false;
+		}
+///////////////////////////// Has ExplorationSupplies?
+		if (!Characters.SingleByUser(commandTokens.Source.Author).Inventory.ContainsSpecificItem(SpecificItem.ExplorationSupplies))
+		{
+			messageBuilder.WithMessage($"You don't have any Exploration Supplies.");
 			return false;
 		}
 /////////////////////////////

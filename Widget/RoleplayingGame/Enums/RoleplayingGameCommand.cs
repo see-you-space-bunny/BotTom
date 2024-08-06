@@ -37,53 +37,77 @@ public enum RoleplayingGameCommand
 	None,
 
 	[Description("")]
-	[CommandPattern(@"(?i)((?'Attack'[a-zA-Z\-_0-9]{1,24})\s+){0,1}(\[user\]){0,1}(?'Target'[a-zA-Z\-_\s0-9]{1,32})(\[\/user\]){0,1}")]
+	[CommandPattern(@"(?i)((?'Attack'[a-zA-Z\-_0-9]{1,24})\s+){0,1}(\[user\]){0,1}(?'Target'[a-zA-Z\-_\s0-9]{1,32})(\[\/user\]){0,1}[\s+\]$]")]
 	[MinimumPrivilege(Privilege.RegisteredUser)]
 	[UsageScope(CommandScope.Anywhere)]
 	[CommandAlias("a")]
 	Attack,
 
 	[Description("")]
-	[CommandPattern(@"(?i)(?'Class'[a-zA-Z\-_\s]{1,64})")]
+	[CommandPattern(@"(?i)(?'Class'[a-zA-Z\-_\s]{1,64})[\s+\]$]")]
 	[MinimumPrivilege(Privilege.RegisteredUser)]
 	[UsageScope(CommandScope.Anywhere)]
 	[CommandAlias("cc")]
 	ClassChange,
 
 	[Description("")]
+	[CommandPattern(@"[\s+\]$]")]
 	[MinimumPrivilege(Privilege.RegisteredUser)]
 	[UsageScope(CommandScope.Anywhere)]
 	[CommandAlias("d")]
 	Defend,
 
 	[Description("")]
+	[CommandPattern(@"(?i)((?'Location'[a-zA-Z\-_0-9]{3,64})){0,1}[\s+\]$]")]
 	[MinimumPrivilege(Privilege.RegisteredUser)]
 	[UsageScope(CommandScope.Whisper)]
 	[CommandAlias("e")]
 	Explore,
 
 	[Description("")]
-	[CommandPattern(@"(?i)((\[user\]){0,1}(?'Target'[a-zA-Z\-_\s0-9]{1,32})(\[\/user\]){0,1}){0,1}")]
+	[CommandPattern(@"(?i)((?'ItemSlot'[0-9]{1,7})|((\[user\]){0,1}(?'Target'[a-zA-Z\-_\s0-9]{1,32})(\[\/user\]){0,1})){0,1}[\s+\]$]")]
 	[MinimumPrivilege(Privilege.RegisteredUser)]
 	[UsageScope(CommandScope.Anywhere)]
 	[CommandAlias("i")]
 	Inspect,
 
 	[Description("")]
+	[CommandPattern(@"(?i)((\[user\]){0,1}(?'Target'[a-zA-Z\-_\s0-9]{1,32})(\[\/user\]){0,1}){0,1}[\s+\]$]")]
 	[MinimumPrivilege(Privilege.RegisteredUser)]
 	[UsageScope(CommandScope.Anywhere)]
 	[CommandAlias("s")]
 	Status,
 
 	[Description("")]
+	[CommandPattern(@"[\s+\]$]")]
 	[MinimumPrivilege(Privilege.RegisteredUser)]
 	[UsageScope(CommandScope.Whisper)]
 	[CommandAlias("f")]
 	Flee,
 
 	[Description("")]
+	[CommandPattern(@"[\s+\]$]")]
+	[MinimumPrivilege(Privilege.RegisteredUser)]
+	[UsageScope(CommandScope.Whisper)]
+	[CommandAlias("g")]
+	Grind,
+
+	[Description("")]
+	[CommandPattern(@"(?i)(?'ItemSlot'[0-9]{1,7})(\s+(\[user\]){0,1}(?'Target'[a-zA-Z\-_\s0-9]{1,32})(\[\/user\]){0,1}){0,1}[\s+\]$]")]
 	[MinimumPrivilege(Privilege.RegisteredUser)]
 	[UsageScope(CommandScope.Anywhere)]
 	[CommandAlias("u")]
 	Use,
+
+	[Description("")]
+	[CommandPattern(@"(?i)(?'ItemSlot'[0-9]{1,7})(\s+(\[user\]){0,1}(?'Target'[a-zA-Z\-_\s0-9]{1,32})(\[\/user\]){0,1})[\s+\]$]")]
+	[MinimumPrivilege(Privilege.RegisteredUser)]
+	[UsageScope(CommandScope.Anywhere)]
+	Give,
+
+	[Description("")]
+	[CommandPattern(@"(?i)(?'ItemSlot'[0-9]{1,7})\s+(?'ItemCost'[0-9]{1,7})(\s+(\[user\]){0,1}(?'Target'[a-zA-Z\-_\s0-9]{1,32})(\[\/user\]){0,1}){0,1}[\s+\]$]")]
+	[MinimumPrivilege(Privilege.RegisteredUser)]
+	[UsageScope(CommandScope.Anywhere)]
+	Sell,
 }
