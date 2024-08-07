@@ -5,12 +5,24 @@ using Plugins.Attributes;
 
 namespace Plugins.Tokenizer;
 
-public class CommandTokens(FChatMessage fChatMessage, string command, string parameters)
+public class CommandTokens
 {
-	public FChatMessage Source { get; }		= fChatMessage;
-	public string Command { get; }			= command;
-	private readonly string _parameters		= parameters;
-	public Dictionary<string,string> Parameters { get; private set; } = new (StringComparer.InvariantCultureIgnoreCase);
+#region (-) Fields
+	private readonly string _parameters;
+	private readonly string _command;
+	private readonly FChatMessage _source;
+#endregion
+
+
+#region (+) Properties
+	public FChatMessage Source => _source; 
+	public string Command => _command;
+
+	public Dictionary<string,string> Parameters { get; private set; }
+#endregion
+
+
+#region (+) Methods
 	public bool TryGetParameters<TCommand>(out TCommand command) where TCommand : struct, Enum
 	{
 		Parameters.Clear();
@@ -28,7 +40,10 @@ public class CommandTokens(FChatMessage fChatMessage, string command, string par
 		}
 		return false;
 	}
+#endregion
 
+
+#region (#) Methods
 	protected static bool TryParseByAlias<TCommand>(string value, out TCommand result) where TCommand : struct, Enum =>
 		AssembleAliasReference<TCommand>().TryGetValue(value,out result);
 
@@ -47,5 +62,17 @@ public class CommandTokens(FChatMessage fChatMessage, string command, string par
 		}
 		return result;
 	}
+#endregion
+
+
+#region Constructor
+	public CommandTokens(FChatMessage fChatMessage, string command, string parameters)
+	{
+		_source		=	fChatMessage;
+		_command	=	command;
+		_parameters	=	parameters;
+		Parameters	=	new (StringComparer.InvariantCultureIgnoreCase);
+	}
+#endregion
 }
 
