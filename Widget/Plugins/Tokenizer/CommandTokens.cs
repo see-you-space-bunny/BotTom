@@ -30,10 +30,12 @@ public class CommandTokens
 			if (!command.HasEnumAttribute<TCommand,CommandPatternAttribute>())
 				return true;
 			var pattern	= command.GetEnumAttribute<TCommand,CommandPatternAttribute>().Pattern;
-			var groups	= pattern.Match(_parameters).Groups;
+			var match	= pattern.Match(_parameters);
+			if (!match.Success)
+				return false;
 			foreach (string groupname in pattern.GetGroupNames())
 			{
-				Parameters.Add(groupname,groups[groupname].Value);
+				Parameters.Add(groupname,match.Groups[groupname].Value);
 			}
 			return true;
 		}

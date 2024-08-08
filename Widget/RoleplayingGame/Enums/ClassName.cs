@@ -13,4 +13,7 @@ public enum ClassName
 	
 	[Description("")]
 	Merchant	= 0x02,
+	
+	[Description("")]
+	Goblin		= 0x03,
 }

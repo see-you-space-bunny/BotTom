@@ -130,7 +130,9 @@ public static class AttributeExtensions
 	/// <param name="enumValue">The specific const EnumValue from which we want to retrieve the data.</param>
 	/// <returns>The instance of the specified <c>enumValue</c>'s <c>TAttribute</c> as passed in the TypeParameter.</returns>
 	public static bool HasEnumAttribute<TEnum,TAttribute>(this TEnum enumValue) where TEnum : Enum where TAttribute : Attribute =>
-		_staticEnumAttributeLookup.ContainsKey(Tuple.Create(typeof(TEnum), typeof(TAttribute)));
+		_staticEnumAttributeLookup
+			.TryGetValue(Tuple.Create(typeof(TEnum), typeof(TAttribute)), out Dictionary<Enum, Attribute> value) &&
+			value.ContainsKey(enumValue);
 
 	/// <summary>
 	/// Retreives an instance of <c>TAttribute</c> that matches the specified <c>enumValue</c>, using reflection.

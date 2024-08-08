@@ -17,6 +17,7 @@ using Plugins.Tokenizer;
 using Plugins.Core;
 using RoleplayingGame.Systems;
 using RoleplayingGame.Contexts;
+using Plugins.Attributes;
 
 namespace RoleplayingGame;
 
@@ -114,6 +115,12 @@ public partial class FRoleplayMC : FChatPlugin<RoleplayingGameCommand>, IFChatPl
 		AttributeExtensions.ProcessEnumForAttribute<DefaultModifierAttribute	>(typeof(ResourceModifier));
 
 		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute		>(typeof(StatusEffect));
+
+		AttributeExtensions.ProcessEnumForAttribute<DescriptionAttribute		>(typeof(RoleplayingGameCommand));
+		AttributeExtensions.ProcessEnumForAttribute<CommandPatternAttribute		>(typeof(RoleplayingGameCommand));
+		AttributeExtensions.ProcessEnumForAttribute<MinimumPrivilegeAttribute	>(typeof(RoleplayingGameCommand));
+		AttributeExtensions.ProcessEnumForAttribute<UsageScopeAttribute			>(typeof(RoleplayingGameCommand));
+		AttributeExtensions.ProcessEnumForAttribute<CommandAliasAttribute		>(typeof(RoleplayingGameCommand));
 	}
 #endregion
 

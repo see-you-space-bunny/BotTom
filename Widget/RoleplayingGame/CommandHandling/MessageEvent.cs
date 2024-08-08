@@ -23,8 +23,8 @@ public partial class FRoleplayMC
 			return;
 /////////////// ERROR MESSAGE
 		FChatMessageBuilder errorMessageBuilder = new FChatMessageBuilder()
-			.WithAuthor(ApiConnection.CharacterName)
-			.WithRecipient(commandTokens.Source.Author.Name)
+			.WithAuthor(ApiConnection.ApiUser)
+			.WithRecipient(commandTokens.Source.Author)
 			.WithChannel(commandTokens.Source.Channel)
 			.WithMessageType(commandTokens.Source.Channel is not null ? FChatMessageType.Basic : FChatMessageType.Whisper);
 /////////////// DO STUFF HERE

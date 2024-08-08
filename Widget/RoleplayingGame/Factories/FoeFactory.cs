@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using RoleplayingGame.Effects;
 using RoleplayingGame.Enums;
 using RoleplayingGame.Objects;
+using RoleplayingGame.SheetComponents;
 
 namespace RoleplayingGame.Factories;
 
@@ -25,13 +26,6 @@ public class FoeFactory
 				_					=>	SelectRandomEnemyBuilder(enemyGroup),
 			}
 		).WithLevel(level).Build();
-
-	public NonPlayerEnemy CreateNonPlayerEnemy(string name,int level,EnemyChassis enemyBuilder = null!)
-	{
-		enemyBuilder ??= new EnemyChassis(name,EnemyGroup.Custom,EncounterZone.None);
-
-		return enemyBuilder.WithLevel(level).Build();
-	}
 #endregion
 
 

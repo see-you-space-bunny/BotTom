@@ -216,7 +216,7 @@ public class CharacterSheet : Actor
 		_characterNickname		= string.Empty;
 		_useOnlyNickname		= false;
 		_user					= null!;
-		Inventory				= null!;
+		Inventory				= new InventoryManager(100,5);
 		Cooldowns				= [];
 		Cooldowns.Add(CharacterCooldown.ClassChange,new Cooldown(new TimeSpan(0,29,0)));
 	}

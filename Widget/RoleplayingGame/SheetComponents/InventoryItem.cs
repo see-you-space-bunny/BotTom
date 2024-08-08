@@ -15,11 +15,18 @@ namespace RoleplayingGame.SheetComponents;
 
 internal class InventoryItem
 {
+#region (-) Constants
+	private const string TagFormatBasic			=	"[sup]({0})[/sup]";
+	private const string TagFormatWithSource	=	"[sup]({0},{1})[/sup]";
+#endregion
+
+
 #region (-) Fields
-	private readonly ItemCategory	_itemCategory;
-	private readonly SpecificItem	_specificItem;
-	private readonly bool			_occupiesSlot;
-	private readonly ulong			_taggedById;
+	private readonly ItemCategory		_itemCategory;
+	private readonly SpecificItem		_specificItem;
+	private readonly EnvironmentSource	_environmentSource;
+	private readonly bool				_occupiesSlot;
+	private readonly ulong				_taggedById;
 #endregion
 
 
@@ -40,8 +47,8 @@ internal class InventoryItem
 #region (-) Properties
 	private string DefaultDescription	=>
 		_specificItem != SpecificItem.Custom
-			?	_itemCategory.GetEnumAttribute<ItemCategory,DescriptionAttribute>().Description		//	TODO: create attribute
-			:	_specificItem.GetEnumAttribute<SpecificItem,DescriptionAttribute>().Description;	//	TODO: create attribute
+			?	_specificItem.GetEnumAttribute<SpecificItem,DescriptionAttribute>().Description		//	TODO: create attribute
+			:	_itemCategory.GetEnumAttribute<ItemCategory,DescriptionAttribute>().Description;	//	TODO: create attribute
 #endregion
 
 
@@ -53,8 +60,8 @@ internal class InventoryItem
 
 
 #region (~) bool Properties
-	internal bool	IsCustomItem		=>	_specificItem == SpecificItem.Custom;
-	internal bool	OccupiesSlot		=> _occupiesSlot && !Equipped;
+	internal bool	IsCustomItem	=>	_specificItem == SpecificItem.Custom;
+	internal bool	OccupiesSlot	=> _occupiesSlot && !Equipped;
 #endregion
 
 
@@ -96,19 +103,17 @@ internal class InventoryItem
 
 	private string TagsString()
 	{
-		const string FormatBasic	=	"[sup]({0})[/sup]";
-		const string FormatWithTag	=	"[sup]({0},{1})[/sup]";
 		if ( _taggedBy is not null  || _activeStatuses.Any(s=>s.Tagged))
 		{
 			Actor actor	=	_taggedBy ?? _activeStatuses.FirstOrDefault(s=>s.Tagged)?.Source!;
 
 			if (actor is not null)
 			{
-				return string.Format(FormatWithTag,string.Join(',',[.. _activeStatuses.Select(s=>s.ToString())]),actor.CharacterName);
+				return string.Format(TagFormatWithSource,string.Join(',',[.. _activeStatuses.Select(s=>s.ToString())]),actor.CharacterName);
 			}
 			else
 			{
-				return string.Format(FormatBasic,string.Join(',',[.. _activeStatuses.Select(s=>s.ToString())]));
+				return string.Format(TagFormatBasic,string.Join(',',[.. _activeStatuses.Select(s=>s.ToString())]));
 			}
 		}
 		return string.Empty;
@@ -132,18 +137,20 @@ internal class InventoryItem
 		if (reader.ReadBoolean())
 		{
 			result	=	new InventoryItem(
-				(string)		reader.ReadString(),
-				(ItemCategory)	reader.ReadUInt16(),
-				(ulong)			reader.ReadUInt64(),
-				(float)			reader.ReadSingle()
+				(string)			reader.ReadString(),
+				(ItemCategory)		reader.ReadUInt16(),
+				(ulong)				reader.ReadUInt64(),
+				(EnvironmentSource)	reader.ReadUInt16(),
+				(float)				reader.ReadSingle()
 			);
 			//_activeStatuses;
 		}
 		else
 		{
 			result	=	new InventoryItem(
-				(SpecificItem)	reader.ReadUInt16(),
-				(float)			reader.ReadSingle()
+				(SpecificItem)		reader.ReadUInt16(),
+				(EnvironmentSource)	reader.ReadUInt16(),
+				(float)				reader.ReadSingle()
 			);
 		}
 		result.Amount	=	reader.ReadUInt32();
@@ -165,12 +172,14 @@ internal class InventoryItem
 			writer.Write((string)	_name);
 			writer.Write((ushort)	_itemCategory);
 			writer.Write((ulong)	_taggedBy.ActorId);
+			writer.Write((ushort)	_environmentSource);
 			writer.Write((float)	_bulk);
 			//_activeStatuses;
 		}
 		else
 		{
 			writer.Write((ushort)	SpecificItemType);
+			writer.Write((ushort)	_environmentSource);
 		}
 		writer.Write((uint)		_amount);
 
@@ -189,12 +198,19 @@ internal class InventoryItem
 
 
 #region Constructor
+/// <summary>Constructs an item with an actorId as source. Must be Initialized!!</summary>
 	internal InventoryItem(string name,ItemCategory category,ulong taggedById,float bulk = 0.0f,uint amount = 1)
-		: this(name,category,taggedById,[],bulk,amount)
+		: this(name,category,taggedById,EnvironmentSource.None,[],bulk,amount)
+	{ }
+
+/// <summary>Constructs an item with an actorId as source. Must be Initialized!!</summary>
+	internal InventoryItem(string name,ItemCategory category,ulong taggedById,EnvironmentSource environmentSource,float bulk = 0.0f,uint amount = 1)
+		: this(name,category,taggedById,environmentSource,[],bulk,amount)
 	{ }
 	
-	internal InventoryItem(string name,ItemCategory category,ulong taggedById,ActiveStatusEffect[] activeStatuses,float bulk = 0.0f,uint amount = 1)
-		: this(category,bulk,amount)
+/// <summary>Constructs an item with an actorId as source. Must be Initialized!!</summary>
+	internal InventoryItem(string name,ItemCategory category,ulong taggedById,EnvironmentSource environmentSource,ActiveStatusEffect[] activeStatuses,float bulk = 0.0f,uint amount = 1)
+		: this(category,environmentSource,bulk,amount,true)
 	{
 		_name			=	name;
 		_description	=	DefaultDescription;
@@ -204,12 +220,19 @@ internal class InventoryItem
 		_activeStatuses	=	[.. activeStatuses];
 	}
 
+/// <summary>Constructs an item with an actor as source.</summary>
 	internal InventoryItem(string name,ItemCategory category,Actor taggedBy,float bulk = 0.0f,uint amount = 1)
-		: this(name,category,taggedBy,[],bulk,amount)
+		: this(name,category,taggedBy,EnvironmentSource.None,[],bulk,amount)
+	{ }
+
+/// <summary>Constructs an item with an actor as source.</summary>
+	internal InventoryItem(string name,ItemCategory category,Actor taggedBy,EnvironmentSource environmentSource,float bulk = 0.0f,uint amount = 1)
+		: this(name,category,taggedBy,environmentSource,[],bulk,amount)
 	{ }
 	
-	internal InventoryItem(string name,ItemCategory category,Actor taggedBy,ActiveStatusEffect[] activeStatuses,float bulk = 0.0f,uint amount = 1)
-		: this(category,bulk,amount)
+/// <summary>Constructs an item with an actor as source.</summary>
+	internal InventoryItem(string name,ItemCategory category,Actor taggedBy,EnvironmentSource environmentSource,ActiveStatusEffect[] activeStatuses,float bulk = 0.0f,uint amount = 1)
+		: this(category,environmentSource,bulk,amount,true)
 	{
 		_name			=	name;
 		_description	=	DefaultDescription;
@@ -219,30 +242,47 @@ internal class InventoryItem
 		_activeStatuses	=	[.. activeStatuses];
 	}
 
+/// <summary>Constructs a specific pre-defined item.</summary>
 	internal InventoryItem(SpecificItem specificItem,float bulk = 0.0f,uint amount = 1)
-		: this(specificItem.GetEnumAttribute<SpecificItem,SpecificItemCategoryAttribute>().Category,bulk,amount)
+		: this(specificItem,EnvironmentSource.World,bulk,amount)
+	{ }
+
+/// <summary>Constructs a specific pre-defined item.</summary>
+	internal InventoryItem(SpecificItem specificItem,EnvironmentSource environmentSource,float bulk = 0.0f,uint amount = 1)
+		: this(specificItem.GetEnumAttribute<SpecificItem,SpecificItemCategoryAttribute>().Category,environmentSource,bulk,amount,false)
 	{
-		_name			=	specificItem.GetEnumAttribute<SpecificItem,DescriptionAttribute>().Description;	//	TODO: create attribute
-		_description	=	DefaultDescription;
-		_specificItem	=	specificItem;
-		_taggedBy		=	null!;
-		_activeStatuses	=	[];	//	TODO: create attribute
+		_name				=	specificItem.GetEnumAttribute<SpecificItem,DescriptionAttribute>().Description;	//	TODO: create attribute
+		_description		=	DefaultDescription;
+		_specificItem		=	specificItem;
+		_taggedBy			=	null!;
+		_activeStatuses		=	[];	//	TODO: create attribute
 	}
 #endregion
 
 
 #region Private Constructor
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-	private InventoryItem(ItemCategory category,float bulk,uint amount)
+	private InventoryItem(ItemCategory category,EnvironmentSource environmentSource,float bulk,uint amount,bool occupiesSlot) : this(bulk,amount,occupiesSlot)
 	{
-		_itemCategory	=	category;
-		_bulk			=	bulk;
-		_amount			=	amount;
+		_itemCategory		=	category;
+		_environmentSource	=	environmentSource;
+	}
+
+	private InventoryItem(float bulk,uint amount,bool occupiesSlot) : this(occupiesSlot)
+	{
+		_bulk	=	bulk;
+		_amount	=	amount;
+	}
+
+	private InventoryItem(bool occupiesSlot) : this()
+	{
+		_occupiesSlot	=	occupiesSlot;
 	}
 
 	private InventoryItem()
 	{
-		Equipped	=	false;
+		Equipped		=	false;
+		_occupiesSlot	=	true;
 	}
 #pragma warning restore CS8618
 #endregion

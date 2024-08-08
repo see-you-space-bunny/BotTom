@@ -4,15 +4,24 @@ using RoleplayingGame.Systems;
 
 namespace RoleplayingGame.SheetComponents;
 
-public class ClassLevels(Actor parent,CharacterClass @class)
+public class ClassLevels
 {
-	private Actor _parent		= parent;
-	
-	public CharacterClass Class	= @class;
+#region (-) Fields
+	private Actor _parent;
+	public CharacterClass Class;
+	private ClassName ClassName	=>	Class.Name;
+#endregion
 
-	private ClassName ClassName	=> Class.Name;
+
+#region (-) Records
+	private readonly List<(DateTime When,ulong Id,int Value,int Actual)>				_lifetimeLevelsPvP	= [];
+	private readonly List<(DateTime When,EnvironmentSource Id,int Value,int Actual)>	_lifetimeLevelsPvE	= [];
+	private readonly List<(DateTime When,ulong Id,int Value,int Actual)>				_currentLevelsPvP	= [];
+	private readonly List<(DateTime When,EnvironmentSource Id,int Value,int Actual)>	_currentLevelsPvE	= [];
+#endregion
 
 
+#region (+) Modify
 	public void Modify(DateTime when,ulong source,int value)
 	{
 		int actual = (int)((value + CurrentLevel > 0 ?
@@ -27,46 +36,34 @@ public class ClassLevels(Actor parent,CharacterClass @class)
 					Math.Max(value + CurrentLevel, _parent.LevelCap)) - CurrentLevel);
 		_currentLevelsPvE.Add((when,source,value,actual));
 	}
+#endregion
 
+
+#region (+) Lifetime
 	public int LifetimeGain	=> _lifetimeLevelsPvP.Sum(li=>li.Actual > 0 ? li.Actual : 0) + _lifetimeLevelsPvE.Sum(li=>li.Actual > 0 ? li.Actual : 0);
 	public int LifetimeLoss	=> _lifetimeLevelsPvP.Sum(li=>li.Actual < 0 ? li.Actual : 0) + _lifetimeLevelsPvE.Sum(li=>li.Actual < 0 ? li.Actual : 0);
 	public int LifetimeTotal=> _lifetimeLevelsPvP.Sum(li=>li.Actual) + _lifetimeLevelsPvE.Sum(li=>li.Actual);
+#endregion
 
+
+#region (+) Current
 	public int CurrentGain	=> _currentLevelsPvP.Sum(li=>li.Actual > 0 ? li.Actual : 0) + _currentLevelsPvE.Sum(li=>li.Actual > 0 ? li.Actual : 0);
 	public int CurrentLoss	=> _currentLevelsPvP.Sum(li=>li.Actual < 0 ? li.Actual : 0) + _currentLevelsPvE.Sum(li=>li.Actual < 0 ? li.Actual : 0);
 	public int CurrentLevel	=> _currentLevelsPvP.Sum(li=>li.Actual) + _currentLevelsPvE.Sum(li=>li.Actual);
-
-	private readonly List<(DateTime When,ulong Id,int Value,int Actual)>				_lifetimeLevelsPvP	= [];
-	private readonly List<(DateTime When,EnvironmentSource Id,int Value,int Actual)>	_lifetimeLevelsPvE	= [];
-	private readonly List<(DateTime When,ulong Id,int Value,int Actual)>				_currentLevelsPvP	= [];
-	private readonly List<(DateTime When,EnvironmentSource Id,int Value,int Actual)>	_currentLevelsPvE	= [];
+#endregion
 
 
 #region Serialization
 	private static (DateTime When,ulong Id,int Value,int Actual) DeserializePvPModifier(BinaryReader reader)
 		=> (
-			new DateTime(
-				year:	reader.ReadInt32(),
-				month:	reader.ReadUInt16(),
-				day:	reader.ReadUInt16(),
-				hour:	reader.ReadUInt16(),
-				minute:	reader.ReadUInt16(),
-				second:	0
-			),
+			new DateTime(reader.ReadInt64()),
 			reader.ReadUInt64(),
 			reader.ReadInt32(),
 			reader.ReadInt32()
 		);
 	private static (DateTime When,EnvironmentSource Id,int Value,int Actual) DeserializePvEModifier(BinaryReader reader)
 		=> (
-			new DateTime(
-				year:	reader.ReadInt32(),
-				month:	reader.ReadUInt16(),
-				day:	reader.ReadUInt16(),
-				hour:	reader.ReadUInt16(),
-				minute:	reader.ReadUInt16(),
-				second:	0
-			),
+			new DateTime(reader.ReadInt64()),
 			(EnvironmentSource)	reader.ReadUInt16(),
 			reader.ReadInt32(),
 			reader.ReadInt32()
@@ -99,22 +96,14 @@ public class ClassLevels(Actor parent,CharacterClass @class)
 
 	private static void SerializeModifier(BinaryWriter writer,(DateTime When,ulong Id,int Value,int Actual) modifier)
 	{
-		writer.Write((int)		modifier.When.Year);
-		writer.Write((ushort)	modifier.When.Month);
-		writer.Write((ushort)	modifier.When.Day);
-		writer.Write((ushort)	modifier.When.Hour);
-		writer.Write((ushort)	modifier.When.Minute);
+		writer.Write((long)		modifier.When.Ticks);
 		writer.Write((ulong)	modifier.Id);
 		writer.Write((int)		modifier.Value);
 		writer.Write((int)		modifier.Actual);
 	}
 	private static void SerializeModifier(BinaryWriter writer,(DateTime When,EnvironmentSource Id,int Value,int Actual) modifier)
 	{
-		writer.Write((int)		modifier.When.Year);
-		writer.Write((ushort)	modifier.When.Month);
-		writer.Write((ushort)	modifier.When.Day);
-		writer.Write((ushort)	modifier.When.Hour);
-		writer.Write((ushort)	modifier.When.Minute);
+		writer.Write((long)		modifier.When.Ticks);
 		writer.Write((ushort)	modifier.Id);
 		writer.Write((int)		modifier.Value);
 		writer.Write((int)		modifier.Actual);
@@ -144,6 +133,15 @@ public class ClassLevels(Actor parent,CharacterClass @class)
 		{
 			SerializeModifier(writer,modifier);
 		}
+	}
+#endregion
+
+
+#region Constructor
+	public ClassLevels(Actor parent,CharacterClass @class)
+	{
+		_parent		=	parent;
+		Class		=	@class;
 	}
 #endregion
 }

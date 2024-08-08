@@ -6,12 +6,12 @@ namespace RoleplayingGame.SheetComponents;
 
 public class CharacterClass
 {
-	#region Properties
+#region (+) Properties
 	public ClassName Name { get; }
-	public Dictionary<Resource,Dictionary<ResourceModifier,float>> ResourceModifiers { get; }
-	public Dictionary<Resource,Dictionary<Ability,float>> ResourceAbilityScales { get; }
-	public Dictionary<Ability,float> AbilityGrowth { get; }
-    #endregion
+	public Dictionary<Resource,Dictionary<ResourceModifier,float>>	ResourceModifiers		{ get; }
+	public Dictionary<Resource,Dictionary<Ability,float>>			ResourceAbilityScales	{ get; }
+	public Dictionary<Ability,float>								AbilityGrowth			{ get; }
+#endregion
 
 	public CharacterClass(
 		ClassName name,
@@ -31,12 +31,19 @@ public class CharacterClass
         return Name.ToString();
 	}
 	
-    public string ToStringDescription()
+    public string ToString(bool withDescription)
     {
-        return string.Format(
-			"[b][u]{0}[/u][/b]\n{1}\n[sub]Combined Growth: {2}[/sub]",
-			Name.ToString(),
-			Name.GetEnumAttribute<ClassName,DescriptionAttribute>().Description,
-			0.0f);
+		if (withDescription)
+		{
+			return string.Format(
+				"[b][u]{0}[/u][/b]\n{1}\n[sub]Combined Growth: {2}[/sub]",
+				Name.ToString(),
+				Name.GetEnumAttribute<ClassName,DescriptionAttribute>().Description,
+				0.0f);
+		}
+		else
+		{
+			return ToString();
+		}
 	}
 }

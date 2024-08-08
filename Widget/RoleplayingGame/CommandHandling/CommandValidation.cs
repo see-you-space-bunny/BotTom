@@ -14,7 +14,7 @@ public partial class FRoleplayMC
 	{
 //////////////// Attack /////
 		if (!commandTokens.Parameters.TryAdd("Attack","Basic"))
-			if (!Enum.TryParse<AttackType>(commandTokens.Parameters["Attack"],out _))
+			if (!Enum.TryParse<AttackType>(commandTokens.Parameters["Attack"],true,out _))
 			{
 				messageBuilder.WithMessage($"{commandTokens.Parameters["Attack"]} is not a valid type of attack.");
 				return false;
@@ -65,7 +65,7 @@ public partial class FRoleplayMC
 	private bool ValidateClassChangeCommand(CommandTokens commandTokens,FChatMessageBuilder messageBuilder)
 	{
 //////////////// Class //////
-		if (!Enum.TryParse<ClassName>(commandTokens.Parameters["Class"],out _))
+		if (!Enum.TryParse<ClassName>(commandTokens.Parameters["Class"],true,out _))
 		{
 			messageBuilder.WithMessage($"\"{commandTokens.Parameters["Class"]}\" is not a valid class.");
 			return false;
@@ -102,7 +102,7 @@ public partial class FRoleplayMC
 	private bool ValidateExploreCommand(CommandTokens commandTokens,FChatMessageBuilder messageBuilder)
 	{
 //////////////// Location ///
-		if (!Enum.TryParse<EncounterZone>(commandTokens.Parameters["Location"],out _))
+		if (!Enum.TryParse<EncounterZone>(commandTokens.Parameters["Location"],true,out _))
 		{
 			messageBuilder.WithMessage($"\"{commandTokens.Parameters["Location"]}\" is not a valid location.");
 			return false;

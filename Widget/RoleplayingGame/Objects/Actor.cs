@@ -251,9 +251,9 @@ public class Actor : GameObject
 
 	public Actor ChangeClass(CharacterClass @class)
 	{
-		if (!_classLevels.TryGetValue(_activeClass, out ClassLevels ?activeClassLevels))
+		if (!_classLevels.ContainsKey(_activeClass))
 		{
-			activeClassLevels = new ClassLevels(this,@class);
+			ClassLevels activeClassLevels = new (this,@class);
             _classLevels.Add(_activeClass, activeClassLevels);
 		}
 		_activeClass = @class.Name;

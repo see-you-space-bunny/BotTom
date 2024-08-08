@@ -11,7 +11,21 @@ internal static class ChatMessageAssistant
 		if (BotInfoAssistant.CommandParser.TryConvertCommand(
 			new FChatMessageBuilder()
 				.WithRecipient(new User() { Name = BotInfoAssistant.BotName })
-				.WithAuthor(new User() { Name = user })
+				.WithAuthor(new User() { Name = user, PrivilegeLevel = Privilege.RegisteredUser })
+				.WithMessage(message)
+				.Build(),
+			out CommandTokens? command
+		))
+			return command!;
+		else
+			throw new ArgumentException($"Failed to parse the following message: {message}",nameof(message));
+	}
+	internal static CommandTokens NewDummyMessage(User user,string message)
+	{
+		if (BotInfoAssistant.CommandParser.TryConvertCommand(
+			new FChatMessageBuilder()
+				.WithRecipient(new User() { Name = BotInfoAssistant.BotName })
+				.WithAuthor(user)
 				.WithMessage(message)
 				.Build(),
 			out CommandTokens? command
