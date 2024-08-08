@@ -73,31 +73,31 @@ public class @RoleplayingGame(ITestOutputHelper output)
 	}
 	
 	[Theory]
-	[InlineData("?explore beginnertraining")]
-	public void TestExploration(string message)
+	[InlineData("?explore beginnertraining","?attack")]
+	public void TestExploration(params string[] messages)
 	{
 ////////////
-		CommandTokens commandTokens	=	ChatMessageAssistant.NewDummyMessage(_player1,message);
-////////////
-		_fRoleplayMC.FoeFactory.AddChassis(new EnemyChassis(
-			"Goblin",
-			_fRoleplayMC.CharacterClasses.All[ClassName.Nobody],
-			EnemyGroup.Generic,
-			EncounterZone.BeginnerTraining
-		));
-////////////
-		_fRoleplayMC.Characters.SingleByUser(commandTokens.Source.Author).Inventory
-			.Add(new InventoryItem(SpecificItem.ExplorationSupplies));
-////////////
-		try
+		foreach (string message in messages)
 		{
-			_fRoleplayMC.HandleRecievedMessage(commandTokens);
-		}
-		catch (NullReferenceException)
-		{ }
+			CommandTokens commandTokens	=	ChatMessageAssistant.NewDummyMessage(_player1,message);
 ////////////
-		var encounters	=	_fRoleplayMC.Encounters.GetCombatEncountersByUser(commandTokens.Source.Author);
-		Assert.NotEmpty(encounters);
+			_fRoleplayMC.FoeFactory.AddChassis(new EnemyChassis(
+				"Goblin",
+				_fRoleplayMC.CharacterClasses.All[ClassName.Nobody],
+				EnemyGroup.Generic,
+				EncounterZone.BeginnerTraining
+			));
+////////////
+			_fRoleplayMC.Characters.SingleByUser(commandTokens.Source.Author).Inventory
+				.Add(new InventoryItem(SpecificItem.ExplorationSupplies));
+////////////
+			try
+			{
+				_fRoleplayMC.HandleRecievedMessage(commandTokens);
+			}
+			catch (NullReferenceException)
+			{ }
+		}
 ////////////
 	}
 

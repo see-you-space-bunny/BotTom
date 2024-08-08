@@ -2,7 +2,6 @@ using FChatApi.Core;
 using FChatApi.Objects;
 using RoleplayingGame.Enums;
 using RoleplayingGame.SheetComponents;
-using RoleplayingGame.Statistics;
 using RoleplayingGame.Systems;
 
 namespace RoleplayingGame.Objects;
@@ -129,9 +128,6 @@ public class CharacterSheet : Actor
 /////	Inventory
 		characterSheet.Inventory = InventoryManager.Deserialize(reader);
 
-/////	Statistics
-		characterSheet.Statistics = ActorStatistics.Deserialize(reader);
-
 /////	End
 		return characterSheet;
 	}
@@ -178,9 +174,6 @@ public class CharacterSheet : Actor
 
 /////	Inventory
 		Inventory.Serialize(writer);
-
-/////	Statistics
-		Statistics.Serialize(writer);
 	}
 #endregion
 

@@ -19,6 +19,12 @@ internal class BaseContext : IContext<BaseContext>
 
 
 #region IContext
+	public bool HasNpcParticipant()	=>
+		_participants.Any(li=>li is NonPlayerEnemy);
+
+	public TParticipant FirstNpcParticipant<TParticipant>() where TParticipant : Actor	=>
+		(_participants.First(li=>li is NonPlayerEnemy) as TParticipant)!;
+
 	public bool HasParticipant(Actor value)	=>
 		_participants.Any(li=>li==value);
 	

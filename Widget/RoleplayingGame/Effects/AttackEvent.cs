@@ -60,7 +60,7 @@ public class AttackEvent : IPendingEvent
 
 
 #region (#) Properties
-	protected float	_accuracyRatio	=> Accuracy == 0 ? Math.Max(_remainingAccuracy / Accuracy,0) : -1;
+	protected float	_accuracyRatio	=> Accuracy != 0 ? Math.Max(_remainingAccuracy / Accuracy,0) : -1;
 #endregion
 
 
@@ -196,26 +196,15 @@ public class AttackEvent : IPendingEvent
 				break;
 		}
 
-		if (!TryToHit(Target.Evasion,Target.Health))
+		if (TryToHit(Target.Evasion,Target.Health))
 		{ }
 
-		if (!TryToImpact(Target.Protection))
+		if (TryToImpact(Target.Protection))
 		{ }
 
-		if (!TryToHarm(Target.Health))
+		if (TryToHarm(Target.Health))
 		{
             //	StatusEffect.Defeated
-		}
-
-		if (EnvironmentSource != EnvironmentSource.None)
-		{
-			Target.Statistics.RecordIncomingAttackResults(Source,(ulong)_appliedAccuracy,_hit,(ulong)_appliedImpact,_protBreak,(ulong)_appliedHarm,_kill,(ulong)_appliedOverkill);
-			Source.Statistics.RecordOutgoingAttackResults(Target,(ulong)_appliedAccuracy,_hit,(ulong)_appliedImpact,_protBreak,(ulong)_appliedHarm,_kill,(ulong)_appliedOverkill);
-		}
-		else
-		{
-			Target.Statistics.RecordIncomingAttackResults(EnvironmentSource,(ulong)_appliedAccuracy,_hit,(ulong)_appliedImpact,_protBreak,(ulong)_appliedHarm,_kill,(ulong)_appliedOverkill);
-			Source.Statistics.RecordOutgoingAttackResults(EnvironmentSource,(ulong)_appliedAccuracy,_hit,(ulong)_appliedImpact,_protBreak,(ulong)_appliedHarm,_kill,(ulong)_appliedOverkill);
 		}
 		return this;
 	}
@@ -236,7 +225,7 @@ public class AttackEvent : IPendingEvent
 		else
 		{
 			message
-				.WithRecipient(_responder)
+				.WithRecipient(_responder ?? _initiator)
 				.WithMessageType(FChatMessageType.Whisper);
 		}
 		

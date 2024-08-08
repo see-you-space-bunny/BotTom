@@ -10,6 +10,8 @@ namespace RoleplayingGame.Interfaces;
 
 internal interface IContext<TContext>
 {
+	internal bool HasNpcParticipant();
+	internal TParticipant FirstNpcParticipant<TParticipant>() where TParticipant : Actor;
 	internal bool HasParticipant(Actor value);
 	internal bool HasParticipant(User value);
 	internal TContext WithParticipant(Actor value);

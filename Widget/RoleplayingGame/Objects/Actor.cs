@@ -3,7 +3,6 @@ using RoleplayingGame.Attributes;
 using RoleplayingGame.Enums;
 using RoleplayingGame.Effects;
 using RoleplayingGame.SheetComponents;
-using RoleplayingGame.Statistics;
 using RoleplayingGame.Interfaces;
 
 namespace RoleplayingGame.Objects;
@@ -40,40 +39,9 @@ public class Actor : GameObject
 	public ulong ActorId	=>	_actorId;
 #endregion
 
-#region (+P) Meta
-	public ActorStatistics Statistics;
-#endregion
-
 #region Interaction
 	public Actor AttackActorTarget(AttackType attackType,Actor target)
 	{
-		return this;
-	}
-
-	public Actor ApplyAttackEffect(AttackEvent attack)
-	{
-		if (!attack.TryToHit(Evasion,Health))
-		{ }
-
-		if (!attack.TryToImpact(Protection))
-		{ }
-
-		if (!attack.TryToHarm(Health))
-		{
-            //StatusEffect.Defeated
-		}
-
-		(ulong EvasionLoss,bool Hit,ulong ProtectionLoss,bool ProtBreak,ulong HealthLoss,bool Kill,ulong Overkill) = attack.AttackInfo();
-		if (attack.EnvironmentSource != EnvironmentSource.None)
-		{
-			Statistics.RecordIncomingAttackResults(attack.Source,EvasionLoss,Hit,ProtectionLoss,ProtBreak,HealthLoss,Kill,Overkill);
-			Statistics.RecordOutgoingAttackResults(attack.Source,EvasionLoss,Hit,ProtectionLoss,ProtBreak,HealthLoss,Kill,Overkill);
-		}
-		else
-		{
-			Statistics.RecordIncomingAttackResults(attack.EnvironmentSource,EvasionLoss,Hit,ProtectionLoss,ProtBreak,HealthLoss,Kill,Overkill);
-			Statistics.RecordOutgoingAttackResults(attack.EnvironmentSource,EvasionLoss,Hit,ProtectionLoss,ProtBreak,HealthLoss,Kill,Overkill);
-		}
 		return this;
 	}
 
@@ -295,8 +263,6 @@ public class Actor : GameObject
 		_statusEffects = [];
 
 		_classLevels = [];
-
-		Statistics = new ActorStatistics();
 	}
 	public Actor(string name,ulong userId) : base(0)
 	{
@@ -319,8 +285,6 @@ public class Actor : GameObject
 		_statusEffects = [];
 
 		_classLevels = [];
-
-		Statistics = new ActorStatistics();
 	}
 #endregion
 }
