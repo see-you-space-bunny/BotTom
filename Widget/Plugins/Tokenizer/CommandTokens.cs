@@ -27,6 +27,8 @@ public class CommandTokens
 		Parameters.Clear();
 		if (Enum.TryParse(Command,true,out command) || TryParseByAlias(Command,out command))
 		{
+			if (string.IsNullOrWhiteSpace(_parameters))
+				return true;
 			if (!command.HasEnumAttribute<TCommand,CommandPatternAttribute>())
 				return true;
 			var pattern	= command.GetEnumAttribute<TCommand,CommandPatternAttribute>().Pattern;

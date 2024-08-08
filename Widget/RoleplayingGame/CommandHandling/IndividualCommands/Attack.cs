@@ -19,10 +19,25 @@ public partial class FRoleplayMC
 	private void InitiateAttackCommand(CommandTokens commandTokens)
 	{
 ///////////// GET KEY VALUES
+		if (commandTokens.Source.MessageType == FChatMessageType.Whisper)
+		{
+			AttackNpc(commandTokens);
+		}
+////////////////////////////
+		else if (commandTokens.Source.MessageType == FChatMessageType.Basic)
+		{
+			AttackUser(commandTokens);
+		}
+//////////////
+	}
+
+	private void AttackUser(CommandTokens commandTokens)
+	{
+///////////// GET KEY VALUES
 		AttackType		attackType	=	Enum.Parse<AttackType>(commandTokens.Parameters["Attack"]);
+		CharacterSheet	attacker	=	Characters.SingleByUser(commandTokens.Source.Author);
 		User			userTarget	=	ApiConnection.Users.SingleByName(commandTokens.Parameters["Target"]);
 		CharacterSheet	defender	=	Characters.SingleByUser(userTarget);
-		CharacterSheet	attacker	=	Characters.SingleByUser(commandTokens.Source.Author);
 ////////////////////////////
 		AttackEvent		attack		=	AttackPool[attackType]
 			.BuildAttack(defender,attacker)
@@ -30,6 +45,24 @@ public partial class FRoleplayMC
 			.WithResponder(userTarget)
 			.WithChannel(commandTokens.Source.Channel);
 		Interactions.Add(attack);
+//////////////
+	}
+
+	private void AttackNpc(CommandTokens commandTokens)
+	{
+///////////// GET KEY VALUES
+		AttackType		attackType	=	Enum.Parse<AttackType>(commandTokens.Parameters["Attack"]);
+		CharacterSheet	attacker	=	Characters.SingleByUser(commandTokens.Source.Author);
+		NonPlayerEnemy	defender	=	Encounters
+			.GetCombatEncountersByUser(commandTokens.Source.Author)
+			.FirstOrDefault(e=>e.HasNpcParticipant())
+			?.FirstNpcParticipant<NonPlayerEnemy>()!;
+////////////////////////////
+		_	=	AttackPool[attackType]
+			.BuildAttack(defender,attacker)
+			.WithInitiator(commandTokens.Source.Author)
+			.ExecuteEffect(RoleplayingGameCommand.Defend)
+			.EnqueueMessage(FChatApi);
 //////////////
 	}
 }

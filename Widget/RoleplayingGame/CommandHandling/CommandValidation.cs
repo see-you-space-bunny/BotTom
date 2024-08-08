@@ -1,4 +1,5 @@
 using FChatApi.Core;
+using FChatApi.Enums;
 using FChatApi.Objects;
 using Plugins.Tokenizer;
 using RoleplayingGame.Effects;
@@ -16,14 +17,42 @@ public partial class FRoleplayMC
 		if (!commandTokens.Parameters.TryAdd("Attack","Basic"))
 			if (!Enum.TryParse<AttackType>(commandTokens.Parameters["Attack"],true,out _))
 			{
-				messageBuilder.WithMessage($"{commandTokens.Parameters["Attack"]} is not a valid type of attack.");
-				return false;
+				if (commandTokens.Source.MessageType == FChatMessageType.Basic)
+				{
+					if (commandTokens.Parameters.TryGetValue("Target",out string ?target))
+					{
+						commandTokens.Parameters["Target"] = $"{commandTokens.Parameters["Attack"]} {target}";
+					}
+					else
+					{
+						commandTokens.Parameters.Add("Target",commandTokens.Parameters["Attack"]);
+					}
+					commandTokens.Parameters["Attack"] = "Basic";
+				}
+				else
+				{
+					messageBuilder.WithMessage($"{commandTokens.Parameters["Attack"]} is not a valid type of attack.");
+					return false;
+				}
 			}
 //////////////// Target /////
 		commandTokens.Parameters.TryGetValue("Target",out string ?targetName);
 		if (string.IsNullOrWhiteSpace(targetName))
 		{
-			throw new NullReferenceException();
+			if (commandTokens.Source.MessageType == FChatMessageType.Whisper)
+			{
+				if (Encounters
+					.GetCombatEncountersByUser(commandTokens.Source.Author)
+					.FirstOrDefault(e=>e.HasNpcParticipant()) is null)
+				{
+					messageBuilder.WithMessage("You're not engaged in combat with any NPCs.");
+					return false;
+				}
+			}
+			else
+			{
+				throw new NullReferenceException();
+			}
 		}
 ///////////////////////////// Target is registered?
 		else if (!ApiConnection.Users.RegisteredUsers.ContainsKey(targetName))
