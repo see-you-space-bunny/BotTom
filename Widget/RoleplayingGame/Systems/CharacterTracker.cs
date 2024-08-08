@@ -32,7 +32,7 @@ public class CharacterTracker
 				TryAdoptCharacter(value);
 			}
 		}
-		if (result is null || result == default)
+		if (result is null)
 			throw new KeyNotFoundException();
 		return result;
 	}
@@ -55,29 +55,29 @@ public class CharacterTracker
 	public CharacterSheet SingleById(ulong value)
 	{
 		CharacterSheet	result	=	PlayerCharacters.Values.FirstOrDefault(c=>c.ActorId==value)!;
-		if (result == default || result is null)
+		if (result is null)
 		{
 			result	=	OrphanCharacters.Values.FirstOrDefault(c=>c.ActorId==value)!;
-			if (result != default || result is not null)
+			if (result is not null)
 			{
 				TryAdoptCharacter(result.User);
 			}
 		}
-		if (result is null || result == default)
+		if (result is null)
 			throw new KeyNotFoundException();
 		return result;
 	}
 	public bool TrySingleById(ulong value,out CharacterSheet result)
 	{
 		result	=	PlayerCharacters.Values.FirstOrDefault(c=>c.ActorId==value)!;
-		if (result != default || result is not null)
+		if (result is not null)
 		{
 			return true;
 		}
-		if (result != default || result is not null)
+		if (result is not null)
 		{
 			result	=	OrphanCharacters.Values.FirstOrDefault(c=>c.ActorId==value)!;
-			if (result != default || result is not null)
+			if (result is not null)
 			{
 				TryAdoptCharacter(result.User);
 				return true;
@@ -92,22 +92,22 @@ public class CharacterTracker
 	public CharacterSheet SingleByName(string value)
 	{
 		var result = PlayerCharacters.Values.SingleOrDefault(pc=>pc.CharacterName == value);
-		if (result == default)
+		if (result is null)
 		{
 			OrphanCharacters.TryGetValue(value,out result);
-			if (result is not null && result != default)
+			if (result is not null)
 			{
 				TryAdoptCharacter(ApiConnection.Users.SingleByName(value));
 			}
 		}
-		if (result is null || result == default)
+		if (result is null)
 			throw new KeyNotFoundException();
 		return result;
 	}
 	public bool TrySingleByName(string value,out CharacterSheet result)
 	{
 		result = PlayerCharacters.Values.SingleOrDefault(pc=>pc.CharacterName == value)!;
-		if (result is not null && result != default)
+		if (result is not null)
 		{
 			return true;
 		}
@@ -153,6 +153,21 @@ public class CharacterTracker
 			return true;
 		}
 		return false;
+	}
+#endregion
+
+
+#region Initialize
+	internal void Initialize()
+	{
+		foreach (CharacterSheet characterSheet in PlayerCharacters.Values)
+		{
+			characterSheet.Initialize(this);
+		}
+		foreach (CharacterSheet characterSheet in OrphanCharacters.Values)
+		{
+			characterSheet.Initialize(this);
+		}
 	}
 #endregion
 

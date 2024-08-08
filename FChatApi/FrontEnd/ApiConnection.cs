@@ -88,7 +88,7 @@ public partial class ApiConnection
 		UserName			= username;
 		CharacterName		= GetMyCharacterList().FirstOrDefault(c=>c.Equals(charactername,StringComparison.InvariantCultureIgnoreCase));
 
-		if (CharacterName == default)
+		if (CharacterName is null)
 		{
 			throw new ArgumentException("Cannot log into a character not on your character list.");
 		}

@@ -38,7 +38,7 @@ public class BoardState(MatchPlayer player1,MatchPlayer player2)
 
 	internal string LastGameAction = IntroMessage;
 
-	internal bool AwaitingChannel => Channel == null || Channel == default;
+	internal bool AwaitingChannel => Channel is null;
 
 	internal bool WelcomeMessageSent = false;
 

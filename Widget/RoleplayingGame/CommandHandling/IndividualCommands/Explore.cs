@@ -10,9 +10,9 @@ public partial class FRoleplayMC
 	private void ResolveExploreCommand(CommandTokens commandTokens)
 	{
 ///////////// GET KEY VALUES
-		CharacterSheet characterSheet	= Characters.SingleByUser(commandTokens.Source.Author);
+		CharacterSheet characterSheet	=	Characters.SingleByUser(commandTokens.Source.Author);
 ////////////////////////////
-		CombatContext context	= Encounters.NewCombatEncounter();
+		CombatContext context			=	Encounters.NewCombatEncounter();
 		context.WithParticipant(characterSheet);
 ////////////////////////////
 		context.EnqueueMessage(FChatApi);

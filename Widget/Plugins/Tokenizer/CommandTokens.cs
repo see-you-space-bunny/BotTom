@@ -17,7 +17,6 @@ public class CommandTokens
 #region (+) Properties
 	public FChatMessage Source => _source; 
 	public string Command => _command;
-
 	public Dictionary<string,string> Parameters { get; private set; }
 #endregion
 

@@ -73,7 +73,7 @@ public class PlayerCharacter
 			reader.ReadUInt16();
 			reader.ReadInt32();
 		}
-		return default!;
+		return null!;
 	}
 
 	public void Serialize(BinaryWriter writer)

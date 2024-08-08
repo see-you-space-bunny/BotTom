@@ -46,9 +46,23 @@ public enum RoleplayingGameCommand
 	[Description("")]
 	[CommandPattern(@"(?i)(?'Class'[a-zA-Z\-_\s]{1,64})[\s+\]$]")]
 	[MinimumPrivilege(Privilege.RegisteredUser)]
-	[UsageScope(CommandScope.Anywhere)]
+	[UsageScope(CommandScope.Whisper)]
 	[CommandAlias("cc")]
 	ClassChange,
+
+	[Description("")]
+	[CommandPattern(@"(?i)(?'Class'[a-zA-Z\-_\s]{1,32})[\s+\]$]")]
+	[MinimumPrivilege(Privilege.RegisteredUser)]
+	[UsageScope(CommandScope.Whisper)]
+	[CommandAlias("cc")]
+	Classes,
+
+	[Description("")]
+	[CommandPattern(@"(?i)(?'Class'[a-zA-Z\-_\s]{1,64})[\s+\]$]")]
+	[MinimumPrivilege(Privilege.RegisteredUser)]
+	[UsageScope(CommandScope.Whisper)]
+	[CommandAlias("cc")]
+	ClassInfo,
 
 	[Description("")]
 	[CommandPattern(@"[\s+\]$]")]

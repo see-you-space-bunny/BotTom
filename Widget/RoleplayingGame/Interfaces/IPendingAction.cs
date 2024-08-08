@@ -18,6 +18,6 @@ internal interface IPendingEvent
     internal User? Initiator { get; }
     internal User? Responder { get; }
     internal Channel? Channel { get; }
-	internal bool RequiresResponse => Responder is not null && Responder != default;
-	internal bool IsPlayerInitiated => Initiator is not null && Initiator != default;
+	internal bool RequiresResponse => Responder is not null;
+	internal bool IsPlayerInitiated => Initiator is not null;
 }

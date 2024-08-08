@@ -241,14 +241,14 @@ public partial class FChatTournamentOrganiser : FChatPlugin<CardGameCommand>, IF
 
 		ActiveChannels.TryAdd(@event.Channel.Code,@event.Channel);
 
-		var match = OngoingMatches.FirstOrDefault(m => m.Channel == @event.Channel);
-		if (match != default)
+		var boardState = OngoingMatches.FirstOrDefault(m => m.Channel == @event.Channel);
+		if (boardState is not null)
 		{
-			if (@event.User == match.Player1.User || @event.User == match.Player2.User)
+			if (@event.User == boardState.Player1.User || @event.User == boardState.Player2.User)
 				ApiConnection.Mod_SetChannelUserStatus(@event.Channel,@event.User,UserRoomStatus.Moderator);
 		
-			if (match.IsGameChannelValid() && !match.WelcomeMessageSent)
-				match.SendWelcomeMessage(FChatApi);
+			if (boardState.IsGameChannelValid() && !boardState.WelcomeMessageSent)
+				boardState.SendWelcomeMessage(FChatApi);
 		}
 	}
 

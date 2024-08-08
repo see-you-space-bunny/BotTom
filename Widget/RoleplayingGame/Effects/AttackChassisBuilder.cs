@@ -99,7 +99,7 @@ public class AttackChassisBuilder
     public AttackChassisBuilder()
     {
 		_attackType			= AttackType.None;
-		_textName			= default!;
+		_textName			= null!;
         Harm				= 0.0f;
         Impact				= 0.0f;
         Accuracy			= 0.0f;

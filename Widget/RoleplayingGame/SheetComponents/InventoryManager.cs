@@ -74,7 +74,7 @@ internal class InventoryManager : IList<InventoryItem>
 #region (~) Remove
 	internal InventoryManager Sort()
 	{
-		_items.RemoveAll(ii=>ii==default||ii is null);
+		_items.RemoveAll(ii=>ii is null);
 		_items.Sort((i1, i2)=>string.Compare(i1.Name,i2.Name,true));
 		return this;
 	}
@@ -92,7 +92,7 @@ internal class InventoryManager : IList<InventoryItem>
 		ushort index		=	1;
 		foreach (InventoryItem item in this)
 		{
-			sb.AppendFormat("{2}{1}. {0}\n",item != default ? (item?.ToString() ?? Empty) : Empty,index,indentation);
+			sb.AppendFormat("{2}{1}. {0}\n",item is null ? (item?.ToString() ?? Empty) : Empty,index,indentation);
 			index++;
 		}
 		return sb.ToString();
@@ -100,14 +100,25 @@ internal class InventoryManager : IList<InventoryItem>
 #endregion
 
 
+#region Initialize
+	internal void Initialize(CharacterTracker characterTracker)
+	{
+		foreach (InventoryItem item in _items)
+		{
+			item.Initialize(characterTracker);
+		}
+	}
+#endregion
+
+
 #region Serialization
-	internal static InventoryManager Deserialize(BinaryReader reader,CharacterTracker characterTracker)
+	internal static InventoryManager Deserialize(BinaryReader reader)
 	{
 		var result	=	new InventoryManager();
 		result._items.Clear();
 		for (ushort i=0;i<reader.ReadUInt16();i++)
 		{
-			result._items.Add(InventoryItem.Deserialize(reader,characterTracker));
+			result._items.Add(InventoryItem.Deserialize(reader));
 		}
 		return result;
 	}
@@ -142,9 +153,9 @@ internal class InventoryManager : IList<InventoryItem>
 
 	public void RemoveAt(int index)
 	{
-		if (_items.ElementAtOrDefault(index) == default)
+		if (_items.ElementAtOrDefault(index) is null)
 			return;
-		_items[index]	=	default!;
+		_items[index]	=	null!;
 	}
 
 	public void Add(InventoryItem item)
@@ -172,7 +183,7 @@ internal class InventoryManager : IList<InventoryItem>
 		int index	=	_items.IndexOf(item);
 		if (index == -1)
 			return false;
-		_items[index]	=	default!;
+		_items[index]	=	null!;
 		return true;
 	}
 

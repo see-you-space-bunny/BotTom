@@ -48,7 +48,7 @@ partial class Program
 	/// <summary>
 	/// our command tokenizer
 	/// </summary>
-	private static CommandParser F_CommandParser = default!;
+	private static CommandParser F_CommandParser = null!;
 	
 	/// <summary>
 	/// A list of global bot ops

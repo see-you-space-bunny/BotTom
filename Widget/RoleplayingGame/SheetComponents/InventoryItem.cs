@@ -19,7 +19,7 @@ internal class InventoryItem
 	private readonly ItemCategory	_itemCategory;
 	private readonly SpecificItem	_specificItem;
 	private readonly bool			_occupiesSlot;
-	private readonly Actor			_taggedBy;
+	private readonly ulong			_taggedById;
 #endregion
 
 
@@ -33,6 +33,7 @@ internal class InventoryItem
 	private string	_description;
 	private uint	_amount;
 	private float	_bulk;
+	private Actor	_taggedBy;
 #endregion
 
 
@@ -97,15 +98,11 @@ internal class InventoryItem
 	{
 		const string FormatBasic	=	"[sup]({0})[/sup]";
 		const string FormatWithTag	=	"[sup]({0},{1})[/sup]";
-		if ((_taggedBy != default! && _taggedBy is not null)  || _activeStatuses.Any(s=>s.Tagged))
+		if ( _taggedBy is not null  || _activeStatuses.Any(s=>s.Tagged))
 		{
-			Actor actor	=	_taggedBy!;
-			if (actor is null && actor != default)
-			{
-				actor	=	_activeStatuses.FirstOrDefault(s=>s.Tagged)?.Source!;
-			}
+			Actor actor	=	_taggedBy ?? _activeStatuses.FirstOrDefault(s=>s.Tagged)?.Source!;
 
-			if (actor is null && actor != default)
+			if (actor is not null)
 			{
 				return string.Format(FormatWithTag,string.Join(',',[.. _activeStatuses.Select(s=>s.ToString())]),actor.CharacterName);
 			}
@@ -119,8 +116,16 @@ internal class InventoryItem
 #endregion
 
 
+#region Initialize
+	internal void Initialize(CharacterTracker characterTracker)
+	{
+		_taggedBy	=	characterTracker.SingleById(_taggedById);
+	}
+#endregion
+
+
 #region Serialization
-	internal static InventoryItem Deserialize(BinaryReader reader,CharacterTracker characterTracker)
+	internal static InventoryItem Deserialize(BinaryReader reader)
 	{
 		InventoryItem result;
 /////	Constructor
@@ -129,7 +134,7 @@ internal class InventoryItem
 			result	=	new InventoryItem(
 				(string)		reader.ReadString(),
 				(ItemCategory)	reader.ReadUInt16(),
-				characterTracker.SingleById((ulong)	reader.ReadUInt64()),
+				(ulong)			reader.ReadUInt64(),
 				(float)			reader.ReadSingle()
 			);
 			//_activeStatuses;
@@ -184,6 +189,21 @@ internal class InventoryItem
 
 
 #region Constructor
+	internal InventoryItem(string name,ItemCategory category,ulong taggedById,float bulk = 0.0f,uint amount = 1)
+		: this(name,category,taggedById,[],bulk,amount)
+	{ }
+	
+	internal InventoryItem(string name,ItemCategory category,ulong taggedById,ActiveStatusEffect[] activeStatuses,float bulk = 0.0f,uint amount = 1)
+		: this(category,bulk,amount)
+	{
+		_name			=	name;
+		_description	=	DefaultDescription;
+		_specificItem	=	SpecificItem.Custom;
+		_taggedBy		=	null!;
+		_taggedById		=	taggedById;
+		_activeStatuses	=	[.. activeStatuses];
+	}
+
 	internal InventoryItem(string name,ItemCategory category,Actor taggedBy,float bulk = 0.0f,uint amount = 1)
 		: this(name,category,taggedBy,[],bulk,amount)
 	{ }
@@ -195,6 +215,7 @@ internal class InventoryItem
 		_description	=	DefaultDescription;
 		_specificItem	=	SpecificItem.Custom;
 		_taggedBy		=	taggedBy;
+		_taggedById		=	_taggedBy.ActorId;
 		_activeStatuses	=	[.. activeStatuses];
 	}
 
@@ -204,7 +225,7 @@ internal class InventoryItem
 		_name			=	specificItem.GetEnumAttribute<SpecificItem,DescriptionAttribute>().Description;	//	TODO: create attribute
 		_description	=	DefaultDescription;
 		_specificItem	=	specificItem;
-		_taggedBy		=	default!;
+		_taggedBy		=	null!;
 		_activeStatuses	=	[];	//	TODO: create attribute
 	}
 #endregion

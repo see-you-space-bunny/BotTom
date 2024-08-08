@@ -72,4 +72,12 @@ public enum Ability
 	[ShortForm("LVL")]
 	[AbilityInfo(AbilityGroup.Overall,AbilityType.None)]
 	Level		= 0xFF,
+
+/////////	
+	[Description("")]
+	[ShortForm("LVL")]
+	[AbilityInfo(AbilityGroup.Overall,AbilityType.None)]
+	Strength,	//	Allies: , Enemies:
+	Endurance,	//	Allies: Strength & Dexterity, Enemies:
+	Dexterity,	//	Allies: , Enemies:
 }

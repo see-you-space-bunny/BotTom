@@ -282,9 +282,9 @@ public class AttackEvent : IPendingEvent
 	public AttackEvent(Actor source,EnvironmentSource environmentSource,Actor target,float harm,float impact,float accuracy,ActiveStatusEffect[]? carriedEffects = null)
 	{
 		_expectedResponses	=	[RoleplayingGameCommand.Defend];
-		_initiator			=	default!;
-		_responder			=	default!;
-		_channel			=	default!;
+		_initiator			=	null!;
+		_responder			=	null!;
+		_channel			=	null!;
 		Source				=	source;
 		EnvironmentSource	=	environmentSource;
 		Target				=	target;

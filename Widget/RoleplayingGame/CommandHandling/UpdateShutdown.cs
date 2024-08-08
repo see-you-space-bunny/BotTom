@@ -22,6 +22,7 @@ public partial class FRoleplayMC
 		{
 			Characters = CharacterTracker.Deserialize(reader,CharacterClasses);
 		}
+		Characters.Initialize();
 
 		base.Initialize();
 	}

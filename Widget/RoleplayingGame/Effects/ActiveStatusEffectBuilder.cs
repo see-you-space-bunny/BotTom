@@ -153,8 +153,8 @@ public class ActiveStatusEffectBuilder
 	
 	internal ActiveStatusEffectBuilder()
 	{
-		_effectType = StatusEffect.None;
-		_target		= default!;
+		_effectType 			= StatusEffect.None;
+		_target					= null!;
 		/////
 		_affectsAbilities		= [];
 		_affectsResources		= [];

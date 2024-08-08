@@ -76,6 +76,14 @@ public class CharacterSheet : Actor
 #endregion
 
 
+#region Initialize
+	internal void Initialize(CharacterTracker characterTracker)
+	{
+		Inventory.Initialize(characterTracker);
+	}
+#endregion
+
+
 #region Serialization
 	internal static CharacterSheet Deserialize(BinaryReader reader,CharacterClassTracker CharacterClasses)
 	{
@@ -119,7 +127,7 @@ public class CharacterSheet : Actor
 		}
 
 /////	Inventory
-		// TODO
+		characterSheet.Inventory = InventoryManager.Deserialize(reader);
 
 /////	Statistics
 		characterSheet.Statistics = ActorStatistics.Deserialize(reader);
@@ -169,7 +177,7 @@ public class CharacterSheet : Actor
 		}
 
 /////	Inventory
-		// TODO
+		Inventory.Serialize(writer);
 
 /////	Statistics
 		Statistics.Serialize(writer);
@@ -207,8 +215,8 @@ public class CharacterSheet : Actor
 		_uniqueCharacterName	= string.Empty;
 		_characterNickname		= string.Empty;
 		_useOnlyNickname		= false;
-		_user					= default!;
-		Inventory				= default!;
+		_user					= null!;
+		Inventory				= null!;
 		Cooldowns				= [];
 		Cooldowns.Add(CharacterCooldown.ClassChange,new Cooldown(new TimeSpan(0,29,0)));
 	}

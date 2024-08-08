@@ -123,7 +123,7 @@ public partial class ApiConnection
 				(var currentRecipient, var currentQueue) = MessageQueue
 					.FirstOrDefault(mq=>DateTime.Now > mq.Key.Next && mq.Value.Count > 0);
 
-				if (currentQueue == default)
+				if (currentQueue is null)
 					return;
 
 				message = currentQueue.Dequeue().Build();
