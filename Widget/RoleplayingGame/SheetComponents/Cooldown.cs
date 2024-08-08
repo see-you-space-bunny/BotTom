@@ -8,36 +8,77 @@ namespace RoleplayingGame.SheetComponents;
 internal class Cooldown
 {
 #region (-) Fields
-	readonly TimeSpan _cooldown;
-	DateTime _next;
+	readonly TimeSpan	_cooldown;
+	readonly ushort		_capacity;
+#endregion
+
+
+#region (-) Fields
+	DateTime	_next;
 #endregion
 
 
 #region (+) Properties
-	internal bool Ready		=>	DateTime.Now >= _next;
-	internal int Remaining	=>	(int)Math.Max((_next-DateTime.Now).TotalMinutes+1,0);
+	internal ushort	Charges		=>	(ushort)Math.Min((DateTime.Now - _next) / _cooldown,_capacity);
+	internal ushort	Capacity	=>	_capacity;
+	internal bool	AtCapacity	=>	Charges	>=	_capacity;
+	internal int	Remaining	=>	(int)Math.Max((_next-DateTime.Now).TotalMinutes+1,0);
+	internal bool	Ready		=>	DateTime.Now	>=	_next;
 #endregion
 
 
 #region (+) Trigger
 	internal void Trigger()
 	{
-		_next	= DateTime.Now + _cooldown;
+		if (AtCapacity)
+		{
+			_next	= DateTime.Now - (_cooldown * (_capacity - 1));
+		}
+		else
+		{
+			_next	+= _cooldown;
+		}
 	}
 #endregion
 
 
-#region Constructor 
-	internal Cooldown(TimeSpan cooldown,bool beginOnCooldown = false)
+#region (+) ToString
+	public override string ToString()
 	{
-		_cooldown	= cooldown;
+		return base.ToString()!;
+	}
+#endregion
+
+
+#region Serialization
+	public static Cooldown Deserialize(BinaryReader reader)
+	{
+		Cooldown result = new (new TimeSpan(reader.ReadInt64()),reader.ReadUInt16())
+			{ _next = new DateTime(reader.ReadInt64()) };
+		return result;
+	}
+
+	public void Serialize(BinaryWriter writer)
+	{
+		writer.Write((long)		_cooldown.Ticks);
+		writer.Write((ushort)	_capacity);
+		writer.Write((long)		_next.Ticks);
+	}
+#endregion
+
+
+#region Constructor
+	internal Cooldown(TimeSpan cooldown,ushort capacity = 1,bool beginOnCooldown = false)
+	{
+		_cooldown	=	cooldown;
+		_capacity	=	capacity;
 		if (beginOnCooldown)
 		{
-			_next		= DateTime.Now;
+			Trigger();
 		}
 		else
 		{
-			Trigger();
+			_next		= DateTime.Now;
 		}
 	}
 #endregion
