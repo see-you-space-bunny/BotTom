@@ -9,10 +9,10 @@ namespace RoleplayingGame.Objects;
 public class CharacterSheet : Actor
 {
 #region (-) Fields
-	private User _user;
-	private string _uniqueCharacterName;
-	private string _characterNickname;
-	private bool _useOnlyNickname;
+	private User	_user;
+	private string	_uniqueCharacterName;
+	private string	_characterNickname;
+	private bool	_useOnlyNickname;
 #endregion
 
 
@@ -156,7 +156,7 @@ public class CharacterSheet : Actor
 		{
 			classLevel.Value.Serialize(writer);
 		}
-		writer.Write((uint)		_activeClass);
+		writer.Write((uint)		_activeClass.Class.Name);
 
 /////	Abilities
 		writer.Write((uint) 	Abilities.Count);
@@ -179,12 +179,10 @@ public class CharacterSheet : Actor
 
 
 #region Constructor
-	public CharacterSheet(string uniqueCharacterName, string? characterName = null)
-		: this()
+	public CharacterSheet(User user, string? characterName = null)
+		: this(user.Name,characterName)
 	{
-		_uniqueCharacterName        = uniqueCharacterName;
-		_characterName              = characterName ?? uniqueCharacterName;
-		ApiConnection.Users.TrySingleByName(_uniqueCharacterName,out _user);
+		_user = user;
 	}
 
 	public CharacterSheet(string uniqueCharacterName, ulong userId, string? characterName = null)
@@ -193,23 +191,24 @@ public class CharacterSheet : Actor
 		_actorId                     = userId;
 	}
 
-	public CharacterSheet(User user, string? characterName = null)
-		: this(user.Name,characterName)
+	public CharacterSheet(string uniqueCharacterName, string? characterName = null)
+		: this(characterName ?? uniqueCharacterName)
 	{
-		_user = user;
+		_uniqueCharacterName        = uniqueCharacterName;
+		ApiConnection.Users.TrySingleByName(_uniqueCharacterName,out _user);
+		Inventory					= new InventoryManager(100,5);
 	}
 #endregion
 
 
 #region Private Constructor
-	private CharacterSheet() : base(string.Empty)
+	private CharacterSheet(string characterName) : base(characterName)
 	{
-		_actorId				= 0uL;
 		_uniqueCharacterName	= string.Empty;
 		_characterNickname		= string.Empty;
 		_useOnlyNickname		= false;
 		_user					= null!;
-		Inventory				= new InventoryManager(100,5);
+		Inventory				= null!;
 		Cooldowns				= [];
 		Cooldowns.Add(CharacterCooldown.ClassChange,new Cooldown(new TimeSpan(0,29,0)));
 	}

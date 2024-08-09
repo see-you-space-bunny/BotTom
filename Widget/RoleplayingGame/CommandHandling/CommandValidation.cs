@@ -2,6 +2,7 @@ using FChatApi.Core;
 using FChatApi.Enums;
 using FChatApi.Objects;
 using Plugins.Tokenizer;
+using RoleplayingGame.Contexts;
 using RoleplayingGame.Effects;
 using RoleplayingGame.Enums;
 using RoleplayingGame.SheetComponents;
@@ -42,7 +43,7 @@ public partial class FRoleplayMC
 			if (commandTokens.Source.MessageType == FChatMessageType.Whisper)
 			{
 				if (Encounters
-					.GetCombatEncountersByUser(commandTokens.Source.Author)
+					.GetEncounters<CombatContext>(commandTokens.Source.Author)
 					.FirstOrDefault(e=>e.HasNpcParticipant()) is null)
 				{
 					messageBuilder.WithMessage("You're not engaged in combat with any NPCs.");

@@ -4,20 +4,33 @@ using System.Linq;
 using System.Threading.Tasks;
 using FChatApi.Objects;
 using RoleplayingGame.Contexts;
+using RoleplayingGame.Interfaces;
 using RoleplayingGame.Objects;
+using RoleplayingGame.SheetComponents;
 
 namespace RoleplayingGame.Systems;
 
-internal class EncounterTracker
+internal class EncounterTracker : ObjectManager<BaseContext>, IObjectManager, IList<BaseContext>
 {
 #region (-) Fields
-	private readonly List<CombatContext> _activeCombats;
+	private IEnumerable<CombatContext> ActiveCombats	=> _objects.OfType<CombatContext>();
 #endregion
 
 
 #region (~) Get
-	internal IEnumerable<CombatContext> GetCombatEncountersByUser(User value)	=>
-		_activeCombats.Where(li=>li.HasParticipant(value));
+	internal TEncounter[] GetEncounters<TEncounter>(User value) where TEncounter : BaseContext	=>
+		[.. _objects.OfType<TEncounter>().Where(li=>li.HasParticipant(value))];
+	internal bool TryGetEncounters<TEncounter>(User value,out TEncounter[] result) where TEncounter : BaseContext
+	{
+		var encounters	=	_objects.OfType<TEncounter>().Where(li=>li.HasParticipant(value));
+		if (encounters.Any())
+		{
+			result = [.. encounters];
+			return true;
+		}
+		result	= [];
+		return false;
+	}
 #endregion
 
 
@@ -27,7 +40,7 @@ internal class EncounterTracker
 		values ??= [];
 		CombatContext result = new CombatContext()
 			.WithParticipants(values);
-		_activeCombats.Add(result);
+		_objects.Add(result);
 		return result;
 	}
 #endregion
@@ -35,8 +48,6 @@ internal class EncounterTracker
 
 #region Constructor
 	internal EncounterTracker()
-	{
-		_activeCombats	= [];
-	}
+	{ }
 #endregion
 }

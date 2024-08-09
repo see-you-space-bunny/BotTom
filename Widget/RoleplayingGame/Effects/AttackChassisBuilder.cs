@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using RoleplayingGame.Enums;
+using RoleplayingGame.Factories;
 using RoleplayingGame.Objects;
+using RoleplayingGame.Systems;
 
 namespace RoleplayingGame.Effects;
 
@@ -81,7 +83,7 @@ public class AttackChassisBuilder
 			dictionary[key] = value;
 	}
 
-    public AttackChassis Build()
+    internal AttackChassis Build(StatusEffectFactory statusEffectFactory,DieRoller dieRoller)
     {
         return new AttackChassis(
 			_attackType,
@@ -93,7 +95,11 @@ public class AttackChassisBuilder
 			_impactScales,
 			_accuracyScales,
             [.. _carriedEffects]
-        );
+        )
+		{
+			StatusEffectFactory	=	statusEffectFactory,
+			DieRoller			=	dieRoller,
+		};
     }
 
     public AttackChassisBuilder()

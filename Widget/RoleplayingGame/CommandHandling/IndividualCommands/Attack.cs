@@ -8,6 +8,7 @@ using FChatApi.Enums;
 using FChatApi.Objects;
 using Plugins.Attributes;
 using Plugins.Tokenizer;
+using RoleplayingGame.Contexts;
 using RoleplayingGame.Effects;
 using RoleplayingGame.Enums;
 using RoleplayingGame.Objects;
@@ -54,7 +55,7 @@ public partial class FRoleplayMC
 		AttackType		attackType	=	Enum.Parse<AttackType>(commandTokens.Parameters["Attack"]);
 		CharacterSheet	attacker	=	Characters.SingleByUser(commandTokens.Source.Author);
 		NonPlayerEnemy	defender	=	Encounters
-			.GetCombatEncountersByUser(commandTokens.Source.Author)
+			.GetEncounters<CombatContext>(commandTokens.Source.Author)
 			.FirstOrDefault(e=>e.HasNpcParticipant())
 			?.FirstNpcParticipant<NonPlayerEnemy>()!;
 ////////////////////////////

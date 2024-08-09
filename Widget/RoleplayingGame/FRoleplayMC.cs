@@ -59,11 +59,11 @@ public partial class FRoleplayMC : FChatPlugin<RoleplayingGameCommand>, IFChatPl
 
 
 #region LoadAttacks
-	public static void LoadAttacks(string filePath) => LoadAttacks(_csvDirectory,filePath);
+	public void LoadAttacks(string filePath) => LoadAttacks(_csvDirectory,filePath);
 
-	public static void LoadAttacks(string directory,string filePath)
+	public void LoadAttacks(string directory,string filePath)
 	{
-		foreach (AttackChassis chassis in DeserializeKommaVaues.GetAttacks(Path.Combine(directory,filePath)))
+		foreach (AttackChassis chassis in DeserializeKommaVaues.GetAttacks(Path.Combine(directory,filePath),StatusEffectFactory,DieRoller))
 		{
 			AttackPool.AddOrUpdate(chassis.AttackType,(k)=>chassis,(k,v)=>chassis);
 		}

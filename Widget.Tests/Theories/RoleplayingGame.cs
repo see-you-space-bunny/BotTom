@@ -7,6 +7,7 @@ using RoleplayingGame.Enums;
 using RoleplayingGame.Objects;
 using Plugins.Tokenizer;
 using RoleplayingGame.SheetComponents;
+using RoleplayingGame.Contexts;
 
 namespace Widget.Tests.Theories;
 
@@ -97,6 +98,30 @@ public class @RoleplayingGame(ITestOutputHelper output)
 			}
 			catch (NullReferenceException)
 			{ }
+////////////
+			switch (commandTokens.Command)
+			{
+				case "explore":
+				{
+					var encounters	=	_fRoleplayMC.Encounters.GetEncounters<CombatContext>(commandTokens.Source.Author);
+					Assert.NotEmpty(encounters);
+					var encounter	=	encounters.FirstOrDefault(e=>e.HasNpcParticipant());
+					Assert.NotNull(encounter);
+					break;
+				}
+
+				case "attack":
+				{
+					var encounters	=	_fRoleplayMC.Encounters.GetEncounters<CombatContext>(commandTokens.Source.Author);
+					Assert.NotEmpty(encounters);
+					var encounter	=	encounters.FirstOrDefault(e=>e.HasNpcParticipant());
+					Assert.NotNull(encounter);
+					var enemy		=	encounter.FirstNpcParticipant<NonPlayerEnemy>();
+					Assert.NotEqual(enemy.Health.Current,enemy.Health.SoftLimit);
+					break;
+				}
+			}
+
 		}
 ////////////
 	}

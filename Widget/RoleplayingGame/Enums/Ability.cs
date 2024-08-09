@@ -77,7 +77,9 @@ public enum Ability
 	[Description("")]
 	[ShortForm("LVL")]
 	[AbilityInfo(AbilityGroup.Overall,AbilityType.None)]
-	Strength,	//	Allies: , Enemies:
-	Endurance,	//	Allies: Strength & Dexterity, Enemies:
-	Dexterity,	//	Allies: , Enemies:
+	Strength,		//	Allies: , Enemies: 
+	Endurance,		//	Allies: Strength & Dexterity, Enemies: 
+	Dexterity,		//	Allies: Intelligence & Charisma, Enemies: Strength & Endurance
+	Intelligence,	//	Allies: , Enemies:
+	Charisma,		//	Allies: , Enemies:
 }

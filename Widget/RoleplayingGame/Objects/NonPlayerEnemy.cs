@@ -8,8 +8,15 @@ namespace RoleplayingGame.Objects;
 
 public class NonPlayerEnemy : Actor
 {
-	public EnvironmentSource SourceType = EnvironmentSource.Foe;
+#region (+P)
+	public EnvironmentSource SourceType	{ get; }
+#endregion
 
+
+#region Constructor
 	public NonPlayerEnemy(string name) : base(name)
-	{ }
+	{
+		SourceType	=	EnvironmentSource.Foe;
+	}
+#endregion
 }

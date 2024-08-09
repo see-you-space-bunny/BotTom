@@ -6,13 +6,15 @@ using FChatApi.Core;
 using FChatApi.Enums;
 using FChatApi.Objects;
 using RoleplayingGame.Enums;
+using RoleplayingGame.Factories;
 using RoleplayingGame.Interfaces;
 using RoleplayingGame.Objects;
 using RoleplayingGame.SheetComponents;
+using RoleplayingGame.Systems;
 
 namespace RoleplayingGame.Effects;
 
-public class AttackEvent : IPendingEvent
+internal class AttackEvent : IPendingEvent
 {
 #region (-) Constants
 	private const float MinimumStaminaRatio = 0.15f;
@@ -29,13 +31,19 @@ public class AttackEvent : IPendingEvent
 #endregion
 
 
+#region (-) Fields
+	internal required StatusEffectFactory StatusEffectFactory { private get; set; }
+	internal required DieRoller DieRoller { private get; set; }
+#endregion
+
+
 #region (+) Fields
-	public readonly Actor Source;
-	public readonly EnvironmentSource EnvironmentSource;
-	public readonly Actor Target;
-	public readonly float Accuracy;
-	public readonly float Impact;
-	public readonly float Harm;
+	internal readonly Actor Source;
+	internal readonly EnvironmentSource EnvironmentSource;
+	internal readonly Actor Target;
+	internal readonly float Accuracy;
+	internal readonly float Impact;
+	internal readonly float Harm;
 #endregion
 
 
@@ -120,7 +128,7 @@ public class AttackEvent : IPendingEvent
 /// </summary>
 /// <param name="health"></param>
 /// <returns>true if the target has 0 or less health remaining</returns>
-	public bool TryToHarm(CharacterResource health)
+	internal bool TryToHarm(CharacterResource health)
 	{
 		if (!_protBreak)
 			return false;
@@ -136,12 +144,6 @@ public class AttackEvent : IPendingEvent
 		_appliedHarm = _remainingHarm - _appliedOverkill;
 		return _kill;
 	}
-#endregion
-
-
-#region AttackInfo
-	public (ulong,bool,ulong,bool,ulong,bool,ulong) AttackInfo() =>
-		((ulong)_appliedAccuracy,_hit,(ulong)_appliedImpact,_protBreak,(ulong)_appliedHarm,_kill,(ulong)_appliedOverkill);
 #endregion
 
 
@@ -193,6 +195,8 @@ public class AttackEvent : IPendingEvent
 		switch (command)
 		{
 			default:
+				DieRoll	attack	=	DieRoller.StandardRoll([Source.Abilities[Ability.Power]]);
+				DieRoll	defense	=	DieRoller.StandardRoll([Target.Abilities[Ability.Dexterity]]);
 				break;
 		}
 
@@ -264,11 +268,11 @@ public class AttackEvent : IPendingEvent
 
 
 #region Constructor
-	public AttackEvent(Actor source,Actor target,float harm,float impact,float accuracy,ActiveStatusEffect[]? carriedEffects = null)
+	internal AttackEvent(Actor source,Actor target,float harm,float impact,float accuracy,ActiveStatusEffect[]? carriedEffects = null)
 		: this(source,EnvironmentSource.None,target,harm,impact,accuracy,carriedEffects)
 	{ }
 
-	public AttackEvent(Actor source,EnvironmentSource environmentSource,Actor target,float harm,float impact,float accuracy,ActiveStatusEffect[]? carriedEffects = null)
+	internal AttackEvent(Actor source,EnvironmentSource environmentSource,Actor target,float harm,float impact,float accuracy,ActiveStatusEffect[]? carriedEffects = null)
 	{
 		_expectedResponses	=	[RoleplayingGameCommand.Defend];
 		_initiator			=	null!;

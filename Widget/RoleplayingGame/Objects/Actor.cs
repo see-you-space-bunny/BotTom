@@ -19,7 +19,7 @@ public class Actor : GameObject
 #endregion
 
 #region (#) Fields
-	protected ClassName _activeClass;
+	protected ClassLevels _activeClass;
 	protected Dictionary<ClassName,ClassLevels> _classLevels;
 	protected Dictionary<Ability,AbilityScore> _abilities;
 	protected Dictionary<Resource,CharacterResource> _resources;
@@ -98,11 +98,11 @@ public class Actor : GameObject
 /// <returns>this Actor</returns>
 	public Actor LevelUp(int levels,EnvironmentSource source)
 	{
-		if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
+		if (_activeClass is not null)
 		{
-			levels = (int)Math.Round(activeClassLevels.Class.AbilityGrowth[Ability.Level] * levels);
+			levels = (int)Math.Round(_activeClass.Class.AbilityGrowth[Ability.Level] * levels);
 			levels = levels == 0 ? 1 : levels;
-			activeClassLevels.Modify(DateTime.Now,source,levels);
+			_activeClass.Modify(DateTime.Now,source,levels);
 		}
 		return this;
 	}
@@ -114,11 +114,11 @@ public class Actor : GameObject
 /// <returns>this Actor</returns>
 	public Actor LevelUp(int levels,Actor source)
 	{
-		if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
+		if (_activeClass is not null)
 		{
-			levels = (int)Math.Round(activeClassLevels.Class.AbilityGrowth[Ability.Level] * levels);
+			levels = (int)Math.Round(_activeClass.Class.AbilityGrowth[Ability.Level] * levels);
 			levels = levels == 0 ? 1 : levels;
-			activeClassLevels.Modify(DateTime.Now,source.ActorId,levels);
+			_activeClass.Modify(DateTime.Now,source.ActorId,levels);
 		}
 		return this;
 	}
@@ -174,10 +174,7 @@ public class Actor : GameObject
 /// <returns>this Actor</returns>
 	public Actor RemoveLevels(int levels,EnvironmentSource source)
 	{
-		if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
-		{
-			activeClassLevels.Modify(DateTime.Now,source,-levels);
-		}
+		_activeClass?.Modify(DateTime.Now,source,-levels);
 		ReCalculateDerivedStatistics();
 		return this;
 	}
@@ -189,10 +186,7 @@ public class Actor : GameObject
 /// <returns>this Actor</returns>
 	public Actor RemoveLevels(int levels,Actor source)
 	{
-		if (_classLevels.TryGetValue(_activeClass, out var activeClassLevels))
-		{
-			activeClassLevels.Modify(DateTime.Now,source.ActorId,-levels);
-		}
+		_activeClass?.Modify(DateTime.Now,source.ActorId,-levels);
 		ReCalculateDerivedStatistics();
 		return this;
 	}
@@ -219,12 +213,8 @@ public class Actor : GameObject
 
 	public Actor ChangeClass(CharacterClass @class)
 	{
-		if (!_classLevels.ContainsKey(_activeClass))
-		{
-			ClassLevels activeClassLevels = new (this,@class);
-            _classLevels.Add(_activeClass, activeClassLevels);
-		}
-		_activeClass = @class.Name;
+		_classLevels.TryAdd(@class.Name,new ClassLevels(this,@class));
+		_activeClass = _classLevels[@class.Name];
 		return this;
 	}
 
@@ -242,33 +232,24 @@ public class Actor : GameObject
 #endregion
 
 #region (+) Constructor
-	public Actor(string name) : base(0)
+	public Actor(string name)
+		: this(name,null!)
+	{ }
+
+	public Actor(string name,CharacterClass @class)
+		: this(name,Convert.ToUInt64(new Guid().ToString("N")),@class)
+	{ }
+
+#pragma warning disable CS8618	//	Non-nullable field must contain a non-null value when exiting constructor.
+								//	Consider adding the 'required' modifier or declaring as nullable.
+	public Actor(string name,ulong userId,CharacterClass @class) : base(0)
 	{
-		_characterName	= name;
-		_actorId		= Convert.ToUInt64(new Guid().ToString("N"));
-		_levelCap		= 500u;
-
-		_abilities = [];
-		foreach(Ability ability in Enum.GetValues(typeof(Ability)).Cast<Ability>().Where(a=>a != Ability.None))
-		{
-			_abilities.Add(ability,new AbilityScore(this,ability));
-		}
-
-		_resources = [];
-		foreach(Resource resource in Enum.GetValues(typeof(Resource)).Cast<Resource>().Where(a=>a != Resource.None))
-		{
-			_resources.Add(resource,new CharacterResource(this,resource,resource.GetEnumAttribute<Resource,ResourceDefaultValuesAttribute>()));
-		}
-
-		_statusEffects = [];
-
-		_classLevels = [];
-	}
-	public Actor(string name,ulong userId) : base(0)
-	{
-		_characterName	= name;
-		_actorId		= userId;
-		_levelCap		= 500u;
+		_characterName	=	name;
+		_actorId		=	userId;
+		_levelCap		=	500u;
+		
+		if (@class is not null)
+			_activeClass	=	new ClassLevels(this,@class);
 
 		_abilities = [];
 		foreach(Ability ability in Enum.GetValues(typeof(Ability)).Cast<Ability>().Where(a=>a != Ability.None && a != Ability.Level))
@@ -285,6 +266,9 @@ public class Actor : GameObject
 		_statusEffects = [];
 
 		_classLevels = [];
+		if (_activeClass is not null)
+			_classLevels.Add(_activeClass.Class.Name,_activeClass);
 	}
+#pragma warning restore CS8618
 #endregion
 }
