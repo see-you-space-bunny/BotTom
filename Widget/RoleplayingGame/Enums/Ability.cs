@@ -1,5 +1,5 @@
 using System.ComponentModel;
-
+using System.Runtime.InteropServices;
 using RoleplayingGame.Attributes;
 
 namespace RoleplayingGame.Enums;
@@ -11,6 +11,41 @@ public enum Ability
 	[ShortForm("NON")]
 	[AbilityInfo(AbilityGroup.None,AbilityType.None)]
 	None		= 0x00,
+
+	[Description("")]
+	[ShortForm("PER")]
+	[AbilityInfo(AbilityGroup.Overall,AbilityType.None)]
+	//[AllyAbilities(Consider,Defy)]		//| Adapt (Resist Status)
+	//[EnemyAbilities(Subvert,Provoke)]		//| Inflict (Status)
+	Percieve,
+	
+	[Description("")]
+	[ShortForm("CON")]
+	[AbilityInfo(AbilityGroup.Overall,AbilityType.None)]
+	//[AllyAbilities(Perceive,Subvert)]		//| Anticipate (Resist Attack)
+	//[EnemyAbilities(Provoke,Defy)]		//| Clash (Attack)
+	Consider, 
+	
+	[Description("")]
+	[ShortForm("SUB")]
+	[AbilityInfo(AbilityGroup.Overall,AbilityType.None)]
+	//[AllyAbilities(Consider,Provoke)]		//| Spellcast (Attack)
+	//[EnemyAbilities(Perceive,Defy)]		//| Empathise (Buff Status)
+	Subvert,
+	
+	[Description("")]
+	[ShortForm("PRO")]
+	[AbilityInfo(AbilityGroup.Overall,AbilityType.None)]
+	//[AllyAbilities(Subvert,Defy)]			//| Recover (Resist Attack)
+	//[EnemyAbilities(Perceive,Consider)]	//| Analyse (Buff Status)
+	Provoke,
+	
+	[Description("")]
+	[ShortForm("DEF")]
+	[AbilityInfo(AbilityGroup.Overall,AbilityType.None)]
+	//[AllyAbilities(Perceive,Provoke)]		//| Strike (Attack)
+	//[EnemyAbilities(Consider,Subvert)]	//| Manipulate (Status)
+	Defy,
 	
 	#region Physical Abilities
 	[Description("")]
@@ -72,14 +107,4 @@ public enum Ability
 	[ShortForm("LVL")]
 	[AbilityInfo(AbilityGroup.Overall,AbilityType.None)]
 	Level		= 0xFF,
-
-/////////	
-	[Description("")]
-	[ShortForm("LVL")]
-	[AbilityInfo(AbilityGroup.Overall,AbilityType.None)]
-	Strength,		//	Allies: , Enemies: 
-	Endurance,		//	Allies: Strength & Dexterity, Enemies: 
-	Dexterity,		//	Allies: Intelligence & Charisma, Enemies: Strength & Endurance
-	Intelligence,	//	Allies: , Enemies:
-	Charisma,		//	Allies: , Enemies:
 }
