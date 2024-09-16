@@ -195,8 +195,8 @@ internal class AttackEvent : IPendingEvent
 		switch (command)
 		{
 			default:
-				DieRoll	attack	=	DieRoller.StandardRoll([Source.Abilities[Ability.Power]]);
-				DieRoll	defense	=	DieRoller.StandardRoll([Target.Abilities[Ability.Dexterity]]);
+				//DieRoll	attack	=	DieRoller.StandardRoll([Source.Abilities[Ability.Power]]);
+				//DieRoll	defense	=	DieRoller.StandardRoll([Target.Abilities[Ability.Reflex]]);
 				break;
 		}
 
