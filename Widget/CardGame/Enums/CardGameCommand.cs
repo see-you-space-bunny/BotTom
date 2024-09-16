@@ -31,7 +31,7 @@ public enum CardGameCommand
 	Invalid = 0x00,
 	
 	/// <summary>summon STAT SLOT</summary>
-	[Description("")]
+	[Description("Once on your turn you may use {0}summon STAT SLOT to create a combattant on your side of the field. You have 3 slots to choose from and cannot summon into an occupied slot. (Example:[spoiler] !summon INT 1[/spoiler])")]
 	[CommandPattern(@"(?i)(?'Stat'[a-zA-Z\-_0-9]{3,24})(\s+(?'Slot'[0-3])){0,1}(\s+(?'CardName'[a-zA-Z\ \-_0-9]{1,24}))[\s+\]$]")]
 	[MinimumPrivilege(Privilege.RegisteredUser)]
 	[UsageScope(CommandScope.ActiveChannel)]
